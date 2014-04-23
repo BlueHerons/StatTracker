@@ -1,7 +1,13 @@
 <?php
 session_start();
 
-$mysql = new mysqli("localhost", "SRStats", "XR3mYASAFweTbcfB", "SRStats");
+function debug($str) {
+	echo "<!--";
+	print_r($str);
+	echo "-->";
+}
+
+$mysql = new mysqli("localhost", "SRStats", "LYdPNrbE3PVTDzVn", "SRStats");
 if ($mysql->connect_errno) {
 	die(sprintf("%s: %s", $mysql->connect_errno, $mysql_connect_error));
 }
@@ -68,78 +74,84 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 ORDER BY `date`;";
 
 	$res = $mysql->query($sql);
-	$data_points = array();
-	while ($row = $res->fetch_assoc()) {
-		$data_points[] = $row;
+
+	$message = "";
+
+	if ($res->num_rows < 2) {
+		$message = "Your stats have been recieved. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
 	}
-
-	$deltas = array();
-	$stats = array();
-	$days = 0;
-
-	// Iterates over the list of fields
-	foreach($data_points[0] as $field => $ignore) {
-		$sumXY = 0;
-		$sumX = 0;
-		$sumY = 0;
-		$sumX2 = 0;
-		$lowest_ts = time();
-		if ($field == "agent" || $field == "timestamp")
-			continue;
-		
-		// Iterates of all values for a field
-		foreach ($data_points as $i => $data) {
-
-			if ($field == "date") {
-				if ($i == sizeof($data_points) - 1) {
-
-					$days = strtotime($data[$field]) - $lowest_ts;
-					$days = $days / 86400; // seconds / seconds in a day
-					$days += 1;
-				}
-				else {
-					if (strtotime($data[$field]) < $lowest_ts) {
-						$lowest_ts = strtotime($data[$field]);
-					}
-				}
-			}
-			else {
-				$sumXY = $sumXY + ($data[$field] * ($i + 1));
-				$sumX = $sumX + ($i + 1);
-				$sumY = $sumY + ($data[$field]);
-				$sumX2 = $sumX2 + (($i + 1) * ($i + 1));
-			}
+	else {
+		$data_points = array();
+		while ($row = $res->fetch_assoc()) {
+			$data_points[] = $row;
 		}
 
-		if ($field == "date")
-			continue;
-
-		$slope = ((sizeof($data_points) * $sumXY) - ($sumX * $sumY)) /
-			 ((sizeof($data_points) * $sumX2) - ($sumX * $sumX));
-
-		$deltas[$field] = $slope;
-
-		$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required <= " . $fields[$field] . " ORDER BY amount_required DESC LIMIT 1;";
-
-		$current_badge = $mysql->query($sql)->fetch_assoc();
-		$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required > " . $fields[$field] . " ORDER BY amount_required ASC LIMIT 1;";
-		$next_badge = $mysql->query($sql)->fetch_assoc();
-
-
-		$stats[$field] = array(
-			"name" => "",
-			"current_amount" => $fields[$field],
-			"datapoints" => sizeof($data_points),
-			"days" => $days,
-			"slope" => $slope,
-			"badge_name" => $current_badge['name'],
-			"badge_level" => $current_badge['level'],
-			"badge_next_level" => $next_badge['level'],
-			"badge_next_amount" => $next_badge['amount_required'],
-			"badge_remaining_amount" => ($next_badge['amount_required'] - $fields[$field]),
-			"badge_est_days" => round(($next_badge['amount_required'] - $fields[$field]) / $slope, 0)
-		);
-	}
+		$deltas = array();
+		$stats = array();
+		$days = 0;
+	
+		// Iterates over the list of fields
+		foreach($data_points[0] as $field => $ignore) {
+			$sumXY = 0;
+			$sumX = 0;
+			$sumY = 0;
+			$sumX2 = 0;
+			$lowest_ts = time();
+			if ($field == "agent" || $field == "timestamp")
+				continue;
+			
+			// Iterates of all values for a field
+			foreach ($data_points as $i => $data) {
+	
+				if ($field == "date") {
+					if ($i == sizeof($data_points) - 1) {
+	
+						$days = strtotime($data[$field]) - $lowest_ts;
+						$days = $days / 86400; // seconds / seconds in a day
+						$days += 1;
+					}
+					else {
+						if (strtotime($data[$field]) < $lowest_ts) {
+							$lowest_ts = strtotime($data[$field]);
+						}
+					}
+				}
+				else {
+					$sumXY = $sumXY + ($data[$field] * ($i + 1));
+					$sumX = $sumX + ($i + 1);
+					$sumY = $sumY + ($data[$field]);
+					$sumX2 = $sumX2 + (($i + 1) * ($i + 1));
+				}
+			}
+	
+			if ($field == "date")
+				continue;
+	
+			$slope = ((sizeof($data_points) * $sumXY) - ($sumX * $sumY)) /
+				 ((sizeof($data_points) * $sumX2) - ($sumX * $sumX));
+	
+			$deltas[$field] = $slope;
+	
+			$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required <= " . $fields[$field] . " ORDER BY amount_required DESC LIMIT 1;";
+			$current_badge = $mysql->query($sql)->fetch_assoc();
+			$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required > " . $fields[$field] . " ORDER BY amount_required ASC LIMIT 1;";
+			$next_badge = $mysql->query($sql)->fetch_assoc();
+	
+	
+			$stats[$field] = array(
+				"name" => "",
+				"current_amount" => $fields[$field],
+				"datapoints" => sizeof($data_points),
+				"days" => $days,
+				"slope" => $slope,
+				"badge_name" => $current_badge['name'],
+				"badge_level" => $current_badge['level'],
+				"badge_next_level" => $next_badge['level'],
+				"badge_next_amount" => $next_badge['amount_required'],
+				"badge_remaining_amount" => ($next_badge['amount_required'] - $fields[$field]),
+				"badge_est_days" => round(($next_badge['amount_required'] - $fields[$field]) / $slope, 0)
+			);
+		}
 ?>
 <h2>Results (<?php echo $days; ?> days)</h2>
 	<ul>
@@ -167,13 +179,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 ?>
 	</ul>
 <?php
+	}
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 	<title>Agent Stats</title>
-	<link href="stats.css" rel="stylesheet" />
+	<link href="style.css" rel="stylesheet" />
 	<meta name="viewport" content="width=360" />
 </head>
 <body>
@@ -194,6 +207,14 @@ while($row = $res->fetch_assoc()) {
 	);
 }
 $mysql->close();
+
+if (isset($message) && $message != "") {
+?>
+	<div id="message">
+		<?php echo $message; ?>
+	</div>
+<?php
+}
 ?>
 
 <form method="post">
@@ -240,7 +261,7 @@ foreach ($fields as $field) {
 		else {
 			?><input type="<?php echo $field['type'];?>"
 				   name="<?php echo $field['name']; ?>"
-				   value="<?php echo $_SESSION[$field['name']];?>"
+				   value="<?php echo $field['type'] == "number" ? "0" : "";?>"
 				   <?php echo ($field['type'] == "number") ? "min=\"0\"\n" : "\n";?>
 				   <?php echo ($field['type'] == "number") ? "max=\"".pow(10, $field['length'])."\"" : "maxlength=\"\"";?> />
 <?php
