@@ -1,34 +1,38 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `AgentStats` (
-  `agent` varchar(15) NOT NULL DEFAULT '' COMMENT 'Agent Name',
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `ap` int(11) NOT NULL COMMENT 'AP',
-  `unique_visits` int(11) NOT NULL COMMENT 'Unique Portals Visited',
-  `portals_discovered` int(11) NOT NULL COMMENT 'Portals Discovered',
-  `xm_collected` int(11) NOT NULL COMMENT 'XM Collected',
-  `hacks` int(11) NOT NULL COMMENT 'Hacks',
-  `res_deployed` int(11) NOT NULL COMMENT 'Resonators Deployed',
-  `links_created` int(11) NOT NULL COMMENT 'Links Created',
-  `fields_created` int(11) NOT NULL COMMENT 'Control Fields Created',
-  `mu_captured` int(11) NOT NULL COMMENT 'Mind Units Captured',
-  `longest_link` int(11) NOT NULL COMMENT 'Longest Link Ever Created',
-  `largest_field` int(11) NOT NULL COMMENT 'Largest Control Field',
-  `xm_recharged` int(11) NOT NULL COMMENT 'XM Recharged',
-  `portals_captured` int(11) NOT NULL COMMENT 'Portals Captured',
-  `unique_captures` int(11) NOT NULL COMMENT 'Unique Portals Captured',
-  `res_destroyed` int(11) NOT NULL COMMENT 'Resonators Destroyed',
-  `portals_neutralized` int(11) NOT NULL COMMENT 'Portals Neutralized',
-  `links_destroyed` int(11) NOT NULL COMMENT 'Enemy Links Destroyed',
-  `fields_destroyed` int(11) NOT NULL COMMENT 'Enemy Control Fields Destroyed',
-  `distance_walked` int(11) NOT NULL COMMENT 'Distance Walked',
-  `oldest_portal` int(11) NOT NULL COMMENT 'Max Time Portal Held',
-  `oldest_link` int(11) NOT NULL COMMENT 'Max Time Link Maintained',
-  `oldest_link_days` int(11) NOT NULL COMMENT 'Max Link Length x Days',
-  `oldest_field` int(11) NOT NULL COMMENT 'Max Time Field Held',
-  `largest_field_days` int(11) NOT NULL COMMENT 'Largest Field MUs x Days',
-  PRIMARY KEY (`agent`,`timestamp`),
-  UNIQUE KEY `UNIQUE` (`agent`,`ap`)
+DROP TABLE IF EXISTS `Stats`;
+CREATE TABLE IF NOT EXISTS `Stats` (
+  `order` tinyint(2) NOT NULL,
+  `stat` varchar(20) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`stat`),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `order` (`order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+INSERT INTO `Stats` (`order`, `stat`, `name`) VALUES
+(0, 'ap', 'AP'),
+(5, 'unique_visits', 'Unique Portals Visited'),
+(10, 'portals_discovered', 'Portals Discovered'),
+(15, 'xm_collected', 'XM Collected'),
+(20, 'hacks', 'Hacks'),
+(25, 'res_deployed', 'Resonators Deployed'),
+(30, 'links_created', 'Links Created'),
+(35, 'fields_created', 'Control Fields Created'),
+(40, 'mu_captured', 'Mind Units Captured'),
+(45, 'longest_link', 'Longest Link Ever Created'),
+(50, 'largest_field', 'Largest Control Field'),
+(55, 'xm_recharged', 'XM Recharged'),
+(60, 'portals_captured', 'Portals Captured'),
+(65, 'unique_captures', 'Unique Portals Captured'),
+(70, 'res_destroyed', 'Resonators Destroyed'),
+(75, 'portals_neutralized', 'Portals Neutralized'),
+(80, 'links_destroyed', 'Enemy Links Destroyed'),
+(85, 'fields_destroyed', 'Enemy Control Fields Destroyed'),
+(90, 'distance_walked', 'Distance Walked'),
+(95, 'oldest_portal', 'Max Time Portal Held'),
+(100, 'oldest_link', 'Max Time Link Maintained'),
+(105, 'oldest_link_days', 'Max Link Length x Days'),
+(110, 'oldest_field', 'Max Time Field Held'),
+(115, 'largest_field_days', 'Largest Field MUs x Days');
