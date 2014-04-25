@@ -117,12 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			continue;
 
 		$value = filter_var($_REQUEST[$stat], FILTER_SANITIZE_NUMBER_INT);
+		$value = !is_numeric($value) ? 0 : $value;
 
 		$sql = "INSERT INTO Data VALUES('%s', '%s', '%s', %s);";
 		$sql = sprintf($sql, $_SESSION['agent'], $ts, $stat, $value);
 		
 		if (!$mysql->query($sql)) {
-			die(sprintf("%s: %s", $mysql->errno, $mysql->error));
+			debug($sql);
+			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
 	}	
 	
