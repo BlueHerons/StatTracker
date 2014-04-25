@@ -1,6 +1,80 @@
 <?php
 session_start();
 
+class StatTracker {
+
+	static $stats;
+	static $fields;
+	static $predictions;
+
+	public static function getStatsFields() {
+		if (!is_array(self::$fields)) {
+			global $mysql;
+			$sql = "SELECT stat, name FROM Stats ORDER BY `order` ASC;";
+			$res = $mysql->query($sql);
+			if (!is_object($res)) {
+				die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			while ($row = $res->fetch_assoc()) {
+				self::$fields[$row['stat']] = $row['name'];
+			}
+		}
+
+		return self::$fields;
+	}
+
+	public static function getRawStats($agent, $refresh = false) {
+		if (!is_array(self::$stats) || $refresh) {
+			global $mysql;
+			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $agent);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+			}
+			$sql = "SELECT * FROM RawStatsForAgent";
+			$res = $mysql->query($sql);
+			
+			while ($row = $res->fetch_assoc()) {
+				self::$stats[$row['stat']][$row['timepoint']] = $row['value'];
+			}
+
+		}
+
+		return self::$stats;
+	}
+
+	public static function getBadgePredictions($agent, $refresh = false) {
+		if (!is_array(self::$predictions) || $refresh) {
+			global $mysql;
+
+			function badge_sort($a, $b) {
+				return strcmp($a['Badge'], $b['Badge']);
+			}
+
+			foreach (self::getStatsFields() as $stat => $name) {
+				$sql = "CALL GetBadgePrediction('%s');";
+				$sql = sprintf($sql, $stat);
+				if (!$mysql->query($sql)) {
+					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+				}
+
+				$sql = "SELECT * FROM BadgePrediction;";
+				$res = $mysql->query($sql);
+				$row = $res->fetch_assoc();
+
+				if (empty($row['Badge']))
+					continue;
+
+				self::$predictions[$stat] = $row;
+			}
+
+			uksort(self::$predictions, "badge_sort");
+		}
+
+		return self::$predictions;
+	}
+}
+
 function debug($str) {
 	echo "<!--";
 	print_r($str);
@@ -9,178 +83,61 @@ function debug($str) {
 
 $mysql = new mysqli("localhost", "SRStats", "LYdPNrbE3PVTDzVn", "SRStats");
 if ($mysql->connect_errno) {
-	die(sprintf("%s: %s", $mysql->connect_errno, $mysql_connect_error));
+	die(sprintf("%s: %s", $mysql->connect_errno, $mysql->connect_error));
+}
+
+StatTracker::getStatsFields();
+
+$predictions;
+
+if ($_SERVER['REQUEST_METHOD'] == "GET") {
+	$_SESSION['agent'] = filter_var($_REQUEST['agent'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
+	StatTracker::getRawStats($_SESSION['agent']);
+}
+
+if (empty($_SESSION['agent'])) {
+	unset($_SESSION['agent']);
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-	$fields = array();
-	if (isset($_SESSION['agent'])) {
-		$_REQUEST['agent'] = $_SESSION['agent'];
-	}
-
-	foreach ($_REQUEST as $field => $value) {
-		if ($field == "agent") {
-			$fields[$field] = filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
-			$_SESSION['agent'] = $fields[$field];
+	
+	if (!isset($_SESSION['agent'])) {
+		if (!isset($_REQUEST['agent'])) {
+			die("No agent name");
 		}
 		else {
-			$fields[$field] = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+			$_SESSION['agent'] = filter_var($_REQUEST['agent'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
 		}
 	}
+
+	$ts = date("Y-m-d H:i:s");
+
+	foreach (StatTracker::getStatsFields() as $stat => $name) {
+		if (!isset($_REQUEST[$stat]))
+			continue;
+
+		$value = filter_var($_REQUEST[$stat], FILTER_SANITIZE_NUMBER_INT);
+
+		$sql = "INSERT INTO Data VALUES('%s', '%s', '%s', %s);";
+		$sql = sprintf($sql, $_SESSION['agent'], $ts, $stat, $value);
+		
+		if (!$mysql->query($sql)) {
+			die(sprintf("%s: %s", $mysql->errno, $mysql->error));
+		}
+	}	
 	
+	StatTracker::getRawStats($_SESSION['agent'], true);
 
-	$sql = "INSERT INTO AgentStats (%s) VALUES (%s);";
-	$cols = "";
-	$vals = "";
-
-	foreach ($fields as $field => $value) {
-		$cols .= "$field, ";
-		$vals .= "'$value', ";
-	}
-	
-	$cols .= "timestamp";
-	$vals .= "'" . date("Y-m-d H:i:s")  . "'";
-
-	$cols = trim($cols, ' ,');
-	$vals = trim($vals, ' ,');
-
-	$sql = sprintf($sql, $cols, $vals);
-	$mysql->query($sql);
-
-	$sql = "SELECT *
-                FROM (SELECT CAST(timestamp as DATE) `date`,
-                             agent,
-                             ap,
-                             portals_discovered,
-                             unique_visits,
-                             hacks,
-                             res_deployed,
-                             links_created,
-                             fields_created,
-                             xm_recharged,
-                             portals_captured,
-                             unique_captures,
-                             res_destroyed,
-                             oldest_portal
-                      FROM `AgentStats`) stats
-                WHERE `agent` = '". $_SESSION['agent'] ."' AND
-                      NOT EXISTS (SELECT 1
-                                  FROM (SELECT *, CAST(timestamp as DATE) `date2`
-                                        FROM `AgentStats`) stats2
-                                  WHERE stats2.`agent` = stats.`agent` AND
-                                        stats2.date2 = stats.date AND
-                                        stats2.ap > stats.ap
-                                 )
-                ORDER BY `date`;";
-
-	$res = $mysql->query($sql);
-
-	$message = "";
-
-	if ($res->num_rows < 2) {
+	if (sizeof(StatTracker::getRawStats()['ap']) < 2) {
 		$message = "Your stats have been recieved. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
 	}
-	else {
-		$data_points = array();
-		while ($row = $res->fetch_assoc()) {
-			$data_points[] = $row;
-		}
-
-		$deltas = array();
-		$stats = array();
-		$days = 0;
-	
-		// Iterates over the list of fields
-		foreach($data_points[0] as $field => $ignore) {
-			$sumXY = 0;
-			$sumX = 0;
-			$sumY = 0;
-			$sumX2 = 0;
-			$lowest_ts = time();
-			if ($field == "agent" || $field == "timestamp")
-				continue;
-			
-			// Iterates of all values for a field
-			foreach ($data_points as $i => $data) {
-	
-				if ($field == "date") {
-					if ($i == sizeof($data_points) - 1) {
-	
-						$days = strtotime($data[$field]) - $lowest_ts;
-						$days = $days / 86400; // seconds / seconds in a day
-						$days += 1;
-					}
-					else {
-						if (strtotime($data[$field]) < $lowest_ts) {
-							$lowest_ts = strtotime($data[$field]);
-						}
-					}
-				}
-				else {
-					$sumXY = $sumXY + ($data[$field] * ($i + 1));
-					$sumX = $sumX + ($i + 1);
-					$sumY = $sumY + ($data[$field]);
-					$sumX2 = $sumX2 + (($i + 1) * ($i + 1));
-				}
-			}
-	
-			if ($field == "date")
-				continue;
-	
-			$slope = ((sizeof($data_points) * $sumXY) - ($sumX * $sumY)) /
-				 ((sizeof($data_points) * $sumX2) - ($sumX * $sumX));
-	
-			$deltas[$field] = $slope;
-	
-			$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required <= " . $fields[$field] . " ORDER BY amount_required DESC LIMIT 1;";
-			$current_badge = $mysql->query($sql)->fetch_assoc();
-			$sql = "SELECT * FROM Badges WHERE stat = '$field' AND amount_required > " . $fields[$field] . " ORDER BY amount_required ASC LIMIT 1;";
-			$next_badge = $mysql->query($sql)->fetch_assoc();
-	
-	
-			$stats[$field] = array(
-				"name" => "",
-				"current_amount" => $fields[$field],
-				"datapoints" => sizeof($data_points),
-				"days" => $days,
-				"slope" => $slope,
-				"badge_name" => $current_badge['name'],
-				"badge_level" => $current_badge['level'],
-				"badge_next_level" => $next_badge['level'],
-				"badge_next_amount" => $next_badge['amount_required'],
-				"badge_remaining_amount" => ($next_badge['amount_required'] - $fields[$field]),
-				"badge_est_days" => round(($next_badge['amount_required'] - $fields[$field]) / $slope, 0)
-			);
-		}
-?>
-<h2>Results (<?php echo $days; ?> days)</h2>
-	<ul>
-<?php
-	foreach ($deltas as $stat => $amount) {
-		$sql = "SELECT * FROM Badges WHERE stat = '$stat' AND amount_required <= " . $fields[$stat] . " ORDER BY amount_required DESC LIMIT 1;";
-		$current_badge_res = $mysql->query($sql);
-		$sql = "SELECT * FROM Badges WHERE stat = '$stat' AND amount_required > " . $fields[$stat] . " ORDER BY amount_required ASC LIMIT 1;";
-		$next_badge_res = $mysql->query($sql);
-
-		$current_badge = $current_badge_res->fetch_assoc();
-		$next_badge = $next_badge_res->fetch_assoc();
-?>
-		<li><?php echo $stat;?>
-			<ul>
-				<li>Badge Name: <?php echo $current_badge['name'];?></li>
-				<li>Current: <?php echo $current_badge['level'];?></li>
-				<li>Next: <?php echo $next_badge['level'];?></li>
-				<li>Amount left: <?php echo ($next_badge['amount_required'] - $fields[$stat]);?></li>
-				<li>Should take: <?php echo round((($next_badge['amount_required'] - $fields[$stat]) / $amount), 0);?> days (<?php echo $amount;?> / day)</li>
-			</ul>
-		</li>
-<?php
-	}
-?>
-	</ul>
-<?php
-	}
 }
+
+if (isset($_SESSION['agent']) && !empty($_SESSION['agent'])) {
+	$predictions = StatTracker::getBadgePredictions($_SESSION['agent']);
+}
+
+$mysql->close();
 ?>
 <!DOCTYPE html>
 <html>
@@ -191,23 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 </head>
 <body>
 <?php
-$sql = "SHOW FULL COLUMNS FROM AgentStats;";
-$res = $mysql->query($sql);
-
-$fields = array();
-
-while($row = $res->fetch_assoc()) {
-	$type = "";
-	preg_match("#([a-z]+)\(([0-9]+)\)#i", $row['Type'], $type);
-	$fields[] = array(
-		"name" => $row['Field'],
-		"label" => $row['Comment'],
-		"type" => $type[1] == "int" ? "number" : "text",
-		"length" => $type[2]
-	);
-}
-$mysql->close();
-
 if (isset($message) && $message != "") {
 ?>
 	<div id="message">
@@ -215,25 +155,65 @@ if (isset($message) && $message != "") {
 	</div>
 <?php
 }
+
+if (is_array($predictions)) {
+?>
+	<h2><?php echo $_SESSION['agent'];?></h2>
+	<ul id="predictions">
+<?php
+	foreach ($predictions as $prediction) {
+?>
+		<li><?php echo $prediction['Badge'];?> (<?php echo $prediction['Name']; ?>)
+			<ul>
+				<li>Current: <span><?php echo $prediction['Current'];?></span></li>
+				<li>Next: <span><?php echo $prediction['Next'];?></span></li>
+				<li>Remaining: <span><?php echo $prediction['Remaining'];?></span></li>
+				<li>Should take: <span><?php echo $prediction['Days'];?> days</span></li>
+				<li>Historical Rate: <span><?php echo $prediction['Rate'];?> per day</span></li>
+			</ul>
+		</li>
+<?php
+	}
+?>
+	</ul>
+<?php
+}
 ?>
 
 <form method="post">
 	<table>
+		<tr>
+			<td>Agent Name</td>
+			<td><?php
+if (isset($_SESSION['agent'])) {
+	echo "<strong>".$_SESSION['agent']."</strong>";
+}
+else {
+		          ?><input type="text"
+                                   name="agent"
+				   size="15"
+				   maxlength="15" />
+			</td><?php
+}
+?>
+
+		</tr>
 <?php
-foreach ($fields as $field) {
-	if ($field['name'] == "unique_visits") {
+
+foreach (StatTracker::getStatsFields() as $stat => $name) {
+	if ($stat == "unique_visits") {
 		$title = "Discovery";
 	}
-	else if ($field['name'] == "hacks") {
+	else if ($stat == "hacks") {
 		$title = "Building";
 	}
-	else if ($field['name'] == "res_destroyed") {
+	else if ($stat == "res_destroyed") {
 		$title = "Combat";
 	}
-	else if ($field['name'] == "distance_walked") {
+	else if ($stat == "distance_walked") {
 		$title = "Health";
 	}
-	else if ($field['name'] == "oldest_portal") {
+	else if ($stat == "oldest_portal") {
 		$title = "Defense";
 	}
 
@@ -248,26 +228,15 @@ foreach ($fields as $field) {
 
 	
 
-	if ($field['name'] == "timestamp") {
+	if ($stat == "timestamp") {
 	}
 	else {
 ?>
 		<tr>
-			<td><?php echo $field['label'];?></td>
-			<td><?php
-		if (isset($_SESSION['agent']) && ($field['name'] == "agent")) {
-			echo "<strong>".$_SESSION['agent']."</strong>";
-		}
-		else {
-			?><input type="<?php echo $field['type'];?>"
-				   name="<?php echo $field['name']; ?>"
-				   value="<?php echo $field['type'] == "number" ? "0" : "";?>"
-				   <?php echo ($field['type'] == "number") ? "min=\"0\"\n" : "\n";?>
-				   <?php echo ($field['type'] == "number") ? "max=\"".pow(10, $field['length'])."\"" : "maxlength=\"\"";?> />
-<?php
-		}
-?>
-
+			<td><?php echo $name;?></td>
+			<td><input type="number"
+				   name="<?php echo $stat; ?>"
+				   value="" />
 			</td>
 		</tr>
 <?php
@@ -279,4 +248,8 @@ foreach ($fields as $field) {
 		</tr>
 	</table>
 </body>
-</html>
+</html><?php
+if ($_SERVER['REQUEST_METHOD'] == "GET") {
+	unset($_SESSION['agent']);
+}
+?>
