@@ -1,13 +1,12 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
 
-DROP TABLE IF EXISTS `Badges`;
 CREATE TABLE IF NOT EXISTS `Badges` (
   `name` varchar(20) NOT NULL,
   `level` enum('Bronze','Silver','Gold','Platinum','Black','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16') NOT NULL,
   `stat` varchar(20) NOT NULL,
   `amount_required` int(11) NOT NULL,
-  PRIMARY KEY (`name`,`level`)
+  PRIMARY KEY (`name`,`level`),
+  KEY `stat` (`stat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
@@ -82,3 +81,8 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Seer', 'Gold', 'portals_discovered', 200),
 ('Seer', 'Platinum', 'portals_discovered', 500),
 ('Seer', 'Black', 'portals_discovered', 5000);
+
+
+ALTER TABLE `Badges`
+  ADD CONSTRAINT `stat_fk` FOREIGN KEY (`stat`) REFERENCES `Stats` (`stat`);
+
