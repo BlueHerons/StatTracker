@@ -1,0 +1,80 @@
+<html>
+<head>
+	<title>Stat Tracker - Blue Herons Resistance</title>
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+	<link href="style.css" rel="stylesheet" />
+	<meta name="viewport" content="width=409" />
+	<script type="text/javascript" src="//www.google.com/jsapi"></script>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+	<script src="scripts/jquery.tablesorter.min.js"></script>
+	<script src="scripts/stattracker.js"></script>
+	<script>
+	google.load('visualization', '1.0', {'packages':['corechart']});
+
+	function onSignInCallback(authResult) {
+		StatTracker.signinCallback(authResult);
+	}
+
+	$(document).ready(function() {
+		$("#login-dialog").hide();
+		$("#login-dialog").dialog({
+	                autoOpen: false,
+			closeOnEscape: false,
+			dialogClass: "no-close",
+	                modal: true,
+			resizable: false,
+	                width: 400,
+	                height: "auto",
+			title: "Welcome, agent"
+        	});
+
+		StatTracker.pageToLoad = "{{ page }}";
+	});
+
+	</script>
+</head>
+<body>
+	<ul class="tabs">
+		<li class="dashboard">
+			<a href="./dashboard">Dashboard</a>
+		</li>
+		<li class="my-stats">
+			<a href="./my-stats">My Stats</a>
+		</li>
+		<li class="leaderboards">
+			<a href="./leaderboards">Leaderboards</a>
+		</li>
+	</ul>
+
+	<div id="main-content">
+
+	</div>
+
+	<div id="login-dialog">
+		<div id="gConnect">
+			<button class="g-signin"
+				data-scope="https://www.googleapis.com/auth/plus.profile.emails.read"
+				data-clientId="745491520594-v5hudcvndh49r1ould7j8ba6tje1s3nt.apps.googleusercontent.com"
+				data-accesstype="offline"
+				data-callback="onSignInCallback"
+				data-theme="dark"
+				data-cookiepolicy="single_host_origin">
+			</button>
+		</div>
+
+		<div id="login-message"></div>
+
+		<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
+	</div>
+	<script type="text/javascript">
+	(function() {
+		var po = document.createElement('script');
+		po.type = 'text/javascript'; po.async = true;
+		po.src = 'https://plus.google.com/js/client:plusone.js';
+		var s = document.getElementsByTagName('script')[0];
+		s.parentNode.insertBefore(po, s);
+	})();
+	</script>
+</body>
+</html>

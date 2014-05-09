@@ -1,0 +1,82 @@
+{% set agentClass %}
+{% if agent.faction == "R" %}
+resistance-agent{% elseif agent.faction == "E" %}
+enlightened-agent{% endif %}
+{% endset %}
+<div id="message" />
+<div id="badges" />
+<form method="post" action="./my-stats/submit" id="my-stats">
+	<table>
+		<tr>
+			<td>Agent Name</td>
+			<td><span class="{{ agentClass }}">{{ agent.name }}</span></td>
+		</tr>
+{% for stat in stats %}
+	{% set title = "" %}
+	{% if stat.stat == "unique_visits" %}
+		{% set title = "Discovery" %}
+	{% elseif stat.stat == "hacks" %}
+		{% set title = "Building" %}
+	{% elseif stat.stat == "res_destroyed" %}
+		{% set title = "Combat" %}
+	{% elseif stat.stat == "distance_walked" %}
+		{% set title = "Health" %}
+	{% elseif stat.stat == "oldest_portal" %}
+		{% set title = "Defense" %}
+	{% endif %}
+
+{% if title != "" %}
+		<tr>
+			<th colspan="2">{{ title }}</th>
+		</tr>
+	{% endif %}
+		<tr>
+			<td>{{ stat.name }}</td>
+			<td><input type="number" name="{{ stat.stat }}" value="{{ attribute(agent.stats, stat.stat) }}" min="{{ attribute(agent.stats, stat.stat) }}" /></td>
+		</tr>
+{% endfor %}
+		<tr>
+			<td colspan="2"><input type="submit" value="Submit Statistics"/></td>
+		</tr>
+	</table>
+</form>
+<script>
+function onPageLoad() {
+	$("#message").hide();
+	$.ajax({url: StatTracker.baseUrl + "data/badges",
+		dataType: "json",
+		statusCode: {
+			500 : function() {
+				alert("There was an error retrieving your badges.");
+			}
+		},
+		success: function(data) {
+			for (badge in data) {
+				console.log(badge);
+				console.log(badge.replace("_", " "));
+			}
+		}
+	});
+}
+
+$("form#my-stats").submit(function() {
+	$.ajax({
+		type: "POST",
+		url: StatTracker.baseUrl + "my-stats/submit",
+		data: $("form#my-stats").serialize(),
+		dataType: "json",
+		success: function(data) {
+			console.log(data);
+			if (!data.error) {
+				$("#message").html(data.message).show();
+				window.scrollTo(0,0);
+			}
+			else {
+				alert(data.message);
+			}
+		}
+	});
+
+	return false;
+});
+</script>

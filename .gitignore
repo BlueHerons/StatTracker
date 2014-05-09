@@ -1,2 +1,5 @@
 **/*.css
 **/*.swp
+token
+code/credentials.php
+vendor

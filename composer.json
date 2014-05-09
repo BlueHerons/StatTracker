@@ -1,0 +1,8 @@
+{
+    "require": {
+        "silex/silex": "~1.2",
+	"twig/twig": "~1.8",
+	"swiftmailer/swiftmailer": "~5.1.0",
+	"google/apiclient": "~1.0@beta"
+    }
+}

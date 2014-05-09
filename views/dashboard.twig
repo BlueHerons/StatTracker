@@ -1,0 +1,147 @@
+{% set agentClass %}
+{% if agent.faction == "R" %}
+resistance-agent
+{% elseif agent.faction == "E" %}
+enlightened-agent 
+{% endif %}
+{% endset %}
+<div class="dashboard-container">
+	<h2>Welcome, <span class="{{ agentClass }}">{{ agent.name }}</span></h2>
+
+	<div class="breakdown">
+		<h3>AP Breakdown</h3>
+		<div id="ap_breakdown"></div>
+	</div>
+	<div class="predictions">
+{% for stat in stats if stat.graphable %}
+		<div class="prediction {{ stat.stat }}">
+			<h3>{{ stat.name }}</h3>
+			<div class="summary">
+				<img class="current-badge badge-icon" />
+				<div class="next-badge">
+					<img class="badge-icon" />
+					<p class="progress" />
+				</div>
+				<p class="badge-prediction" />
+				<p class="rate" />
+			</div>
+		<div id="graph-{{ stat.stat }}">
+	
+			</div>
+		</div>
+{% endfor %}
+	</div>
+</div>
+<script>
+function onPageLoad() {
+	$.ajax({url: StatTracker.baseUrl + "data/ap/breakdown",
+		dataType: "json",
+		statusCode: {
+			500: function() {
+				alert("There was an error retrieving the graph for AP Breakdown.");
+			}
+		},
+		success: function(data) {
+			dataTable = google.visualization.arrayToDataTable(data);
+			new google.visualization.PieChart(document.getElementById('ap_breakdown')).draw(
+				dataTable, {
+				fontSize: '14',
+				height: 200,
+				width: 300,
+				chartArea: {
+					top: 0,
+					left: 0,
+					width: 300,
+					height: 200
+				},
+				backgroundColor: '#000000',
+				legend: {
+					textStyle: {
+						color: '#00bbb1',
+					}
+				}
+			});
+		}
+	});
+{% for stat in stats if stat.graphable %}
+	$.ajax({url: StatTracker.baseUrl + "data/{{ stat.stat }}/graph",
+		dataType: "json",
+		statusCode: {
+			500: function() {
+				alert("There was an error retrieving the graph for {{ stat.name }}.");
+			}
+		},
+		success: function(data) {
+			dataTable = google.visualization.arrayToDataTable(data);
+			new google.visualization.LineChart(document.getElementById('graph-{{ stat.stat }}')).draw(
+				dataTable, {
+				backgroundColor: '#000000',
+				height: 400,
+				pointSize: 5,
+				width: 500,
+				chartArea: {
+					top: 10,
+					left: 60,
+					width: 500
+				},
+				legend: {
+					position: "in",
+					textStyle: {
+						color: '#00bbb1'
+					}
+				},
+				series: {
+					0: {
+						color: '{{ faction_color }}'
+					},
+					1: { 
+						pointSize: 0
+					}
+				},
+				hAxis: {
+					title: "Date",
+					slantedText: true,
+					textStyle: {
+						color: '#00bbb1'
+					},
+					titleTextStyle: {
+						color: '#00bbb1'
+					}
+				},
+				vAxis: {
+					title: "{{ stat.name }}",
+					textStyle : {
+						color: '#00bbb1'
+					},
+					titleTextStyle: {
+						color: '#00bbb1'
+					}
+				}
+			});
+		}
+	});
+	$.ajax({url: StatTracker.baseUrl + "data/{{ stat.stat }}/prediction",
+		dataType: "json",
+		statusCode: {
+			500: function() {
+				alert("There was an error retrieving the graph for {{ stat.name }}.");
+			}
+		},
+		success: function (data) {
+			if (data.badge != "" && data.badge != "Level") {
+				$(".prediction.{{ stat.stat }} img.current-badge").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.current.toLowerCase() + ".png");
+				$(".prediction.{{ stat.stat }} .next-badge img").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.next.toLowerCase() + ".png");
+				$(".prediction.{{ stat.stat }} .next-badge img").css("opacity", data.progress / 1.5);
+				$(".prediction.{{ stat.stat }} .next-badge .progress").html((data.progress * 100) +"%");
+				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.amount_remaining + " " + data.unit + " remaining for the " + data.next + " badge.<p/>At your average rate of " + data.rate + " per day, that should take " + data.days_remaining + " days");
+			}
+			else {
+				$(".prediction.{{ stat.stat }} .summary .current-badge").hide();
+				$(".prediction.{{ stat.stat }} .summary .next-badge").hide();
+				$(".prediction.{{ stat.stat }} .rate").html("Your average rate is " + data.rate + " " + data.unit + " per day.");
+			}
+		}
+	});
+{% endfor %}
+}
+</script>

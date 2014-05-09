@@ -1,0 +1,60 @@
+<div class="quick-links">
+{% for stat in stats %}
+	<a href="#{{ stat.stat }}">{{ stat.name }}</a> {% if not loop.last %} &nbsp;|&nbsp; {% endif %}
+{% endfor %}
+</div>
+
+{% for stat in stats %}
+	<div class="leaderboard {{ stat.stat }}">
+		<a name="{{ stat.stat }}">
+			<h3>{{ stat.name }}</h3>
+		</a>
+		<table>
+			<thead>
+			<tr>
+				<th>Rank</th>
+				<th>Agent</th>
+				<th>Amount</th>
+				<th>Updated</th>
+			</tr>
+			</thead>
+			<tbody>
+
+			</tbody>
+		</table>
+	</div>
+{% endfor %}
+</div>
+<script>
+function onPageLoad() {
+	highlightAgent = "{{ agent.name }}";
+{% for stat in stats %}
+	$.ajax({url: StatTracker.baseUrl + "data/{{ stat.stat }}/leaderboard",
+		dataType: "json",
+		statusCode: {
+			500: function() {
+				alert("There was an error retrieving the leaderboard for {{ stat.name }}.");
+			}
+		},
+		success: function(data) {
+			$.each(data, function() {
+				updated = (this.age == 0) ? "Today" :
+						(this.age == 1) ? "Yesterday" : this.age + " days ago";
+				row = "<tr><td>" + this.rank + "</td><td>" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
+
+				if ($(".leaderboard.{{ stat.stat }} table tbody tr").length == 0) {
+					$(".leaderboard.{{ stat.stat }} table tbody").append(row);
+				}
+				else {
+					$(".leaderboard.{{ stat.stat }} table tbody tr:last").after(row);
+				}
+
+				if (highlightAgent == this.agent) {
+					$(".leaderboard.{{ stat.stat }} table tbody tr:last").addClass("highlight");
+                                }
+			});
+		}
+	});
+{% endfor %}
+}
+</script>
