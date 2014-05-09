@@ -45,20 +45,24 @@ function onPageLoad() {
 			dataTable = google.visualization.arrayToDataTable(data);
 			new google.visualization.PieChart(document.getElementById('ap_breakdown')).draw(
 				dataTable, {
+				backgroundColor: '#000000',
 				fontSize: '14',
-				height: 200,
-				width: 300,
+				height: 400,
+				width: 600,
 				chartArea: {
 					top: 0,
 					left: 0,
 					width: 300,
-					height: 200
+					height: 300
 				},
-				backgroundColor: '#000000',
 				legend: {
+					position: 'bottom',
 					textStyle: {
 						color: '#00bbb1',
 					}
+				},
+				tooltip: {
+					text: 'value'
 				}
 			});
 		}
