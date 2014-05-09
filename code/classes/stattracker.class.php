@@ -220,7 +220,7 @@ class StatTracker {
 		$data = array();
 		$data[] = array("Action", "AP Gained");
 		while ($row = $res->fetch_assoc()) {
-			$data[] = array($row['group'], $row['ap_gained']);
+			$data[] = array($row['name'], $row['ap_gained']);
 		}
 
 	 	return json_encode($data, JSON_NUMERIC_CHECK);
