@@ -10,5 +10,7 @@ CREATE TABLE IF NOT EXISTS `Data` (
   KEY `stat` (`stat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+
 ALTER TABLE `Data`
   ADD CONSTRAINT `Data_ibfk_1` FOREIGN KEY (`stat`) REFERENCES `Stats` (`stat`);
+

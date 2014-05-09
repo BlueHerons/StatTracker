@@ -1,4 +1,5 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `Badges`;
 CREATE TABLE IF NOT EXISTS `Badges` (
@@ -49,14 +50,14 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Level', '6', 'ap', 300000),
 ('Level', '7', 'ap', 600000),
 ('Level', '8', 'ap', 1200000),
-('Level', '9', 'ap', 2500000),
-('Level', '10', 'ap', 5000000),
-('Level', '11', 'ap', 7500000),
-('Level', '12', 'ap', 10000000),
-('Level', '13', 'ap', 15000000),
-('Level', '14', 'ap', 20000000),
-('Level', '15', 'ap', 30000000),
-('Level', '16', 'ap', 50000000),
+('Level', '9', 'ap', 2400000),
+('Level', '10', 'ap', 4000000),
+('Level', '11', 'ap', 6000000),
+('Level', '12', 'ap', 8400000),
+('Level', '13', 'ap', 12000000),
+('Level', '14', 'ap', 17000000),
+('Level', '15', 'ap', 24000000),
+('Level', '16', 'ap', 40000000),
 ('Liberator', 'None', 'portals_captured', 0),
 ('Liberator', 'Bronze', 'portals_captured', 100),
 ('Liberator', 'Silver', 'portals_captured', 1000),
@@ -94,5 +95,7 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Seer', 'Platinum', 'portals_discovered', 500),
 ('Seer', 'Onyx', 'portals_discovered', 5000);
 
+
 ALTER TABLE `Badges`
   ADD CONSTRAINT `stat_fk` FOREIGN KEY (`stat`) REFERENCES `Stats` (`stat`);
+

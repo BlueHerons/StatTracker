@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `Agent` (
   `faction` enum('E','R') NOT NULL DEFAULT 'R',
   `email` varchar(255) NOT NULL,
   `auth_code` varchar(6) NOT NULL,
-  PRIMARY KEY (`agent`),
-  UNIQUE KEY `email` (`email`),
-  KEY `faction` (`faction`)
+  PRIMARY KEY (`email`),
+  KEY `faction` (`faction`),
+  KEY `agent` (`agent`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
