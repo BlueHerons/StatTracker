@@ -132,7 +132,10 @@ function onPageLoad() {
 			}
 		},
 		success: function (data) {
-			if (data.badge != "" && data.badge != "Level") {
+			if (data.rate == null) {
+				$(".prediction.{{ stat.stat }}").hide();
+			}
+			else if (data.badge != "" && data.badge != "Level") {
 				$(".prediction.{{ stat.stat }} img.current-badge").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.current.toLowerCase() + ".png");
 				$(".prediction.{{ stat.stat }} .next-badge img").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.next.toLowerCase() + ".png");
 				$(".prediction.{{ stat.stat }} .next-badge img").css("opacity", data.progress / 1.5);
