@@ -2,9 +2,9 @@
 session_start();
 
 require_once("code/credentials.php");
-require_once("code/classes/stattracker.class.php");
-require_once("code/classes/authentication.php");
-require_once("code/classes/agent.class.php");
+require_once("code/StatTracker.class.php");
+require_once("code/Authentication.class.php");
+require_once("code/Agent.class.php");
 require_once("vendor/autoload.php");
 
 $mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
