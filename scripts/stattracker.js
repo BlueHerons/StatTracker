@@ -1,5 +1,5 @@
 var StatTracker = new function() {
-	this.baseUrl = "http://api.johnluetke.net/ingress/stats/test/StatTracker/";
+	this.baseUrl = "http://api.johnluetke.net/ingress/stats/";
 	this.pageToLoad = "dashboard";
 	this.message = null;
 
