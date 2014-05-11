@@ -356,4 +356,12 @@ class StatTracker {
 		return json_encode($results, JSON_NUMERIC_CHECK);
 	}
 }
+
+class Stat {
+	public $stat;
+	public $name;
+	public $unit;
+	public $graphable;
+}
+
 ?>
