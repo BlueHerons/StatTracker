@@ -3,7 +3,6 @@ session_start();
 
 require_once("code/credentials.php");
 require_once("code/StatTracker.class.php");
-require_once("code/Authentication.class.php");
 require_once("code/Agent.class.php");
 require_once("vendor/autoload.php");
 
@@ -24,7 +23,7 @@ $action = $_REQUEST['action'];
 
 switch ($action) {
 	case "login":
-		$response = new AuthResponse();
+		$response = new stdClass();
 
 		if (empty($_SESSION['token'])) {
 			$code = file_get_contents("php://input");

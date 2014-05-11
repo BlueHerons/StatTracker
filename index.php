@@ -3,7 +3,6 @@ session_start();
 
 require_once("code/credentials.php");
 require_once("code/StatTracker.class.php");
-require_once("code/Stat.class.php");
 require_once("code/Agent.class.php");
 require_once("vendor/autoload.php");
 
