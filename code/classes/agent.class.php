@@ -42,33 +42,6 @@ class Agent {
 		}
 	}
 
-	/**
-	 * Returns an agent object for the current session, or false
-	 *
-	 * @return Agent object, or false.
-	 */
-	public static function getAgent() {
-		$agent = "";
-		if (isset($_SESSION['agent'])) {
-			$agent = new Agent($_SESSION['agent']);
-		}
-		else if (isset($_COOKIE['agent'])) {
-			$agent = filter_var($_COOKIE['agent'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
-			$agent = new Agent($agent);
-		}
-		else if (isset($_REQUEST['agent'])) {
-			$agent = filter_var($_REQUEST['agent'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
-			$agent = new Agent($agent);
-		}
-		else {
-			echo("no agent");
-			return false;
-		}
-
-		setcookie('agent', $agent->name, time() + (60 * 60 * 24 * 30), "/ingress/", "", false, true);
-		return $agent;
-	}
-
 	public static function getStatsFields() {
 		return StatTracker::getStats();
 	}
@@ -92,6 +65,7 @@ class Agent {
 		$agent = self::sanitizeAgentName($agent);
 
 		$this->name = $agent;
+		$this->GetLevel();
 	}
 
 	/**
@@ -142,6 +116,38 @@ class Agent {
 		}
 
 		return $name;
+	}
+
+	/**
+	 * Gets the current level for the Agent. Considers AP and badges.
+	 *
+	 * @returns int current Agent level
+	 */
+	public function getLevel() {
+		if (!isset($this->level)) {
+			global $mysql;
+
+			$sql = "CALL GetRawStatsForAgent('%s');";
+			$sql = sprintf($sql, $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = "CALL GetCurrentLevel();";
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = "SELECT level FROM CurrentLevel;";
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->level = $res->fetch_assoc()['level'];
+		}
+
+		return $this->level;
 	}
 
 	public function getSubmissionCount() {
