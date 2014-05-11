@@ -1,9 +1,6 @@
 <?php
 class Agent {
 
-	private $rawStats;
-	private static $predictions;
-
 	public $name;
 	public $faction;
 	public $level;
@@ -45,10 +42,6 @@ class Agent {
 		}
 	}
 
-	public static function getStatsFields() {
-		return StatTracker::getStats();
-	}
-	
 	/**
 	 * Constructs a new Agent object for the given agent name. This object will include all information
 	 * publicly visible from the "Agent Profile" screen in Ingress: Agent name, AP, and badges earned.
@@ -281,54 +274,6 @@ class Agent {
 		}
 
 		return $this->badges;
-	}
-
-	public function getRawStats($refresh = false) {
-		if (!is_array($this->rawStats) || $refresh) {
-			global $mysql;
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-			}
-			$sql = "SELECT * FROM RawStatsForAgent";
-			$res = $mysql->query($sql);
-			
-			while ($row = $res->fetch_assoc()) {
-				$this->rawStats[$row['stat']][$row['timepoint']] = array(
-					"date" => $row['date'],
-					"value" => $row['value']
-				);
-			}
-
-		}
-
-		return $this->rawStats;
-	}
-
-	public function getPredictions($refresh = false) {
-		if (!is_array(self::$predictions) || $refresh) {
-			global $mysql;
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			foreach (self::getStatsFields() as $stat => $name) {
-				$sql = sprintf("CALL GetBadgePrediction('%s');", $stat);
-				if (!$mysql->query($sql)) {
-					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-				}
-
-				$sql = "SELECT * FROM BadgePrediction";
-				$res2 = $mysql->query($sql);
-			
-				while ($row2 = $res2->fetch_assoc()) {
-					self::$predictions[$row2['Stat']] = $row2;
-				}
-			}
-		}
-
-		return self::$predictions;
 	}
 }
 ?>
