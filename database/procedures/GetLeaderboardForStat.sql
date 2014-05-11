@@ -1,5 +1,3 @@
-CREATE DEFINER=`SRStats`@`localhost` PROCEDURE `GetLeaderboardForStat`(IN `stat_name` VARCHAR(20))
-    READS SQL DATA
 BEGIN
 
 DROP TABLE IF EXISTS `LeaderboardForStat`;
@@ -14,12 +12,15 @@ CREATE TEMPORARY TABLE LeaderboardForStat
                    DATEDIFF(CURDATE(), CAST(d.`timestamp` AS DATE)) `age`
               FROM Data d 
                    INNER JOIN (SELECT `agent`,
-                                      MAX(`value`) `value`
-                                 FROM `Data`
-                                WHERE `stat` = stat_name AND
-                                      `value` > 0
-                             GROUP BY `agent`
-                             ORDER BY `value` DESC) q1
+                                      `value`
+                                 FROM `Data` d
+                           INNER JOIN (SELECT MAX(timestamp) `timestamp`
+                                         FROM `Data`
+                                     GROUP BY agent) q0
+                                 ON d.timestamp = q0.timestamp
+                                WHERE stat = stat_name AND
+                                      value > 0
+                             ORDER BY value DESC) q1
                          ON d.`agent` = q1.`agent` AND
                             d.`value` = q1.`value`) q2,
                    (SELECT @rank := 0) r
