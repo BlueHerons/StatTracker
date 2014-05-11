@@ -42,7 +42,11 @@ enlightened-agent{% endif %}
 </form>
 <script>
 function onPageLoad() {
-	$("#message").hide();
+	if (StatTracker.message == "" || StatTracker.message == null)
+		$("#message").hide();
+	else
+		$("#message").html(StatTracker.message).show();
+
 	$.ajax({url: StatTracker.baseUrl + "data/badges",
 		dataType: "json",
 		statusCode: {

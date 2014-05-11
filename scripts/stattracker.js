@@ -1,5 +1,7 @@
 var StatTracker = new function() {
-	this.baseUrl = "http://api.johnluetke.net/ingress/stats/";
+	this.baseUrl = "http://api.johnluetke.net/ingress/stats/test/StatTracker/";
+	this.pageToLoad = "dashboard";
+	this.message = null;
 
 	this.hideLogout = function() {
 		$("#gDisconnect").hide();
@@ -59,6 +61,11 @@ var StatTracker = new function() {
 				else if (result.status == "okay") {
 					modal = $("#login-dialog").dialog("isOpen");
 					if (modal) $("#login-dialog").dialog("close");
+					if (result.agent.numSubmissions == 0) {
+						StatTracker.message = "Stats must be submitted before this tool can be utilized";
+						StatTracker.pageToLoad = "my-stats";
+					}
+
 					StatTracker.loadPage();
 			}
 			},

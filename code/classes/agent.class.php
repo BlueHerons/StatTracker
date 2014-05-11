@@ -6,8 +6,11 @@ class Agent {
 
 	public $name;
 	public $faction;
+	public $level;
 	public $stats;
 	public $badges;
+
+	public $numSubmissions;
 
 	/**
 	 * Returns the registered Agent for the given email address. If no agent is found, a generic
@@ -65,7 +68,11 @@ class Agent {
 		$agent = self::sanitizeAgentName($agent);
 
 		$this->name = $agent;
-		$this->GetLevel();
+
+		if ($this->isValid()) {
+			$this->GetLevel();
+			$this->getSubmissionCount();
+		}
 	}
 
 	/**
@@ -150,23 +157,31 @@ class Agent {
 		return $this->level;
 	}
 
+	/**
+	 * Retrieves the number of times (once / day) that an Agent has submitted data
+	 *
+	 * @return int number of submissions
+	 */
 	public function getSubmissionCount() {
 		global $mysql;
 		
-		$sql = "CALL GetRawStatsForAgent('%s');";
-		$sql = sprintf($sql, $this->name);
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+		if (!isset($this->numSubmissions)) {
+			$sql = "CALL GetRawStatsForAgent('%s');";
+			$sql = sprintf($sql, $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+	
+			$sql = "SELECT COUNT(*) count FROM RawStatsForAgent WHERE stat = 'ap';";
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+	
+			$this->numSubmissions = $res->fetch_assoc()['count'];
 		}
 
-		$sql = "SELECT COUNT(*) count FROM RawStatsForAgent WHERE stat = 'ap';";
-		$res = $mysql->query($sql);
-		if (!$res) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-
-		return $res->fetch_assoc()['count'];
-		
+		return $this->numSubmissions;
 	}
 
 	/**
