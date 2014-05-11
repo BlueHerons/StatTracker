@@ -139,7 +139,7 @@ function onPageLoad() {
 				$(".prediction.{{ stat.stat }} img.current-badge").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.current.toLowerCase() + ".png");
 				$(".prediction.{{ stat.stat }} .next-badge img").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.next.toLowerCase() + ".png");
 				$(".prediction.{{ stat.stat }} .next-badge img").css("opacity", data.progress / 1.5);
-				$(".prediction.{{ stat.stat }} .next-badge .progress").html((data.progress * 100) +"%");
+				$(".prediction.{{ stat.stat }} .next-badge .progress").html(Math.floor(data.progress * 100) +"%");
 				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.amount_remaining + " " + data.unit + " remaining for the " + data.next + " badge.<p/>At your average rate of " + data.rate + " per day, that should take " + data.days_remaining + " days");
 			}
 			else {
