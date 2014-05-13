@@ -1,0 +1,12 @@
+.git
+.gitignore
+.rsync_ignore
+LICENSE
+Makefile
+README
+
+composer.*
+*.css
+*.less
+database/
+
