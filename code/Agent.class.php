@@ -7,7 +7,7 @@ class Agent {
 	public $stats;
 	public $badges;
 
-	public $numSubmissions;
+	public $submissions;
 
 	/**
 	 * Returns the registered Agent for the given email address. If no agent is found, a generic
@@ -64,7 +64,7 @@ class Agent {
 
 		if ($this->isValid()) {
 			$this->GetLevel();
-			$this->getSubmissionCount();
+			$this->getSubmissions();
 		}
 	}
 
@@ -156,24 +156,7 @@ class Agent {
 	 * @return int number of submissions
 	 */
 	public function getSubmissionCount() {
-		global $mysql;
-		
-		if (!isset($this->numSubmissions)) {
-			$sql = "CALL GetRawStatsForAgent('%s');";
-			$sql = sprintf($sql, $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-	
-			$sql = "SELECT COUNT(*) count FROM RawStatsForAgent WHERE stat = 'ap';";
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-	
-			$this->numSubmissions = $res->fetch_assoc()['count'];
-		}
-
+		$this->getSubmissions();
 		return $this->numSubmissions;
 	}
 
@@ -274,6 +257,39 @@ class Agent {
 		}
 
 		return $this->badges;
+	}
+
+	/**
+	 * Gets the date and timestamps for an Agent's stat submissions. This is limited to the latest
+	 * submission on a given day -- multiple submission per day are counted as 1 submissions.
+	 *
+	 * @return array of objects containing a date and a timestamp
+	 */
+	public function getSubmissions() {
+		if (!is_array($this->submissions)) {
+			global $mysql;
+
+			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = "SELECT DISTINCT date, timestamp FROM RawStatsForAgent ORDER BY date DESC;";
+			$res = $mysql->query($sql);
+
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->submissions = array();
+			while ($row = $res->fetch_assoc()) {
+				$this->submissions[] = $row;
+			}
+			$this->numSubmissions = sizeof($this->submissions);
+		}
+
+		return $this->submissions;
+
 	}
 }
 ?>
