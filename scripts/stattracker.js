@@ -35,7 +35,8 @@ var StatTracker = new function() {
 			this.processSignin(authResult);
 		}
 		else if (authResult['error']) {
-			if (authResult['error'] == "immediate_failed") {
+			if (authResult['error'] == "immediate_failed" ||
+			    authResult['error'] == "user_signed_out") {
 				this.showLoginDialog();
 			}
 			else {
