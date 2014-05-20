@@ -9,13 +9,14 @@ require_once("vendor/autoload.php");
 const ENL_GREEN = "#00F673";
 const RES_BLUE = "#00C4FF";
 
+use Symfony\Component\HttpFoundation\Response;
+
 $mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysql->connect_errno) {
 	die(sprintf("%s: %s", $mysql->connect_errno, $mysql->connect_error));
 }
 
 $app = new Silex\Application();
-$app['debug'] = true;
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
 	'twig.path' => __DIR__ . "/views",
 ));
@@ -25,13 +26,25 @@ if (isset($_SESSION['agent'])) {
 	$agent = unserialize($_SESSION['agent']);
 }
 
-$app->get('/', function () use ($app) {
-	return $app->redirect('dashboard');
-});
-
-$app->get('/terms-of-use', function () use ($app) {
-	return $app['twig']->render("terms.html");
-});
+// Default handler. Will match any alphnumeric string. If the page doesn't exist,
+// 404
+$app->get('/{page}', function ($page) use ($app) {
+	if ($page == "dashboard" ||
+	    $page == "my-stats" ||
+	    $page == "leaderboards") {
+	
+		return $app['twig']->render("index.twig", array(
+			"page" => $page
+		));
+	}
+	else if ($page == "terms-of-use") {
+		return $app['twig']->render("terms.html");
+	}
+	else {
+		$app->abort(404);
+	}
+})->assert('page', '[a-z-]+')
+  ->value('page', 'dashboard');
 
 $app->get('/page/{page}', function($page) use ($app, $agent) {
 	if ($page == "my-stats") {
@@ -77,26 +90,8 @@ $app->get('/data/{stat}/{view}', function($stat, $view) use ($app, $agent) {
 			
 });
 
-$app->get('/dashboard', function () use ($app) {
-	return $app['twig']->render("index.twig", array(
-		"page" => "dashboard"
-	));
-});
-
-$app->get('/my-stats', function () use ($app) {
-	return $app['twig']->render("index.twig", array(
-		"page" => "my-stats"
-	));
-});
-
 $app->post('/my-stats/submit', function () use ($app, $agent) {
 	return StatTracker::handleAgentStatsPost($agent, $_POST);
-});
-
-$app->get('/leaderboards', function () use ($app) {
-	return $app['twig']->render("index.twig", array(
-		"page" => "leaderboards"
-	));
 });
 
 $app->run();
