@@ -227,18 +227,6 @@ class StatTracker {
 	}
 
 	/**
-	 * Gets the current badges for the specified agent
-	 *
-	 * @param Agent the agent
-	 *
-	 * @return JSON string
-	 */
-	public static function getBadgesJSON($agent) {
-		$data = $agent->getBadges();
-		return json_encode($data);
-	}
-
-	/**
 	 * Gets the prediction line for a stat. If the stat has a badge associated with it, this will also
 	 * retrieve the badge name, current level, next level, and percentage complete to attain the next
 	 * badge level.

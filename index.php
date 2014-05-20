@@ -46,8 +46,13 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 });
 
 $app->get('/data/badges', function() use ($app, $agent) {
-	$data = StatTracker::getBadgesJSON($agent);
-	return $data;
+	$data = $agent->getBadges();
+	return json_encode($data);
+});
+
+$app->get('/data/submissions', function() use ($app, $agent) {
+	$data = $agent->getSubmissions();
+	return json_encode($data);
 });
 
 $app->get('/data/{stat}/{view}', function($stat, $view) use ($app, $agent) {
