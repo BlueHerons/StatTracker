@@ -46,12 +46,13 @@ var StatTracker = new function() {
 	};
 
 	this.processSignin = function(authResult) {
-		$.ajax({url: StatTracker.baseUrl + "auth.php?action=login",
+		$.ajax({url: StatTracker.baseUrl + "authenticate?action=login",
 			type: 'POST',
 			data: authResult.code,
 			contentType: 'application/octet-stream; charset=utf-8',
 			success: function(result) {
-				result = JSON.parse(result);
+				if (typeof result !== "object")
+					result = JSON.parse(result);
 				if (result.status == "registration_required") {
 					$("#login-dialog").dialog("open");
 					message = "An email has been sent to ";

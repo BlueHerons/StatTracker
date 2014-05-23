@@ -4,6 +4,7 @@ session_start();
 require_once("code/credentials.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
+require_once("code/Authentication.class.php");
 require_once("vendor/autoload.php");
 
 const ENL_GREEN = "#00F673";
@@ -17,6 +18,7 @@ if ($mysql->connect_errno) {
 }
 
 $app = new Silex\Application();
+$app['debug'] = true;
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
 	'twig.path' => __DIR__ . "/views",
 ));
@@ -28,7 +30,7 @@ if (isset($_SESSION['agent'])) {
 
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,
 // 404
-$app->get('/{page}', function ($page) use ($app) {
+$app->match('/{page}', function ($page) use ($app) {
 	if ($page == "dashboard" ||
 	    $page == "my-stats" ||
 	    $page == "leaderboards") {
@@ -39,6 +41,18 @@ $app->get('/{page}', function ($page) use ($app) {
 	}
 	else if ($page == "terms-of-use") {
 		return $app['twig']->render("terms.html");
+	}
+	else if ($page == "authenticate") {
+		switch ($_REQUEST['action']) {
+			case "login":
+				return $app->json(Authentication::getInstance()->login());
+				break;
+			case "logout":
+				return $app->json(Authentication::getInstance()->logout());
+				break;
+			default:
+				$app->abort(405, "Invalid Authentication action");
+		}
 	}
 	else {
 		$app->abort(404);
