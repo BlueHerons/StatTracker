@@ -32,7 +32,7 @@ enlightened-agent{% endif %}
 	{% endif %}
 		<tr>
 			<td>{{ stat.name }}</td>
-			<td><input type="number" name="{{ stat.stat }}" value="{{ attribute(agent.stats, stat.stat) }}" min="{{ attribute(agent.stats, stat.stat) }}" /></td>
+			<td><input type="number" name="{{ stat.stat }}" value="{{ attribute(agent.stats, stat.stat) }}" /></td>
 		</tr>
 {% endfor %}
 		<tr>
