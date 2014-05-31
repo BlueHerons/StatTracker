@@ -28,6 +28,41 @@ var StatTracker = new function() {
 		$("#login-dialog").dialog("open");
 	}
 
+	this.authenticate = function() {
+		$.ajax({url: StatTracker.baseUrl + "authenticate?action=login",
+			type: 'GET',
+			contentType: 'json',
+			success: function(result) {
+				if (typeof result !== "object")
+					result = JSON.parse(result);
+				if (result.status == "authentication_required") {
+					modal = $("#login-dialog").dialog("isOpen");
+					if (!modal) $("#login-dialog").dialog("open");
+					$("#login-buttons .google a").attr("href", result.url);
+				}
+				else if (result.status == "registration_required") {
+					$("#login-dialog").dialog("open");
+					message = "An email has been sent to ";
+					message += result.email;
+					message += " with additional steps for registering.";
+					$("#login-message").html(message);
+				}
+				else if (result.status == "okay") {
+					modal = $("#login-dialog").dialog("isOpen");
+					if (modal) $("#login-dialog").dialog("close");
+					if (result.agent.numSubmissions == 0) {
+						StatTracker.message = "Stats must be submitted before this tool can be utilized";
+						StatTracker.pageToLoad = "my-stats";
+					}
+
+					StatTracker.loadPage();
+			}
+			},
+			processData: false
+		});
+
+	}
+
 	this.signinCallback = function(authResult) {
 		this.hideLogout();
 		if (authResult['access_token']) {
