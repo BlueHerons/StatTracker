@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 class Authentication {
 
 	private static $instance;
@@ -108,7 +106,9 @@ class Authentication {
 		$this->client->setApplicationName(GOOGLE_APP_NAME);
 		$this->client->setClientId(GOOGLE_CLIENT_ID);
 		$this->client->setClientSecret(GOOGLE_CLIENT_SECRET);
-		$this->client->setRedirectUri('postmessage');
+		$this->client->setRedirectUri(GOOGLE_REDIRECT_URL);
+
+		$this->client->setScopes("https://www.googleapis.com/auth/plus.profile.emails.read");
 
 		$this->plus = new Google_Service_Plus($this->client);
 	}
@@ -116,13 +116,12 @@ class Authentication {
 	public function login() {
 		$response = new StdClass();
 		$response->error = false;
+
+		// Kick off the OAuth process
 		if (empty($_SESSION['token'])) {
-			$token = $this->getToken();
-			if (!$token) {
-				$response->error = true;
-				$response->message = $token->getMessage();
-				return $response;
-			}
+			$response->status = "authentication_required";
+			$response->url = $this->client->createAuthUrl();
+			return $response;
 		}
 
 		$this->client->setAccessToken($_SESSION['token']);
@@ -154,7 +153,7 @@ class Authentication {
 			$response->email = $email_address;
 			$agent = Agent::lookupAgentName($email_address);
 			if (empty($agent->name) || $agent->name == "Agent") {
-				// They need to registera
+				// They need to register
 				self::generateAuthCode($email_address);
 				self::sendAuthCode($email_address);
 				$response->status = "registration_required";
@@ -174,6 +173,19 @@ class Authentication {
 		}
 	}
 
+	public function callback() {
+		if (!isset($_REQUEST['code'])) {
+			throw new Exception("Invalid callback parameters");
+		}
+
+		$token = $this->getToken();
+		if (!$token) {
+			throw new Exception("No token available");
+		}
+	
+		return true;
+	}
+
 	public function logout() {
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
@@ -190,7 +202,14 @@ class Authentication {
 	}
 
 	private function getToken() {
-		$code = file_get_contents("php://input");
+		$code = "";
+		if (isset($_REQUEST['code'])) {
+			$code = $_REQUEST['code'];
+		}
+		else {
+			$code = file_get_contents("php://input");
+		}
+
 		$this->client->authenticate($code);
 
 		try {

@@ -30,6 +30,7 @@
         	});
 
 		StatTracker.pageToLoad = "{{ page }}";
+		StatTracker.authenticate();
 	});
 
 	</script>
@@ -52,29 +53,15 @@
 	</div>
 
 	<div id="login-dialog">
-		<div id="gConnect">
-			<button class="g-signin"
-				data-scope="https://www.googleapis.com/auth/plus.profile.emails.read"
-				data-clientId="745491520594-v5hudcvndh49r1ould7j8ba6tje1s3nt.apps.googleusercontent.com"
-				data-accesstype="offline"
-				data-callback="onSignInCallback"
-				data-theme="dark"
-				data-cookiepolicy="single_host_origin">
-			</button>
+		<div id="login-buttons">
+			<div class="google">
+				<a href=""><span>Sign in with Google</span></a>
+			</div>
 		</div>
 
 		<div id="login-message"></div>
 
 		<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
 	</div>
-	<script type="text/javascript">
-	(function() {
-		var po = document.createElement('script');
-		po.type = 'text/javascript'; po.async = true;
-		po.src = 'https://plus.google.com/js/client:plusone.js';
-		var s = document.getElementsByTagName('script')[0];
-		s.parentNode.insertBefore(po, s);
-	})();
-	</script>
 </body>
 </html>
