@@ -45,13 +45,13 @@ class Authentication {
 		if ($num_rows != 1) {
 			$stmt = $mysql->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?);");
 			$stmt->bind_param("ss", $email_address, $code);
-		}
 
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-		}
+			if (!$stmt->execute()) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
+			}
 
-		$stmt->close();
+			$stmt->close();
+		}
 	}
 
 	/**

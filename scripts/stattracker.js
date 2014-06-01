@@ -41,9 +41,10 @@ var StatTracker = new function() {
 					$("#login-buttons .google a").attr("href", result.url);
 				}
 				else if (result.status == "registration_required") {
+					$("#login-buttons").hide();
 					$("#login-dialog").dialog("open");
 					message = "An email has been sent to ";
-					message += result.email;
+					message += "<strong>" + result.email + "</strong>";
 					message += " with additional steps for registering.";
 					$("#login-message").html(message);
 				}
