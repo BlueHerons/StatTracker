@@ -17,9 +17,9 @@ enlightened-agent
 		<div class="prediction {{ stat.stat }}">
 			<h3>{{ stat.name }}</h3>
 			<div class="summary">
-				<img class="current-badge badge-icon" />
+				<div class="current-badge badge-icon-75"></div>
 				<div class="next-badge">
-					<img class="badge-icon" />
+					<div class="badge-icon-75" />
 					<p class="progress" />
 				</div>
 				<p class="badge-prediction" />
@@ -136,9 +136,11 @@ function onPageLoad() {
 				$(".prediction.{{ stat.stat }}").hide();
 			}
 			else if (data.badge != "" && data.badge != "Level") {
-				$(".prediction.{{ stat.stat }} img.current-badge").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.current.toLowerCase() + ".png");
-				$(".prediction.{{ stat.stat }} .next-badge img").attr("src", StatTracker.baseUrl + "resources/images/" + data.badge.toLowerCase().replace(" ", "") + "_" + data.next.toLowerCase() + ".png");
-				$(".prediction.{{ stat.stat }} .next-badge img").css("opacity", data.progress / 1.5);
+				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.badge.toLowerCase().replace(" ", ""));
+				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.current.toLowerCase());
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.badge.toLowerCase().replace(" ", ""));
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.next.toLowerCase());
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").css("opacity", data.progress / 1.5);
 				$(".prediction.{{ stat.stat }} .next-badge .progress").html(Math.floor(data.progress * 100) +"%");
 				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.amount_remaining + " " + data.unit + " remaining for the " + data.next + " badge.<p/>At your average rate of " + data.rate + " per day, that should take " + data.days_remaining + " days");
 			}
