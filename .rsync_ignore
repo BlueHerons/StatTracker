@@ -6,7 +6,6 @@ Makefile
 README
 
 composer.*
-*.css
 *.less
 database/
 
