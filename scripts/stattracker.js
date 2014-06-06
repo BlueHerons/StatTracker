@@ -28,6 +28,10 @@ var StatTracker = new function() {
 		$("#login-dialog").dialog("open");
 	}
 
+	this.showLoading = function(selector) {
+		$(selector).html("<img src='./resources/images/ADA.gif' />");
+	}
+
 	this.authenticate = function() {
 		$.ajax({url: StatTracker.baseUrl + "authenticate?action=login",
 			type: 'GET',
