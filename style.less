@@ -6,6 +6,9 @@
 @resistance-color: rgba(0, 196, 255, 1);
 @enlightened-color: rgba(2, 246, 115, 1);
 
+@upcoming-badge-height: 85;
+@upcoming-badge-width: 265;
+
 body {
 	background: rgba(0, 0, 0, 1);
 	color: @text-color;
@@ -117,10 +120,42 @@ h2, h3 {
 .resistance-agent { color: @resistance-color; }
 .enlightened-agent { color: @enlightened-color; }
 
+.badge {
+	p {
+		display: none;
+	}
+}
+
+.badge {
+	
+	.badge-image.progress-overlay {
+		position: relative;
+
+		p {
+			display: block;
+			position: absolute;
+			top: 0px;
+			left: 10px;
+			color: white;
+			font-size: 24px;
+			font-weight: bold;
+	
+			span:nth-child(2) {
+				display: none;
+			}
+		}
+	}
+
+	div.badge-name {
+		display: none;
+	}
+}
+
 .badge-icon-75 {
 	height: 75px;
 	width: 75px;
 	background-image: url("./resources/images/badges_75.png");
+	background-position: -375px -150px;
 }
 
 .badge-icon-75.builder.bronze   { background-position: 0px 0px; }
@@ -189,9 +224,6 @@ h2, h3 {
 .badge-icon-75.seer.platinum { background-position: -450px -225px; }
 .badge-icon-75.seer.onyx     { background-position: -450px -300px; }
 
-
-
-
 .loading {
 	height: 220px;
 	width: 220px;
@@ -199,7 +231,31 @@ h2, h3 {
 	margin: 0 auto;
 	margin-top: 50px;
 }
+
 .small-text { font-size: 10pt; }
+
+.upcoming-badge {
+	color: white;
+	font-size: 20px;
+	padding: 5px 0;
+	height: @upcoming-badge-height;
+
+	.badge-icon {
+		float: left;
+	}
+
+	.time-remaining {
+		float: right;
+		padding-top: @upcoming-badge-height / 3.3;
+		padding-left: 10px;
+	}
+}
+
+#upcoming_badges {
+	margin: 0 auto;
+	width: @upcoming-badge-width;
+}
+
 
 #main-content {
 

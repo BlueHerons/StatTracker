@@ -8,6 +8,22 @@ enlightened-agent
 <div class="dashboard-container">
 	<h2>Welcome, <span class="{{ agentClass }}">{{ agent.name }}</span></h2>
 
+	<div class="upcoming">
+		<h3>Upcoming Badges</h3>
+		<div id="upcoming_badges">
+			<div class="upcoming-badge">
+				<div class="badge">
+					<div class="badge-name"/>
+					<div class="badge-image progress-overlay">
+						<div class="badge-icon badge-icon-75" data-progress=""/>
+						<p class="percent-complete"><span/> <span>complete</span></p>
+					</div>
+				</div>
+				<div class="time-remaining"><span></span> days remaining</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="breakdown">
 		<h3>AP Breakdown</h3>
 		<div id="ap_breakdown"></div>
@@ -34,6 +50,28 @@ enlightened-agent
 </div>
 <script>
 function onPageLoad() {
+	$.ajax({url: StatTracker.baseUrl + "data/badges/upcoming",
+		dataType: "json",
+		statusCode: {
+			500: function() {
+				alert("There was an error retrieving your upcoming badges");
+			}
+		},
+		success: function(data) {
+			tmpl = $(".upcoming-badge").clone();
+			$("#upcoming_badges").html("");
+			data.forEach(function(badge, i, arr) {
+				html = tmpl.clone();
+				$(html).find(".badge-icon").addClass(badge.name)
+				                           .addClass(badge.level)
+				                           .css("opacity", badge.progress / 1.5);
+				$(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
+				$(html).find(".time-remaining span").html(badge.days_remaining);
+				$("#upcoming_badges").append(html);
+			});
+		}
+	});
+
 	$.ajax({url: StatTracker.baseUrl + "data/ap/breakdown",
 		dataType: "json",
 		statusCode: {
