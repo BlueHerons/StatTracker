@@ -80,9 +80,17 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 	));
 });
 
-$app->get('/data/badges', function() use ($app, $agent) {
-	$data = $agent->getBadges();
-	return json_encode($data);
+$app->get('/data/badges/{what}', function($what) use ($app, $agent) {
+	switch ($what) {
+		case "upcoming":
+			$data = $agent->getUpcomingBadges();
+			break;
+		case "current":
+		default:
+			$data = $agent->getBadges();
+			break;
+	}
+	return $app->json($data);
 });
 
 $app->get('/data/submissions', function() use ($app, $agent) {

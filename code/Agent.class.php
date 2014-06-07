@@ -260,6 +260,55 @@ class Agent {
 	}
 
 	/**
+	 * Gets the next X  badges for the agent, ordered by least time remaining
+	 *
+	 * @param int $limit number of badges to return, default 3
+	 *
+	 * @return array of badges
+	 */
+	public function getUpcomingBadges($limit = 3) {
+		if (!is_array($this->upcoming_badges)) {
+			global $mysql;
+
+			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+	
+			$sql = sprintf("CALL GetBadgeOverview();", $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = sprintf("SELECT * FROM BadgeOverview WHERE days_remaining > 0 ORDER BY days_remaining ASC LIMIT %s;", $limit);
+			$res = $mysql->query($sql);
+
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			if (!is_array($this->upcoming_badges)) {
+				$this->upcoming_badges = array();
+			}
+			
+			while ($row = $res->fetch_assoc()) {
+				$badge = str_replace(" ", "_", $row['badge']);
+				$badge = strtolower($badge);
+
+				$this->upcoming_badges[] = array(
+					"name" => $badge,
+					"level" => strtolower($row['next']),
+					"progress" => $row['progress'],
+					"days_remaining" => $row['days_remaining']
+				);
+			}
+
+		}
+
+		return $this->upcoming_badges;
+	}
+
+	/**
 	 * Gets the date and timestamps for an Agent's stat submissions. This is limited to the latest
 	 * submission on a given day -- multiple submission per day are counted as 1 submissions.
 	 *
