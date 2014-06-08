@@ -8,25 +8,27 @@ enlightened-agent
 <div class="dashboard-container">
 	<h2>Welcome, <span class="{{ agentClass }}">{{ agent.name }}</span></h2>
 
-	<div class="upcoming">
-		<h3>Upcoming Badges</h3>
-		<div id="upcoming_badges">
-			<div class="upcoming-badge">
-				<div class="badge">
-					<div class="badge-name"/>
-					<div class="badge-image progress-overlay">
-						<div class="badge-icon badge-icon-75" data-progress=""/>
-						<p class="percent-complete"><span/> <span>complete</span></p>
+	<div class="container">
+		<div class="item">
+			<h3>Upcoming Badges</h3>
+			<div id="upcoming_badges">
+				<div class="upcoming-badge">
+					<div class="badge">
+						<div class="badge-name"/>
+						<div class="badge-image progress-overlay">
+							<div class="badge-icon badge-icon-75" data-progress=""/>
+							<p class="percent-complete"><span/> <span>complete</span></p>
+						</div>
 					</div>
+					<div class="time-remaining"><span></span> days remaining</div>
 				</div>
-				<div class="time-remaining"><span></span> days remaining</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="breakdown">
-		<h3>AP Breakdown</h3>
-		<div id="ap_breakdown"></div>
+		<div class="item">
+			<h3>AP Breakdown</h3>
+			<div id="ap_breakdown"></div>
+		</div>
 	</div>
 	<div class="predictions">
 {% for stat in stats if stat.graphable %}
@@ -86,18 +88,15 @@ function onPageLoad() {
 				backgroundColor: '#000000',
 				fontSize: '14',
 				height: 400,
-				width: 600,
+				width: 500,
 				chartArea: {
 					top: 0,
-					left: 0,
+					left: 100,
 					width: 300,
 					height: 300
 				},
 				legend: {
-					position: 'bottom',
-					textStyle: {
-						color: '#00bbb1',
-					}
+					position: 'none'
 				},
 				tooltip: {
 					text: 'value'
