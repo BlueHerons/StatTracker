@@ -150,6 +150,38 @@ class Agent {
 		return $this->level;
 	}
 
+	/** 
+	 * Gets the remaining requirements that the agent must fulfill to get to the next level. 
+	 *
+	 */
+	public function getRemainingLevelRequirements() {
+		if (!isset($this->remaining_requirements)) {
+			global $mysql;
+
+			$sql = "CALL GetRawStatsForAgent('%s');";
+			$sql = sprintf($sql, $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = "CALL GetRemainingLevelRequirements();";
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$sql = "SELECT * FROM RemainingLevelRequirements;";
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->level = $res->fetch_assoc();
+		}
+
+		return $this->level;
+
+	}
+
 	/**
 	 * Retrieves the number of times (once / day) that an Agent has submitted data
 	 *
@@ -266,7 +298,7 @@ class Agent {
 	 *
 	 * @return array of badges
 	 */
-	public function getUpcomingBadges($limit = 3) {
+	public function getUpcomingBadges($limit = 4) {
 		if (!is_array($this->upcoming_badges)) {
 			global $mysql;
 

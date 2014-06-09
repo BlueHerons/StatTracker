@@ -98,6 +98,19 @@ $app->get('/data/submissions', function() use ($app, $agent) {
 	return json_encode($data);
 });
 
+$app->get('/data/level/{what}', function ($what) use ($app, $agent) {
+	switch ($what) {
+		case "remaining":
+			$data = $agent->getRemainingLevelRequirements();
+			break;
+		default:
+			$data = $agent->getLevel();
+			break;
+	}
+
+	return $app->json($data);
+});
+
 $app->get('/data/{stat}/{view}', function($stat, $view) use ($app, $agent) {
 	$data = "";
 	switch ($view) {
