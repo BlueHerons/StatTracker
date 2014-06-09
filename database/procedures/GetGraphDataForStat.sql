@@ -25,6 +25,7 @@ CREATE TEMPORARY TABLE GraphDataForStat
       FROM RawStatForAgent r 
 RIGHT JOIN Dates dl 
            ON dl.date = r.date
-WHERE dl.date <= @maxDate;
+WHERE dl.date >= @minDate AND
+      dl.date <= @maxDate;
 
 END
