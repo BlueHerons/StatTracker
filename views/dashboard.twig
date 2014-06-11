@@ -64,7 +64,7 @@ function onPageLoad() {
 			$("#upcoming_badges").html("");
 			data.forEach(function(badge, i, arr) {
 				html = tmpl.clone();
-				$(html).find(".badge-icon").addClass(badge.name)
+				$(html).find(".badge-icon").addClass(badge.name.toLowerCase().replace("_", ""))
 				                           .addClass(badge.level)
 				                           .css("opacity", badge.progress / 1.5);
 				$(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
