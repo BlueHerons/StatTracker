@@ -13,7 +13,7 @@
 			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="alltime">All-time</span>&nbsp;|&nbsp; 
 			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="weekly">This week</span>
 		</div>
-		<table>
+		<table class="tablesorter">
 			<thead>
 			<tr>
 				<th>Rank</th>
@@ -71,6 +71,7 @@ function onPageLoad() {
 						$(".leaderboard." + stat + " table tbody tr:last").addClass("highlight");
 	                                }
 				});
+				$(".leaderboard." + stat + " table").tablesorter();
 			}
 		});
 	}
