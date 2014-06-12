@@ -127,12 +127,9 @@ class Authentication {
 		$this->client->setAccessToken($_SESSION['token']);
 
 		if ($this->client->isAccessTokenExpired()) {
-			$token = $this->getToken();
-			if (!$token) {
-				$response->error = true;
-				$response->message = $token->getMessage();
-				return $response;
-			}
+			$response->status = "authentication_required";
+			$response->url = $this->client->createAuthUrl();
+			return $response;
 		}
 
 		try {
@@ -210,9 +207,8 @@ class Authentication {
 			$code = file_get_contents("php://input");
 		}
 
-		$this->client->authenticate($code);
-
 		try {
+			$this->client->authenticate($code);
 			$_SESSION['token'] = $this->client->getAccessToken();
 		}
 		catch (Exception $e) {
