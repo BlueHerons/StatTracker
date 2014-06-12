@@ -318,12 +318,23 @@ class StatTracker {
 	 * Generates JSON formatted data for a leaderboard
 	 *
 	 * @param string $stat the stat to generate the leaderboard for
+	 * @param string #when the timeframe to retrieve the leaderboard for
 	 *
 	 * @return string JSON string
 	 */
-	public static function getLeaderboardJSON($stat) {
+	public static function getLeaderboardJSON($stat, $when) {
 		global $mysql;
-		$sql = sprintf("CALL GetLeaderboardForStat('%s');", $stat);
+		switch ($when) {
+			case "weekly":
+				$thisweek = date("Y-m-d", strtotime('last sunday', strtotime('tomorrow')));
+				$sql = sprintf("CALL GetWeeklyLeaderboardForStat('%s', '%s');", $stat, $thisweek);
+				break;
+			case "alltime":
+			default:
+				$sql = sprintf("CALL GetLeaderboardForStat('%s');", $stat);
+				break;
+		}
+
 		if (!$mysql->query($sql)) {
 			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 		}

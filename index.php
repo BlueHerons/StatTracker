@@ -111,14 +111,14 @@ $app->get('/data/level/{what}', function ($what) use ($app, $agent) {
 	return $app->json($data);
 });
 
-$app->get('/data/{stat}/{view}', function($stat, $view) use ($app, $agent) {
+$app->get('/data/{stat}/{view}/{when}', function($stat, $view, $when) use ($app, $agent) {
 	$data = "";
 	switch ($view) {
 		case "breakdown":
 			$data = StatTracker::getAPBreakdownJSON($agent);
 			break;
 		case "leaderboard":
-			$data = StatTracker::getLeaderboardJSON($stat);	
+			$data = StatTracker::getLeaderboardJSON($stat, $when);	
 			break;
 		case "prediction":
 			$data = StatTracker::getPredictionJSON($agent, $stat);
@@ -130,8 +130,7 @@ $app->get('/data/{stat}/{view}', function($stat, $view) use ($app, $agent) {
 	}
 
 	return $data;
-			
-});
+})->value('when', 'all');
 
 $app->post('/my-stats/submit', function () use ($app, $agent) {
 	return StatTracker::handleAgentStatsPost($agent, $_POST);

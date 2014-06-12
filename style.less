@@ -235,6 +235,10 @@ h2, h3 {
 	}
 }
 
+.leaderboard-selector {
+	margin-bottom: 18px;
+}
+
 .level-icon-75 {
 	height: 75px;
 	width: 75px;
@@ -283,12 +287,31 @@ h2, h3 {
 .level-icon-110.l15 { background-position: -1540px 0px; }
 .level-icon-110.l16 { background-position: -1650px 0px; }
 
+.link {
+	text-decoration: underline;
+}
+.link.active {
+	color: white;
+	font-weight: bold;
+	text-decoration: none;
+}
+.link.active:hover { cursor: default; }
+.link:hover { cursor: pointer; }
+
 .loading {
+	display: block;
 	height: 220px;
 	width: 220px;
 	background: url("./resources/images/ADA.gif") no-repeat;
+	background-position: center;
 	margin: 0 auto;
 	margin-top: 50px;
+}
+
+ .loading.110 {
+	height: 110px;
+	width: 110px;
+	background-size: 110px 110px;
 }
 
 .small-text { font-size: 10pt; }
