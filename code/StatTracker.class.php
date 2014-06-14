@@ -11,7 +11,7 @@ class StatTracker {
 	public static function getStats() {
 		if (!is_array(self::$fields)) {
 			global $mysql;
-			$sql = "SELECT stat, name, unit, graph FROM Stats ORDER BY `order` ASC;";
+			$sql = "SELECT stat, name, unit, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
 			$res = $mysql->query($sql);
 			if (!is_object($res)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
@@ -23,6 +23,7 @@ class StatTracker {
 				$stat->name = $row['name'];
 				$stat->unit = $row['unit'];
 				$stat->graphable = $row['graph'];
+				$stat->leaderboard = $row['leaderboard'];
 				self::$fields[$row['stat']] = $stat;
 			}
 		}
@@ -357,10 +358,23 @@ class StatTracker {
 }
 
 class Stat {
+
 	public $stat;
 	public $name;
 	public $unit;
 	public $graphable;
-}
+	public $leaderboard;
 
+	public function hasAllTimeLeaderboard() {
+		return ($this->leaderboard & 0x1) == 1;
+	}
+
+	public function hasMonthlyLeaderboard() {
+		return ($this->leaderboard & 0x2) == 2;
+	}
+
+	public function hasWeeklyLeaderboard() {
+		return ($this->leaderboard & 0x4) == 4;
+	}
+}
 ?>

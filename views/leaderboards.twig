@@ -10,8 +10,13 @@
 			<h3>{{ stat.name }}</h3>
 		</a>
 		<div class="leaderboard-selector">
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="alltime">All-time</span>&nbsp;|&nbsp; 
+{% if stat.hasAllTimeLeaderboard() %}
+			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="alltime">All-time</span>
+{% endif %}
+{% if stat.hasWeeklyLeaderboard() %}
+			&nbsp;|&nbsp;
 			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="weekly">This week</span>
+{% endif %}
 		</div>
 		<table class="tablesorter">
 			<thead>
