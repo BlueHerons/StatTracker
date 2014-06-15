@@ -63,7 +63,8 @@ class Agent {
 		$this->name = $agent;
 
 		if ($this->isValid()) {
-			$this->GetLevel();
+			$this->getLevel();
+			$this->getLatestStat('ap');
 			$this->getSubmissions();
 		}
 	}
