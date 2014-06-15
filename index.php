@@ -76,6 +76,7 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 	return $app['twig']->render($page.".twig", array(
 		"agent" => $agent,
 		"stats" => StatTracker::getStats(),
+		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
 	));
 });

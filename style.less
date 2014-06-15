@@ -1,10 +1,9 @@
-@leaderboard-hover-color: rgba(244, 207, 71, .5);
-
 @title-color: rgba(255, 219, 84, 1);
 @header-color: rgba(244, 207, 71, 1);
 @text-color: rgba(4, 234, 245, 1);
 @resistance-color: rgba(0, 196, 255, 1);
 @enlightened-color: rgba(2, 246, 115, 1);
+@leaderboard-hover-color: rgba(244, 207, 71, .5);
 
 @upcoming-badge-height: 85;
 @upcoming-badge-width: 265;
@@ -79,6 +78,18 @@ body {
 			background: fadeout(@text-color, 65%);
 		}
 	}
+}
+
+img.badge-icon {
+	width: 75px;
+	height: 75px;
+	vertical-align: middle;
+}
+
+img.small-badge-icon {
+	width: 60px;
+	height: 60px;
+	vertical-align: middle;
 }
 
 .summary {
@@ -409,6 +420,25 @@ h2, h3 {
 
 }
 
+#my-stats {
+	input[type="number"] {
+		background-color: black;
+		border: 0;
+		color: @header-color;
+		font-family: "Coda";
+		font-size: 12pt;
+		text-align: right;
+	}
+
+	input[type="number"][value=""] {
+		border: 1px solid red;
+	}
+
+	input[name="ap"] {
+		font-size: 14pt;
+	}
+}
+
 .leaderboard {
 	display: inline-block;
 	vertical-align: top;
@@ -439,6 +469,39 @@ h2, h3 {
 
 		tr:hover td, tr.highlight {
 			background-color: @leaderboard-hover-color;
+		}
+	}
+}
+
+#agent-info {
+	color: @header-color;
+	display: block;
+	margin: 0 auto;
+	padding: 25px 0;
+	position: relative;
+	text-align: left;
+	width: 390px;
+
+	.avatar {
+		display: inline-block;
+		width: 110px;
+		height: 110px;
+	}
+
+	.about {
+		display: inline-block;
+		padding-left: 12px;
+		position: absolute;
+		top: 25px;
+		width: 265px;
+
+		.name, .level {
+			font-size: 1.5em;
+		}
+
+		.ap {
+			border-top: 5px solid @header-color;
+			font-size: 1.3em;
 		}
 	}
 }
