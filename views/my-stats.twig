@@ -1,17 +1,17 @@
-{% set agentClass %}
-{% if agent.faction == "R" %}
-resistance-agent{% elseif agent.faction == "E" %}
-enlightened-agent{% endif %}
-{% endset %}
 <div id="message" />
 <div id="badges" />
 <form method="post" action="./my-stats/submit" id="my-stats">
+	<div id="agent-info">
+		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
+		<div class="about">
+			<div class="name {{ faction_class }}">{{ agent.name }}</div>
+			<div class="level">LVL <span>{{ agent.level }}</span></div>
+			<div class="ap"><input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') }}" min="{{ attribute(agent.stats, "ap") }}"/> AP</div>
+		</div>
+		<div class="badges" />
+	</div>
 	<table>
-		<tr>
-			<td>Agent Name</td>
-			<td><span class="{{ agentClass }}">{{ agent.name }}</span></td>
-		</tr>
-{% for stat in stats %}
+{% for stat in stats if stat.stat != "ap" %}
 	{% set title = "" %}
 	{% if stat.stat == "unique_visits" %}
 		{% set title = "Discovery" %}
@@ -56,8 +56,18 @@ function onPageLoad() {
 		},
 		success: function(data) {
 			for (badge in data) {
-				console.log(badge);
-				console.log(badge.replace("_", " "));
+				if (badge == "level") continue;
+				name = badge.replace("_", " ");
+				name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+				key = badge.replace("_", "");
+				level = data[badge];
+				name += " (" + level.charAt(0).toUpperCase() + level.substr(1) + ")";
+				url = StatTracker.baseUrl + "resources/images/" + key + "_" + level + ".png";
+				img = $(document.createElement("img")).attr("src", url)
+				                                      .attr("alt", name)
+				                                      .attr("title", name)
+                                                                      .addClass("small-badge-icon");
+				$(".badges").append(img);
 			}
 		}
 	});

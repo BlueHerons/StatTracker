@@ -23,26 +23,6 @@ body {
 		border: 2px solid rgba(0, 216, 225, 1);
 	}
 
-	table {
-		margin-left: auto;
-		margin-right: auto;
-		width: 360px;
-
-		th {
-			text-align: left;
-			color: @header-color;
-
-			background: rgba(148,124,43,1);/* Old Browsers */
-			background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
-			background: -webkit-gradient(left top, right top, color-stop(0%, rgba(146,124,43,1)), color-stop(100%, rgba(241,231,103,0)));/* Chrome,Safari4+ */
-			background: -webkit-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Chrome10+,Safari5.1+ */
-			background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
-			background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
-			background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
-			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
-		}
-	}
-
 	form {
 		input[type="submit"] {
 			background: rgba(0, 89, 81, 1);
@@ -420,7 +400,27 @@ h2, h3 {
 
 }
 
-#my-stats {
+form#my-stats {
+	table {
+		margin-left: auto;
+		margin-right: auto;
+		width: 390px;
+
+		th {
+			color: @header-color;
+			text-align: left;
+
+			background: rgba(148,124,43,1);/* Old Browsers */
+			background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
+			background: -webkit-gradient(left top, right top, color-stop(0%, rgba(146,124,43,1)), color-stop(100%, rgba(241,231,103,0)));/* Chrome,Safari4+ */
+			background: -webkit-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Chrome10+,Safari5.1+ */
+			background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
+			background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
+			background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
+			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
+		}
+	}
+
 	input[type="number"] {
 		background-color: black;
 		border: 0;
@@ -432,10 +432,6 @@ h2, h3 {
 
 	input[type="number"][value=""] {
 		border: 1px solid red;
-	}
-
-	input[name="ap"] {
-		font-size: 14pt;
 	}
 }
 
@@ -484,8 +480,6 @@ h2, h3 {
 
 	.avatar {
 		display: inline-block;
-		width: 110px;
-		height: 110px;
 	}
 
 	.about {
@@ -502,6 +496,13 @@ h2, h3 {
 		.ap {
 			border-top: 5px solid @header-color;
 			font-size: 1.3em;
+
+			input {
+				font-size: 14pt;
+				padding: 0;
+				text-align: left;
+				width: 115px;
+			}
 		}
 	}
 }
