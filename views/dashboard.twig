@@ -73,7 +73,12 @@ function onPageLoad() {
 				                           .addClass(badge.level)
 				                           .css("opacity", badge.progress / 1.5);
 				$(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
-				$(html).find(".time-remaining span").html(badge.days_remaining);
+				if (badge.days_remaining == null) {
+					$(html).find(".time-remaining").remove();
+				}
+				else {
+					$(html).find(".time-remaining span").html(badge.days_remaining);
+				}
 				$("#upcoming_badges").append(html);
 			});
 		}

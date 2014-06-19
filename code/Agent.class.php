@@ -313,7 +313,7 @@ class Agent {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 
-			$sql = sprintf("SELECT * FROM BadgeOverview WHERE days_remaining > 0 ORDER BY days_remaining ASC LIMIT %s;", $limit);
+			$sql = sprintf("SELECT * FROM BadgeOverview WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
 			$res = $mysql->query($sql);
 
 			if (!$res) {
