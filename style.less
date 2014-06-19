@@ -109,6 +109,13 @@ h2, h3 {
 	font-weight: bold;
 }
 
+table {
+	th {
+		color: @header-color;
+		text-align: left;
+	}
+}
+
 .resistance-agent { color: @resistance-color; }
 .enlightened-agent { color: @enlightened-color; }
 
@@ -409,13 +416,8 @@ form#my-stats {
 		width: 440px;
 
 		th {
-			color: @header-color;
-			text-align: left;
-
 			background: rgba(148,124,43,1);/* Old Browsers */
 			background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
-			background: -webkit-gradient(left top, right top, color-stop(0%, rgba(146,124,43,1)), color-stop(100%, rgba(241,231,103,0)));/* Chrome,Safari4+ */
-			background: -webkit-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Chrome10+,Safari5.1+ */
 			background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
 			background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
 			background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
@@ -446,6 +448,11 @@ form#my-stats {
 	table {
 		border-spacing: 0px;
 		text-align: left;
+		width: 100%;
+
+		th {
+			cursor: pointer;
+		}
 
 		tr {
 			background: none;
@@ -454,10 +461,6 @@ form#my-stats {
 				padding-right: 10px;
 			}
 
-		}
-
-		th {
-			cursor: pointer;
 		}
 
 		th, td {
