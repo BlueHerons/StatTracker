@@ -3,9 +3,10 @@
 .rsync_ignore
 LICENSE
 Makefile
-README
+README.md
+token
 
 composer.*
-*.less
 database/
-
+*.less
+*.sh
