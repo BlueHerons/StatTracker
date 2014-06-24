@@ -7,7 +7,7 @@ require_once("code/Agent.class.php");
 require_once("code/Authentication.class.php");
 require_once("vendor/autoload.php");
 
-const ENL_GREEN = "#00F673";
+const ENL_GREEN = "#2BED1B";
 const RES_BLUE = "#00BFFF";
 
 use Symfony\Component\HttpFoundation\Response;
