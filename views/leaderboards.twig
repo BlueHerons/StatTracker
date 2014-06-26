@@ -15,7 +15,9 @@
 {% endif %}
 {% if stat.hasWeeklyLeaderboard() %}
 			&nbsp;|&nbsp;
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="weekly">This week</span>
+			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="this-week">This week</span>
+			&nbsp;|&nbsp;
+			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="last-week">Last week</span>
 {% endif %}
 		</div>
 		<table class="tablesorter">
