@@ -176,11 +176,10 @@ class Agent {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 
-			$this->level = $res->fetch_assoc();
+			$this->remaining_requirements = $res->fetch_assoc();
 		}
 
-		return $this->level;
-
+		return $this->remaining_requirements;
 	}
 
 	/**
