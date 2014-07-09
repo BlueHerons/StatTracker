@@ -47,6 +47,8 @@ function onPageLoad() {
 	else
 		$("#message").html(StatTracker.message).show();
 
+	$("input[type='number']").focus(function(e) { $(e.target).select().one("mouseup", function(f) { f.preventDefault(); }); });
+
 	$.ajax({url: StatTracker.baseUrl + "data/badges",
 		dataType: "json",
 		statusCode: {
