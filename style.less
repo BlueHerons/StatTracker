@@ -410,10 +410,12 @@ table {
 
 form#my-stats {
 	table {
+		clear: both;
 		font-size: 1em;
 		margin-left: auto;
 		margin-right: auto;
-		width: 440px;
+		max-width: 440px;
+		width: 95%;
 
 		th {
 			background: rgba(148,124,43,1);/* Old Browsers */
@@ -423,6 +425,10 @@ form#my-stats {
 			background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
 			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
 		}
+	}
+
+	td:nth-child(2) {
+		text-align: right;
 	}
 
 	input[type="number"] {
@@ -436,6 +442,10 @@ form#my-stats {
 
 	input[type="number"][value=""] {
 		border: 1px solid red;
+	}
+
+	input[type="submit"] {
+		margin-top: 20px;
 	}
 }
 
@@ -476,24 +486,19 @@ form#my-stats {
 
 #agent-info {
 	color: @header-color;
-	display: block;
 	margin: 0 auto;
-	padding: 25px 0;
+	max-width: 440px;
+	padding: 15px 0 10px 0;
 	position: relative;
 	text-align: left;
-	width: 390px;
+	width: 95%;
 
 	.avatar {
-		display: inline-block;
+		float: left;
+		margin-right: 12px;
 	}
 
 	.about {
-		display: inline-block;
-		padding-left: 12px;
-		position: absolute;
-		top: 25px;
-		width: 265px;
-
 		.name, .level {
 			font-size: 1.5em;
 		}
