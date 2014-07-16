@@ -1,3 +1,5 @@
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetGraphDataForStat`(IN `statName` VARCHAR(20))
+    READS SQL DATA
 BEGIN
 
 SET @minDate = CURDATE();
