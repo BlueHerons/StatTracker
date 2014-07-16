@@ -256,20 +256,7 @@ class StatTracker {
 			$res = $mysql->query($sql);
 			$row = $res->fetch_assoc();
 
-			$data->stat = $row['Stat'];
-			$data->name = $row['Name'];
-			$data->unit = $row['unit'];
-			$data->badge = $row['Badge'];
-			$data->current = $row['Current'];
-			$data->next = $row['Next'];
-			$data->progress = $row['progress'];
-			$data->amount_remaining = $row['Remaining'];
-			$data->silver_remaining = $row['silver_remaining'];
-			$data->gold_remaining = $row['gold_remaining'];
-			$data->platinum_remaining = $row['platinum_remaining'];
-			$data->onyx_remaining = $row['onyx_remaining'];
-			$data->days_remaining = $row['Days'];
-			$data->rate = $row['slope'];
+			$data = self::buildPredictionResponse($row);
 		}
 
 		return json_encode($data, JSON_NUMERIC_CHECK);
@@ -295,7 +282,16 @@ class StatTracker {
 		if (!$mysql->query($sql)) {
 			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
-		
+	
+		$sql = "SELECT * FROM BadgePrediction;";
+		$res = $mysql->query($sql);
+
+		if (!$res) {
+			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+		}
+	
+		$prediction = self::buildPredictionResponse($res->fetch_assoc());
+
 		$sql = "SELECT * FROM GraphDataForStat;";
 		$res = $mysql->query($sql);
 
@@ -303,16 +299,20 @@ class StatTracker {
 			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
 		
-		$data = array();
+		$graph = array();
 		while ($row = $res->fetch_assoc()) {
-			if (sizeof($data) == 0) {
-				$data[] = array_keys($row);
+			if (sizeof($graph) == 0) {
+				$graph[] = array_keys($row);
 			}
 				
-			$data[] = array_values($row);
+			$graph[] = array_values($row);
 		}
 
-		return json_encode($data, JSON_NUMERIC_CHECK);
+		$response = new stdClass();
+		$response->prediction = $prediction;
+		$response->graph = $graph;
+
+		return json_encode($response, JSON_NUMERIC_CHECK);
 	}
 
 	/**
@@ -358,6 +358,27 @@ class StatTracker {
 		}
 
 		return json_encode($results, JSON_NUMERIC_CHECK);
+	}
+
+	private function buildPredictionResponse($row) {
+		$data = new stdClass();
+
+		$data->stat = $row['Stat'];
+		$data->name = $row['Name'];
+		$data->unit = $row['unit'];
+		$data->badge = $row['Badge'];
+		$data->current = $row['Current'];
+		$data->next = $row['Next'];
+		$data->progress = $row['progress'];
+		$data->amount_remaining = $row['Remaining'];
+		$data->silver_remaining = $row['silver_remaining'];
+		$data->gold_remaining = $row['gold_remaining'];
+		$data->platinum_remaining = $row['platinum_remaining'];
+		$data->onyx_remaining = $row['onyx_remaining'];
+		$data->days_remaining = $row['Days'];
+		$data->rate = $row['slope'];
+
+		return $data;
 	}
 }
 

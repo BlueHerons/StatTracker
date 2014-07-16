@@ -123,7 +123,25 @@ function onPageLoad() {
 			}
 		},
 		success: function(data) {
-			dataTable = google.visualization.arrayToDataTable(data);
+			if (data.prediction.rate == null) {
+				$(".prediction.{{ stat.stat }}").hide();
+			}
+			else if (data.prediction.badge != "" && data.prediction.badge != "Level") {
+				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
+				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.prediction.current.toLowerCase());
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.prediction.next.toLowerCase());
+				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").css("opacity", data.prediction.progress / 1.5);
+				$(".prediction.{{ stat.stat }} .next-badge .progress").html(Math.floor(data.prediction.progress * 100) +"%");
+				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days");
+			}
+			else {
+				$(".prediction.{{ stat.stat }} .summary .current-badge").hide();
+				$(".prediction.{{ stat.stat }} .summary .next-badge").hide();
+				$(".prediction.{{ stat.stat }} .rate").html("Your average rate is " + data.prediction.rate + " " + data.prediction.unit + " per day.");
+			}
+
+			dataTable = google.visualization.arrayToDataTable(data.graph);
 			new google.visualization.LineChart(document.getElementById('graph-{{ stat.stat }}')).draw(
 				dataTable, {
 				backgroundColor: '#000000',
@@ -169,33 +187,6 @@ function onPageLoad() {
 					}
 				}
 			});
-		}
-	});
-	$.ajax({url: StatTracker.baseUrl + "data/{{ stat.stat }}/prediction",
-		dataType: "json",
-		statusCode: {
-			500: function() {
-				alert("There was an error retrieving the graph for {{ stat.name }}.");
-			}
-		},
-		success: function (data) {
-			if (data.rate == null) {
-				$(".prediction.{{ stat.stat }}").hide();
-			}
-			else if (data.badge != "" && data.badge != "Level") {
-				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.badge.toLowerCase().replace(" ", ""));
-				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.current.toLowerCase());
-				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.badge.toLowerCase().replace(" ", ""));
-				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.next.toLowerCase());
-				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").css("opacity", data.progress / 1.5);
-				$(".prediction.{{ stat.stat }} .next-badge .progress").html(Math.floor(data.progress * 100) +"%");
-				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.amount_remaining + " " + data.unit + " remaining for the " + data.next + " badge.<p/>At your average rate of " + data.rate + " per day, that should take " + data.days_remaining + " days");
-			}
-			else {
-				$(".prediction.{{ stat.stat }} .summary .current-badge").hide();
-				$(".prediction.{{ stat.stat }} .summary .next-badge").hide();
-				$(".prediction.{{ stat.stat }} .rate").html("Your average rate is " + data.rate + " " + data.unit + " per day.");
-			}
 		}
 	});
 {% endfor %}
