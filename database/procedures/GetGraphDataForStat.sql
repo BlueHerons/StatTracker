@@ -1,5 +1,3 @@
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetGraphDataForStat`(IN `statName` VARCHAR(20))
-    READS SQL DATA
 BEGIN
 
 SET @minDate = CURDATE();
@@ -19,13 +17,16 @@ SELECT slope FROM BadgePrediction INTO @slope;
 SELECT intercept FROM BadgePrediction INTO @intercept;
 
 CREATE TEMPORARY TABLE GraphDataForStat
-    SELECT dl.date `Date`,
+SELECT * FROM
+   (SELECT dl.date `Date`,
 	       r.value `Actual`,
            CEIL(@intercept + (@slope * (DATEDIFF(dl.date, @minDate) + 1))) `Regression`
       FROM RawStatForAgent r 
 RIGHT JOIN Dates dl 
            ON dl.date = r.date
 WHERE dl.date >= @minDate AND
-      dl.date <= @maxDate;
+      dl.date <= @maxDate 
+ORDER BY Date DESC LIMIT 30) q
+ORDER BY Date ASC;
 
 END
