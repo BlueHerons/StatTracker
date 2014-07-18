@@ -1,8 +1,8 @@
 **/*.css
 **/*.swp
 
+config.php
 token
-code/credentials.php
 
 build/
 vendor/

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once("code/credentials.php");
+require_once("config.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
 require_once("code/Authentication.class.php");
