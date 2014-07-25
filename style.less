@@ -130,7 +130,7 @@ table {
 	.badge-image.progress-overlay {
 		position: relative;
 
-		p {
+		+ p {
 			display: block;
 			position: absolute;
 			top: 0px;
@@ -321,8 +321,9 @@ table {
 	padding: 5px 0;
 	height: @upcoming-badge-height;
 
-	.badge-icon {
+	.badge {
 		float: left;
+		position: relative;
 	}
 
 	.time-remaining {
