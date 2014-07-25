@@ -6,7 +6,7 @@ CONFIG_BASE_URL		= http:\/\/blueheronsresistance.com\/stats\/
 BUILD_DIR		= build
 RSYNC_IGNORE_FILE	= .rsync_ignore
 
-build: css copy config
+build: clean css copy config
 
 clean:
 	echo "  Cleaning build dir...";
@@ -15,7 +15,7 @@ clean:
 config:
 	echo "  Updating configuration...";
 	sed -i -e 's/\(\s*\)\(this.baseUrl = \).*/\1\2"$(CONFIG_BASE_URL)";/' $(BUILD_DIR)/scripts/StatTracker.js;
-	sed -i -e 's/\(define("GOOGLE_REDIRECT_URL", "\).*\(authenticate?action=callback\)");/\1$(CONFIG_BASE_URL)\2");/' $(BUILD_DIR)/code/credentials.php
+	sed -i -e 's/\(define("GOOGLE_REDIRECT_URL", "\).*\(authenticate?action=callback\)");/\1$(CONFIG_BASE_URL)\2");/' $(BUILD_DIR)/config.php
 
 copy:
 	echo "  Copying files...";
