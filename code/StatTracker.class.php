@@ -182,10 +182,10 @@ class StatTracker {
 			$stmt->close();
 
 			if (!$response->error && $agent->getSubmissionCount() <= 1) {
-				$response->message = "Your stats have been recieved. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+				$response->message = "Your stats have been received. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
 			}
 			else if (!$response->error) {
-				$response->message = "Your stats have been recieved.";
+				$response->message = "Your stats have been received.";
 			}
 		}
 
