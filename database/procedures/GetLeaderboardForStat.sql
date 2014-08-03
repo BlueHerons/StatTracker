@@ -24,6 +24,7 @@ CREATE TEMPORARY TABLE LeaderboardForStat
                          ON d.`agent` = q1.`agent` AND
                             d.`value` = q1.`value`) q2,
                    (SELECT @rank := 0) r
+     WHERE age <= 30
 GROUP BY `agent`
 ORDER BY `value` DESC;
 
