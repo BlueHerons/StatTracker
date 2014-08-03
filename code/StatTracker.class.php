@@ -325,13 +325,14 @@ class StatTracker {
 	 */
 	public static function getLeaderboardJSON($stat, $when) {
 		global $mysql;
+		$sunday = strtotime('last sunday', strtotime('tomorrow'));
 		switch ($when) {
 			case "this-week":
-				$thisweek = date("Y-m-d", strtotime('last sunday', strtotime('tomorrow')));
+				$thisweek = date("Y-m-d", $sunday);
 				$sql = sprintf("CALL GetWeeklyLeaderboardForStat('%s', '%s');", $stat, $thisweek);
 				break;
 			case "last-week":
-				$lastweek = date("Y-m-d", strtotime('2 sundays ago', strtotime('tomorrow')));
+				$lastweek = date("Y-m-d", strtotime('7 days ago', $sunday));
 				$sql = sprintf("CALL GetWeeklyLeaderboardForStat('%s', '%s');", $stat, $lastweek);
 				break;
 			case "alltime":
