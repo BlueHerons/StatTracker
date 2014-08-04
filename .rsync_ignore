@@ -9,5 +9,6 @@ token
 composer.*
 config.php.*
 database/
+template*
 *.less
 *.sh
