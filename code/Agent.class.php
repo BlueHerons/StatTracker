@@ -291,6 +291,48 @@ class Agent {
 		return $this->badges;
 	}
 
+	public function getRatios() {
+		if (!is_array($this->ratios)) {
+			global $mysql;
+
+			$sql = sprintf("CALL GetRatiosForAgent('%s');", $this->name);
+			if (!$mysql->query($sql)) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+	
+			$sql = sprintf("SELECT * FROM RatiosForAgent WHERE badge_1 IS NOT NULL AND badge_2 IS NOT NULL;", $this->name);
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->ratios = array();
+			
+			while ($row = $res->fetch_assoc()) {
+				$badge = str_replace(" ", "_", $row['badge']);
+				$badge = strtolower($badge);
+
+				$this->ratio[] = array(
+					"stat1" => array(
+						"stat" => $row['stat_1'],
+						"badge" => strtolower(str_replace(" ", "_", $row['badge_1'])),
+						"level" => strtolower($row['badge_1_level']),
+						"name" => $row['stat_1_name']
+					),
+					"stat2" => array(
+						"stat" => $row['stat_2'],
+						"badge" => strtolower(str_replace(" ", "_", $row['badge_2'])),
+						"level" => strtolower($row['badge_2_level']),
+						"name" => $row['stat_2_name']
+					),
+					"ratio" => $row['ratio']
+				);
+			}
+		}
+
+		return $this->ratio;
+	}
+
 	/**
 	 * Gets the next X  badges for the agent, ordered by least time remaining
 	 *

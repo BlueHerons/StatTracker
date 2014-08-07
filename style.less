@@ -8,6 +8,9 @@
 @upcoming-badge-height: 85;
 @upcoming-badge-width: 265;
 
+@ratio-height: 85;
+@ratio-width: 255;
+
 body {
 	background: rgba(0, 0, 0, 1);
 	color: @text-color;
@@ -337,6 +340,34 @@ table {
 	width: @upcoming-badge-width;
 }
 
+#ratios {
+	margin: 0 auto;
+	width: @ratio-width;
+
+	.ratio {
+		clear: left;
+		color: white;
+		display: block;
+		font-size: 20px;
+		height: @ratio-height;
+		padding-bottom: 20px;
+
+		> * {
+			float: left;
+		}
+
+		.seperator {
+			padding-top: @ratio-height / 3.3;
+			padding-left: 10px;
+			padding-right: 10px;
+		}
+
+		.value {
+			padding-top: @ratio-height / 3.3;
+			padding-left: 10px;
+		}
+	}
+}
 
 #main-content {
 

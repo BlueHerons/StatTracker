@@ -112,6 +112,11 @@ $app->get('/data/level/{what}', function ($what) use ($app, $agent) {
 	return $app->json($data);
 });
 
+$app->get('/data/ratios', function() use ($app, $agent) {
+	$data = $agent->getRatios();
+	return $app->json($data);
+});
+
 $app->get('/data/{stat}/{view}/{when}', function($stat, $view, $when) use ($app, $agent) {
 	$data = "";
 	switch ($view) {
