@@ -16,7 +16,7 @@ SELECT q2.stat,
               GROUP BY stat) q1 
             INNER JOIN Badges b ON 
                        b.stat = q1.stat AND 
-                       q1.value > b.amount_required
+                       q1.value >= b.amount_required
               GROUP BY b.stat) q2
 LEFT JOIN Badges b ON 
           q2.stat = b.stat AND 
