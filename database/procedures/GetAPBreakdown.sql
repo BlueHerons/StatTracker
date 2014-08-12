@@ -1,17 +1,23 @@
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown`()
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown2`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
 
 DROP TABLE IF EXISTS APBreakdown;
+
+SELECT MAX(timestamp) INTO @latest_submission
+  FROM Data
+ WHERE agent = agent_name
+ LIMIT 1;
 
 CREATE TEMPORARY TABLE APBreakdown
 SELECT ap.stat,
        stat.name,
        (FLOOR(q1.value * ap.factor) * ap.ap_gain) ap_gained
   FROM (  SELECT stat,
-                 MAX(value) value
-            FROM RawStatsForAgent
-        GROUP BY stat) q1
+                 value
+            FROM Data
+           WHERE agent = agent_name AND
+                 timestamp = @latest_submission) q1
         INNER JOIN AP ap ON
               ap.stat = q1.stat
         INNER JOIN Stats stat ON
@@ -20,9 +26,9 @@ SELECT ap.stat,
 
 SET @totalAP = 0;
 SET @remainder = 0;
-SELECT MAX(value) FROM RawStatsForAgent WHERE stat = 'ap' INTO @totalAP;
+SELECT value INTO @totalAP FROM Data WHERE stat = 'ap' AND agent = agent_name and timestamp = @latest_submission;
 SELECT @totalAP - SUM(ap_gained) FROM APBreakdown INTO @remainder;
 
-INSERT INTO APBreakdown VALUES('', 'Uncalculated', @remainder);
+INSERT INTO APBreakdown VALUES('', 'Uncalculated', ABS(@remainder));
 
 END

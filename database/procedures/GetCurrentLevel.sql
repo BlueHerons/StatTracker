@@ -1,4 +1,4 @@
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentLevel`()
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentLevel`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
 
@@ -10,13 +10,19 @@ SET @gold_obtained = 0;
 SET @platinum_obtained = 0;
 SET @onyx_obtained = 0;
 
-  SELECT value 
-    FROM RawStatsForAgent
-   WHERE stat = 'ap' 
-ORDER BY date DESC 
-   LIMIT 1 INTO @ap_obtained;
+SELECT MAX(timestamp) INTO @latest_submission
+  FROM Data
+ WHERE agent = agent_name
+ LIMIT 1;
 
-CALL GetBadgeCount();
+SELECT value INTO @ap_obtained
+  FROM Data
+ WHERE stat = 'ap' AND
+       agent = agent_name AND
+       timestamp = @latest_submission
+ LIMIT 1;
+
+CALL GetBadgeCount2(agent_name);
 
 SELECT `count` FROM BadgeCount WHERE level = 'silver' INTO @silver_obtained;
 SELECT `count` FROM BadgeCount WHERE level = 'gold' INTO @gold_obtained;
@@ -34,4 +40,4 @@ CREATE TEMPORARY TABLE CurrentLevel
 ORDER BY level DESC 
    LIMIT 1;
 
-END;
+END

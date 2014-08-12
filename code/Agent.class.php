@@ -128,13 +128,7 @@ class Agent {
 		if (!isset($this->level)) {
 			global $mysql;
 
-			$sql = "CALL GetRawStatsForAgent('%s');";
-			$sql = sprintf($sql, $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$sql = "CALL GetCurrentLevel();";
+			$sql = sprintf("CALL GetCurrentLevel('%s');", $this->name);
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
@@ -258,12 +252,7 @@ class Agent {
 		if (!is_array($this->badges) || $refresh) {
 			global $mysql;
 
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-	
-			$sql = sprintf("CALL GetCurrentBadges();", $this->name);
+			$sql = sprintf("CALL GetCurrentBadges('%s');", $this->name);
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}

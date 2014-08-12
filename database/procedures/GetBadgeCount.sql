@@ -1,8 +1,8 @@
-CREATE DEFINER=`SRStats`@`localhost` PROCEDURE `GetBadgeCount`()
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgeCount`(IN `agent_name` VARCHAR(255))
     READS SQL DATA
 BEGIN
 
-CALL GetCurrentBadges();
+CALL GetCurrentBadges2(agent_name);
 
 DROP TABLE IF EXISTS BadgeCount;
 
