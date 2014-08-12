@@ -22,7 +22,7 @@ SELECT value INTO @ap_obtained
        timestamp = @latest_submission
  LIMIT 1;
 
-CALL GetBadgeCount2(agent_name);
+CALL GetBadgeCount(agent_name);
 
 SELECT `count` FROM BadgeCount WHERE level = 'silver' INTO @silver_obtained;
 SELECT `count` FROM BadgeCount WHERE level = 'gold' INTO @gold_obtained;

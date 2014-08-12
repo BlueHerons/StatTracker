@@ -202,7 +202,7 @@ class StatTracker {
 	public function getAPBreakdownJSON($agent) {
 		global $mysql;
 	
-		$sql = sprintf("CALL GetAPBreakdown2('%s');", $agent->name);
+		$sql = sprintf("CALL GetAPBreakdown('%s');", $agent->name);
 		if (!$mysql->query($sql)) {
 			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
                 }

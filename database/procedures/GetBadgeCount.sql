@@ -2,7 +2,7 @@ CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgeCount`(IN `agent_name` VAR
     READS SQL DATA
 BEGIN
 
-CALL GetCurrentBadges2(agent_name);
+CALL GetCurrentBadges(agent_name);
 
 DROP TABLE IF EXISTS BadgeCount;
 

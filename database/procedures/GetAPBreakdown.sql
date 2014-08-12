@@ -1,4 +1,4 @@
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown2`(IN `agent_name` VARCHAR(15))
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
 
