@@ -8,8 +8,8 @@
 @upcoming-badge-height: 85;
 @upcoming-badge-width: 265;
 
-@ratio-height: 85;
-@ratio-width: 255;
+@ratio-height: 105;
+@ratio-width: 175;
 
 body {
 	background: rgba(0, 0, 0, 1);
@@ -352,19 +352,21 @@ table {
 		height: @ratio-height;
 		padding-bottom: 20px;
 
-		> * {
-			float: left;
-		}
+		.badges {
 
-		.seperator {
-			padding-top: @ratio-height / 3.3;
-			padding-left: 10px;
-			padding-right: 10px;
-		}
+			> * {
+				float: left;
+			}
 
+			.seperator {
+				padding-top: @ratio-height / 3.3;
+				padding-left: 10px;
+				padding-right: 10px;
+			}
+		}
+	
 		.value {
-			padding-top: @ratio-height / 3.3;
-			padding-left: 10px;
+			
 		}
 	}
 }
