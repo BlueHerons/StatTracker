@@ -57,7 +57,7 @@ var StatTracker = new function() {
 					if (modal) $("#login-dialog").dialog("close");
 					if (result.agent.numSubmissions == 0) {
 						StatTracker.message = "Stats must be submitted before this tool can be utilized";
-						StatTracker.pageToLoad = "my-stats";
+						StatTracker.pageToLoad = "submit-stats";
 					}
 
 					StatTracker.loadPage();
@@ -105,7 +105,7 @@ var StatTracker = new function() {
 					if (modal) $("#login-dialog").dialog("close");
 					if (result.agent.numSubmissions == 0) {
 						StatTracker.message = "Stats must be submitted before this tool can be utilized";
-						StatTracker.pageToLoad = "my-stats";
+						StatTracker.pageToLoad = "submit-stats";
 					}
 
 					StatTracker.loadPage();

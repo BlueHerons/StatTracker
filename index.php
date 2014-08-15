@@ -32,7 +32,7 @@ if (isset($_SESSION['agent'])) {
 // 404
 $app->match('/{page}', function ($page) use ($app) {
 	if ($page == "dashboard" ||
-	    $page == "my-stats" ||
+	    $page == "submit-stats" ||
 	    $page == "leaderboards") {
 	
 		return $app['twig']->render("index.twig", array(
@@ -69,7 +69,7 @@ $app->match('/{page}', function ($page) use ($app) {
   ->value('page', 'dashboard');
 
 $app->get('/page/{page}', function($page) use ($app, $agent) {
-	if ($page == "my-stats") {
+	if ($page == "submit-stats") {
 		$agent->getLatestStats();
 	}
 
@@ -138,7 +138,7 @@ $app->get('/data/{stat}/{view}/{when}', function($stat, $view, $when) use ($app,
 	return $data;
 })->value('when', 'all');
 
-$app->post('/my-stats/submit', function () use ($app, $agent) {
+$app->post('/submit-stats', function () use ($app, $agent) {
 	return StatTracker::handleAgentStatsPost($agent, $_POST);
 });
 
