@@ -30,7 +30,7 @@ if (isset($_SESSION['agent'])) {
 
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,
 // 404
-$app->match('/{page}', function ($page) use ($app) {
+$app->get('/{page}', function ($page) use ($app) {
 	if ($page == "dashboard" ||
 	    $page == "submit-stats" ||
 	    $page == "leaderboards") {
