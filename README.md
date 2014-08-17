@@ -11,7 +11,7 @@ To run your own instance of Stat Tracker, you will need:
  * A LAMP (**L** inux, **A** pache, **M** ySQL, **P** HP) server
    * [composer](http://getcomposer.org) will need to be installed
  * A [Google Developer](http://console.developers.google.com) account (for OAuth)
- * An SMTP server (You're exisitng email service should provide one)
+ * An SMTP server (Your existing email service should provide one)
  
 1. In the web directory of your server, run `git clone https://github.com/BlueHerons/StatTracker.git` to pull down the latest code
 2. Edit `config.php` and provide the required credentials
