@@ -231,7 +231,7 @@ class Agent {
 	 * @return array with stat database key as the index
 	 */
 	public function getLatestStats($refresh = false) {
-		if (!is_array($this->stats || $refresh)) {
+		if (!is_array($this->stats) || $refresh) {
 			foreach (StatTracker::getStats() as $stat) {
 				$this->getLatestStat($stat->stat, $refresh);
 			}
