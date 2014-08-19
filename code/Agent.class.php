@@ -2,6 +2,7 @@
 class Agent {
 
 	public $name;
+	public $auth_code;
 	public $faction;
 	public $level;
 	public $stats;
@@ -20,8 +21,41 @@ class Agent {
 	public static function lookupAgentName($email_address) {
 		global $mysql;
 
-		$stmt = $mysql->prepare("SELECT agent, faction FROM Agent WHERE email = ?;");
+		$stmt = $mysql->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
 		$stmt->bind_param("s", $email_address);
+
+		if (!$stmt->execute()) {
+			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
+		}
+
+		$stmt->bind_result($agent, $faction, $auth_code);
+		$stmt->fetch();
+		$stmt->close();
+
+		if (empty($agent)) {
+			return new Agent();
+		}
+		else {
+			$agent = new Agent($agent, $auth_code);
+			$agent->faction = $faction;
+
+			return $agent;
+		}
+	}
+
+	/**
+	 * Retruns the registered Agent for the given auth_code. If not agent is found, a generic
+	 * Agent object is returned.
+	 *
+	 * @param string $auth_code
+	 *
+	 * @return object Agent object
+	 */
+	public static function lookupAgentByAuthCode($auth_code) {
+		global $mysql;
+
+		$stmt = $mysql->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
+		$stmt->bind_param("s", $auth_code);
 
 		if (!$stmt->execute()) {
 			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
@@ -35,7 +69,7 @@ class Agent {
 			return new Agent();
 		}
 		else {
-			$agent = new Agent($agent);
+			$agent = new Agent($agent, $auth_code);
 			$agent->faction = $faction;
 	
 			return $agent;
@@ -53,7 +87,7 @@ class Agent {
 	 *
 	 * @throws Exception if agent name is not found.
 	 */
-	public function __construct($agent = "Agent") {
+	public function __construct($agent = "Agent", $auth_code = null) {
 		if (!is_string($agent)) {
 			throw new Exception("Agent name must be a string");
 		}
@@ -61,6 +95,7 @@ class Agent {
 		$agent = self::sanitizeAgentName($agent);
 
 		$this->name = $agent;
+		$this->auth_code = $auth_code;
 
 		if ($this->isValid()) {
 			$this->getLevel();
@@ -75,7 +110,7 @@ class Agent {
 	 * @return boolean true if agent is valid, false otherwise
 	 */
 	public function isValid() {
-		return $this->name != "Agent";
+		return $this->name != "Agent" && !empty($this->auth_code);
 	}
 
 	/**

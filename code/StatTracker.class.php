@@ -62,10 +62,25 @@ class StatTracker {
 		global $mysql;
 		$length = 6;
 
-		$code = md5($email_address);
-		$code = str_shuffle($code);
-		$start = rand(0, strlen($code) - $length - 1);	
-		$code = substr($code, $start, $length);
+		$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE auth_code = ?;");
+		$stmt->bind_param("s", $auth_code);
+		$stmt->bind_result($num_rows);
+
+		do {
+			$code = md5($email_address);
+			$code = str_shuffle($code);
+			$start = rand(0, strlen($code) - $length - 1);
+			$code = substr($code, $start, $length);
+
+			$auth_code = $code;
+
+			if (!$stmt->execute()) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
+			}
+			$stmt->fetch();
+		}
+		while ($num_rows != 0);
+		$stmt->close();
 
 		$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
 		$stmt->bind_param("s", $email_address);
