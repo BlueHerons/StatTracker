@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS `Agent` (
   `faction` enum('E','R') DEFAULT 'R',
   `auth_code` varchar(6) NOT NULL DEFAULT '',
   `request_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `private` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`email`),
   UNIQUE KEY `auth_code` (`auth_code`),
   KEY `faction` (`faction`),
