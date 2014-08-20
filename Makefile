@@ -1,6 +1,6 @@
 SHELL			= /bin/bash
 
-BUILD_DIR		= build
+BUILD_DIR		= .
 CONFIG_BASE_URL		= http:\/\/blueheronsresistance.com\/stats\/# escapes needed for sed
 DEPLOY_DIR		= /sites/blueheronsresistance.com/stats/
 GIT_REV			= $(shell git rev-parse HEAD)
@@ -31,7 +31,8 @@ css:
 deploy:
 	echo "  Deploying...";
 	rm -rf $(DEPLOY_DIR)*;
-	cp -r build/* $(DEPLOY_DIR);
+	cp -r $(BUILD_DIR)/* $(DEPLOY_DIR);
+	# Change the user:group below to match your server setup
 	chown -R root:www-data $(DEPLOY_DIR);
 	chmod -R 0750 $(DEPLOY_DIR);
 
