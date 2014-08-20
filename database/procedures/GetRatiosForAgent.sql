@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetRatiosForAgent`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -60,4 +61,5 @@ ratio_loop: LOOP
                 (SELECT level FROM Badges WHERE stat = stat_2 and @stat2 >= amount_required ORDER BY amount_required DESC LIMIT 1));
 END LOOP;
 
-END
+END $$
+DELIMITER ;

@@ -1,8 +1,11 @@
+DELIMITER $$
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetLeaderboardForStat`()
+    READS SQL DATA
 BEGIN
 
-DROP TABLE IF EXISTS `LeaderboardForStat`;
+DROP TABLE IF EXISTS LeaderboardForStat;
 
-CREATE TEMPORARY TABLE LeaderboardForStat
+CREATE TEMPORARY TABLE LeaderboardForStat AS
     SELECT @rank := @rank + 1 AS rank,
            `agent`,
            `value`,
@@ -28,4 +31,5 @@ CREATE TEMPORARY TABLE LeaderboardForStat
 GROUP BY `agent`
 ORDER BY `value` DESC;
 
-END
+END $$
+DELIMITER ;

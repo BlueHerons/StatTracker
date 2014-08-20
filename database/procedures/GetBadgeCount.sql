@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgeCount`(IN `agent_name` VARCHAR(255))
     READS SQL DATA
 BEGIN
@@ -13,4 +14,5 @@ INSERT INTO BadgeCount SELECT 'gold', COUNT(*) FROM CurrentBadges WHERE level >=
 INSERT INTO BadgeCount SELECT 'platinum', COUNT(*) FROM CurrentBadges WHERE level >= 5 and stat != 'ap';
 INSERT INTO BadgeCount SELECT 'onyx', COUNT(*) FROM CurrentBadges WHERE level >= 6 and stat != 'ap';
 
-END
+END $$
+DELIMITER ;
