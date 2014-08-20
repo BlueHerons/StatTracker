@@ -32,7 +32,7 @@
 	{% endif %}
 		<tr>
 			<td>{{ stat.name }}</td>
-			<td><input type="number" name="{{ stat.stat }}" value="{{ attribute(agent.stats, stat.stat) }}" /></td>
+			<td><input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" /></td>
 		</tr>
 {% endfor %}
 		<tr>
