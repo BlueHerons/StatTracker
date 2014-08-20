@@ -9,7 +9,7 @@ Stat Tracker relies on agents to submit thier own data. It does not pull any dat
 To run your own instance of Stat Tracker, you will need:
 
  * A LAMP (**L** inux, **A** pache, **M** ySQL, **P** HP) server
-   * [composer](http://getcomposer.org) and [lessc](http://lesscss.org/#using-less) must be installed.
+   * [composer](http://getcomposer.org), [lessc](http://lesscss.org/#using-less) and `make` must be installed.
  * A [Google Developer](http://console.developers.google.com) account (for OAuth)
  * An SMTP server (Your existing email service should provide one)
  
@@ -20,6 +20,8 @@ To run your own instance of Stat Tracker, you will need:
 3. Run `composer update` to download all the dependencies.
 4. Execute each SQL script in `database/tables`, and then in `database/procedures`
   * You will need to create a MySQL user named `admin` to satisfy the definer in the procedure defintions.
+5. In `Makefile`, change `CONFIG_BASE_URL` to the same `http[s]://server/path/to/files` you specified in the Google OAuth setup.
+6. Run `make build` to automatically compile `style.less` and inject `CONFIG_BASE_URL` into [config.php](config.php#L16) and [StatTracker.js](scripts/StatTracker.js#L2)
 
 ## Administration
 
