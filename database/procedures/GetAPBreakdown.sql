@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -31,4 +32,6 @@ SELECT @totalAP - SUM(ap_gained) FROM APBreakdown INTO @remainder;
 
 INSERT INTO APBreakdown VALUES('', 'Uncalculated', ABS(@remainder));
 
-END
+END $$
+DELIMITER ;
+

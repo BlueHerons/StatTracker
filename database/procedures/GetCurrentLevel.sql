@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentLevel`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -40,4 +41,5 @@ CREATE TEMPORARY TABLE CurrentLevel
 ORDER BY level DESC 
    LIMIT 1;
 
-END
+END $$
+DELIMITER ;

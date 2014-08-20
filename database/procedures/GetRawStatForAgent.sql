@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetRawStatForAgent`(IN `agent` VARCHAR(15), IN `statName` VARCHAR(20))
     READS SQL DATA
 BEGIN
@@ -12,4 +13,5 @@ CREATE TEMPORARY TABLE RawStatForAgent
       FROM RawStatsForAgent
 	 WHERE stat = statName;
 
-END
+END $$
+DELIMITER ;

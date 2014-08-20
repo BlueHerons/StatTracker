@@ -37,5 +37,5 @@ INSERT INTO `Stats`
 (100,     'oldest_link',         'Max Time Link Maintained',       'days',            0,        1),
 (105,     'oldest_link_days',    'Max Link Length x Days',         'km-days',         0,        1),
 (110,     'oldest_field',        'Max Time Field Held',            'days',            0,        1),
-(115,     'largest_field_days',  'Largest Field MUs x Days',       'MU-days',         0.        1);
+(115,     'largest_field_days',  'Largest Field MUs x Days',       'MU-days',         0,        1);
 

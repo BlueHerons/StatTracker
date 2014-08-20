@@ -1,3 +1,6 @@
+DELIMITER $$
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` TIMESTAMP)
+    READS SQL DATA
 BEGIN
 
 DECLARE agent_name VARCHAR(20);
@@ -134,4 +137,5 @@ CREATE TEMPORARY TABLE LeaderboardForStat
          (SELECT @rank := 0) r 
 ORDER BY delta_value DESC;
 
-END
+END $$
+DELIMITER ;

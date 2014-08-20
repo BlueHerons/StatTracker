@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgePrediction`(IN `stat_key` VARCHAR(20))
     READS SQL DATA
 BEGIN
@@ -69,4 +70,5 @@ CREATE TEMPORARY TABLE BadgePrediction
 	       ROUND(@intercept) `intercept`,
 	       ROUND(@slope, 2) `slope`;
 
-END
+END $$
+DELIMITER ;

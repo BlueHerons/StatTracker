@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentBadges`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -29,4 +30,5 @@ LEFT JOIN Badges b ON
           q2.threshold = b.amount_required
 ORDER BY `badge`;
 
-END
+END $$
+DELIMITER ;

@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetLevelRequirement`()
     READS SQL DATA
 BEGIN
@@ -47,4 +48,5 @@ SELECT level,
   FROM Level 
  WHERE level = @next_level;
 
-END;
+END $$
+DELIMITER ;

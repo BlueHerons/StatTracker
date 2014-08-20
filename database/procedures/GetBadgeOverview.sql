@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgeOverview`()
     READS SQL DATA
 BEGIN
@@ -30,4 +31,5 @@ END LOOP;
 
 CLOSE stats_cursor;
 
-END
+END $$
+DELIMITER ;
