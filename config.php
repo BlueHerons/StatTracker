@@ -13,4 +13,5 @@ define("SMTP_PASS", "");
 define("GOOGLE_CLIENT_ID",     "");
 define("GOOGLE_CLIENT_SECRET", "");
 define("GOOGLE_APP_NAME",      "");
+define("GOOGLE_REDIRECT_URL",  "");
 ?>
