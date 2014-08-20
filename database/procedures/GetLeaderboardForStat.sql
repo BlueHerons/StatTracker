@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetLeaderboardForStat`()
+CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetLeaderboardForStat`(IN `stat_name` VARCHAR(20))
     READS SQL DATA
 BEGIN
 
