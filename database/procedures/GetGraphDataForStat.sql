@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetGraphDataForStat`(IN `statName` VARCHAR(20))
     READS SQL DATA
 BEGIN
@@ -31,4 +32,5 @@ WHERE dl.date >= @minDate AND
 ORDER BY Date DESC LIMIT 30) q
 ORDER BY Date ASC;
 
-END
+END $$
+DELIMITER ;

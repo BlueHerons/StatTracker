@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetRawStatsForAgent`(IN `agentName` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -34,4 +35,5 @@ CREATE TEMPORARY TABLE RawStatsForAgent
   ORDER BY stat, date; 
 
 DROP TABLE TRawStatsForAgent;
-END
+END $$
+DELIMITER ;
