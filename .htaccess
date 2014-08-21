@@ -2,7 +2,8 @@
     Options -MultiViews
 
     RewriteEngine On
-    #RewriteBase /path/to/app
+    RewriteRule ^api api.php [QSA,L]
+
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
