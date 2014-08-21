@@ -25,15 +25,17 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
 
 	switch ($what) {
-		case "upcoming":
-			$data = $agent->getUpcomingBadges($limit);
-			break;
 		case "current":
 			$data = $agent->getBadges();
 			break;
+		case "upcoming":
+			$data = $agent->getUpcomingBadges($limit);
+			break;
 	}
+
 	return $app->json($data);
-})->value("what", "current");
+})->assert("what", "current|upcoming")
+  ->value("what", "current");
 
 // Retrieve ratio information for the agent
 $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
