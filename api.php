@@ -60,6 +60,44 @@ $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
 	return $app->json($data);
 });
 
+// Retrieve raw or compiled data for a single stat for the agent
+$app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code, $stat, $view, $when, $format) use ($app) {
+	$agent = Agent::lookupAgentByAuthCode($auth_code);
+
+	if (!$agent->isValid()) {
+		return $app->abort(404);
+	}
+
+	$data = "";
+	switch ($view) {
+		case "breakdown":
+			$data = StatTracker::getAPBreakdownJSON($agent);
+			break;
+		case "leaderboard":
+			$data = StatTracker::getLeaderboardJSON($stat, $when);
+			break;
+		case "prediction":
+			$data = StatTracker::getPredictionJSON($agent, $stat);
+			break;
+		case "graph":
+			$data = StatTracker::getGraphDataJSON($stat, $agent);
+			break;
+		case "raw":
+			$agent->getLatestStat($stat);
+			$data = new stdClass();
+			$data->value = $agent->stats[$stat];
+			$data->timestamp = $agent->latest_entry;
+			break;
+	}
+
+	return $app->json($data);
+})->assert("view", "breakdown|leaderboard|prediction|graph")
+  ->value("stat", "ap")
+  ->value("view", "raw")
+  ->value("when", "most-recent")
+  ->value("format", "json");
+
+
 // Allow agents to submit stats
 $app->post("/api/{auth_code}/submit", function ($auth_code) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
