@@ -6,9 +6,6 @@ class Agent {
 	public $faction;
 	public $level;
 	public $stats;
-	public $badges;
-
-	public $submissions;
 
 	/**
 	 * Returns the registered Agent for the given email address. If no agent is found, a generic
@@ -100,7 +97,7 @@ class Agent {
 		if ($this->isValid()) {
 			$this->getLevel();
 			$this->getLatestStat('ap');
-			$this->getSubmissions();
+			$this->hasSubmitted();
 		}
 	}
 
@@ -180,45 +177,26 @@ class Agent {
 		return $this->level;
 	}
 
-	/** 
-	 * Gets the remaining requirements that the agent must fulfill to get to the next level. 
-	 *
+	/**
+	 * Determines if the Agent has submitted to Stat Tracker
 	 */
-	public function getRemainingLevelRequirements() {
-		if (!isset($this->remaining_requirements)) {
+	public function hasSubmitted($refresh = false) {
+		if (!isset($this->has_submitted) || $refresh) {
 			global $mysql;
 
-			$sql = "CALL GetRawStatsForAgent('%s');";
+			$sql = "SELECT count(stat) > 0 AS result FROM Data WHERE stat = 'ap' AND agent = '%s';";
 			$sql = sprintf($sql, $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
 
-			$sql = "CALL GetRemainingLevelRequirements();";
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$sql = "SELECT * FROM RemainingLevelRequirements;";
 			$res = $mysql->query($sql);
 			if (!$res) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 
-			$this->remaining_requirements = $res->fetch_assoc();
+			$this->has_submitted = $res->fetch_assoc()['value'] == 1;
+
 		}
 
-		return $this->remaining_requirements;
-	}
-
-	/**
-	 * Retrieves the number of times (once / day) that an Agent has submitted data
-	 *
-	 * @return int number of submissions
-	 */
-	public function getSubmissionCount() {
-		$this->getSubmissions();
-		return $this->numSubmissions;
+		return $this->has_submitted;
 	}
 
 	/**
@@ -404,39 +382,6 @@ class Agent {
 		}
 
 		return $this->upcoming_badges;
-	}
-
-	/**
-	 * Gets the date and timestamps for an Agent's stat submissions. This is limited to the latest
-	 * submission on a given day -- multiple submission per day are counted as 1 submissions.
-	 *
-	 * @return array of objects containing a date and a timestamp
-	 */
-	public function getSubmissions() {
-		if (!is_array($this->submissions)) {
-			global $mysql;
-
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$sql = "SELECT DISTINCT date, timestamp FROM RawStatsForAgent ORDER BY date DESC;";
-			$res = $mysql->query($sql);
-
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$this->submissions = array();
-			while ($row = $res->fetch_assoc()) {
-				$this->submissions[] = $row;
-			}
-			$this->numSubmissions = sizeof($this->submissions);
-		}
-
-		return $this->submissions;
-
 	}
 }
 ?>
