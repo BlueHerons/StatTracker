@@ -35,5 +35,12 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 	return $app->json($data);
 })->value("what", "current");
 
+// Retrieve ratio information for the agent
+$app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
+	$agent = Agent::lookupAgentByAuthCode($auth_code);
+	$data = $agent->getRatios();
+	return $app->json($data);
+});
+
 $app->run();
 ?>
