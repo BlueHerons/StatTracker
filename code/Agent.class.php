@@ -192,7 +192,7 @@ class Agent {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 
-			$this->has_submitted = $res->fetch_assoc()['value'] == 1;
+			$this->has_submitted = $res->fetch_assoc()['result'] == 1;
 
 		}
 
