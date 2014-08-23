@@ -357,6 +357,7 @@ class Agent {
 			}
 
 			$sql = sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
+
 			$res = $mysql->query($sql);
 
 			if (!$res) {

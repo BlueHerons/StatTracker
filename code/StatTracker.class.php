@@ -132,8 +132,8 @@ class StatTracker {
 		$stmt->fetch();
 		$stmt->close();
 
-		$msg = "Thanks for registering with the Blue Heron's Stat Tracker. In order to validate your " .
-		       "identity, please message the following code to <strong>@CaptCynicism</strong> in " .
+		$msg = "Thanks for registering with ". GROUP_NAME ."'s Stat Tracker. In order to validate your " .
+		       "identity, please message the following code to <strong>@". ADMIN_AGENT ."</strong> in " .
 		       "faction comms: ".
 		       "<pre>%s</pre> " .
 		       "<p/> ".
@@ -149,7 +149,7 @@ class StatTracker {
 		$mailer = Swift_Mailer::newInstance($transport);
 
 		$message = Swift_Message::newInstance('Stat Tracker Registration')
-				->setFrom(array('stats@blueheronsreistance.com' => 'Blue Herons Resistance'))
+				->setFrom(array(GROUP_EMAIL => GROUP_NAME))
 				->setTo(array($email_address))
 				->setBody($msg, 'text/html', 'iso-8859-2');
 
