@@ -346,17 +346,14 @@ class Agent {
 		if (!is_array($this->upcoming_badges)) {
 			global $mysql;
 
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
+			$sql = sprintf("CALL GetUpcomingBadges('%s');", $this->name);
+
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 	
-			$sql = sprintf("CALL GetBadgeOverview();", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			$sql = sprintf("SELECT * FROM UpcomingBadges LIMIT %s;", $limit);
 
-			$sql = sprintf("SELECT * FROM BadgeOverview WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
 			$res = $mysql->query($sql);
 
 			if (!$res) {
