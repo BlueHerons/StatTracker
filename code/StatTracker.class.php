@@ -135,6 +135,7 @@ class StatTracker {
 		$msg = "Thanks for registering with ". GROUP_NAME ."'s Stat Tracker. In order to validate your " .
 		       "identity, please message the following code to <strong>@". ADMIN_AGENT ."</strong> in " .
 		       "faction comms: ".
+		       "<p/> ".
 		       "<pre>%s</pre> " .
 		       "<p/> ".
 		       "You will recieve a reply message once you have been activated. This may take up to " .
@@ -196,7 +197,7 @@ class StatTracker {
 
 			$stmt->close();
 
-			if (!$response->error && $agent->getSubmissionCount() <= 1) {
+			if (!$response->error && !$agent->hasSubmitted()) {
 				$response->message = "Your stats have been received. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
 			}
 			else if (!$response->error) {
@@ -212,9 +213,9 @@ class StatTracker {
 	 *
 	 * @param Agent agent the agent whose data should be used
 	 *
-	 * @return string JSON string
+	 * @return string Object AP Breakdown object
 	 */
-	public function getAPBreakdownJSON($agent) {
+	public function getAPBreakdown($agent) {
 		global $mysql;
 	
 		$sql = sprintf("CALL GetAPBreakdown('%s');", $agent->name);
@@ -234,7 +235,7 @@ class StatTracker {
 			$data[] = array($row['name'], $row['ap_gained']);
 		}
 
-	 	return json_encode($data, JSON_NUMERIC_CHECK);
+	 	return $data;
 	}
 
 	/**
@@ -245,19 +246,14 @@ class StatTracker {
 	 * @param Agent $agent Agent to retrieve prediction for
 	 * @param string $stat Stat to retrieve prediction for
 	 *
-	 * @return JSON string
+	 * @return Object prediciton object
 	 */
-	public static function getPredictionJSON($agent, $stat) {
+	public static function getPrediction($agent, $stat) {
 		global $mysql;
 
 		$data = new stdClass();
 		if (StatTracker::isValidStat($stat)) {
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $agent->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));	
-			}
-
-			$sql = sprintf("CALL GetBadgePrediction('%s');", $stat);
+			$sql = sprintf("CALL GetBadgePrediction2('%s', '%s');", $agent->name, $stat);
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error    ));        
 			}
@@ -269,7 +265,7 @@ class StatTracker {
 			$data = self::buildPredictionResponse($row);
 		}
 
-		return json_encode($data, JSON_NUMERIC_CHECK);
+		return $data;
 	}
 
 	/**
@@ -278,9 +274,9 @@ class StatTracker {
 	 * @param string $stat the stat to generate the data for
 	 * @param Agent agent the agent whose data should be used
 	 *
-	 * @return string JSON string
+	 * @return string Object Graph Data object
 	 */
-	public function getGraphDataJSON($stat, $agent) {
+	public static function getGraphData($stat, $agent) {
 		global $mysql;
 
 		$sql = sprintf("CALL GetRawStatsForAgent('%s');", $agent->name);
@@ -293,15 +289,6 @@ class StatTracker {
 			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
 	
-		$sql = "SELECT * FROM BadgePrediction;";
-		$res = $mysql->query($sql);
-
-		if (!$res) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
-	
-		$prediction = self::buildPredictionResponse($res->fetch_assoc());
-
 		$sql = "SELECT * FROM GraphDataForStat;";
 		$res = $mysql->query($sql);
 
@@ -319,10 +306,10 @@ class StatTracker {
 		}
 
 		$response = new stdClass();
-		$response->prediction = $prediction;
+		//$response->prediction = self::getPrediction($agent, $stat);
 		$response->graph = $graph;
 
-		return json_encode($response, JSON_NUMERIC_CHECK);
+		return $response;
 	}
 
 	/**
@@ -333,7 +320,7 @@ class StatTracker {
 	 *
 	 * @return string JSON string
 	 */
-	public static function getLeaderboardJSON($stat, $when) {
+	public static function getLeaderboard($stat, $when) {
 		global $mysql;
 		$sunday = strtotime('last sunday', strtotime('tomorrow'));
 		switch ($when) {
@@ -368,25 +355,25 @@ class StatTracker {
 			);
 		}
 
-		return json_encode($results, JSON_NUMERIC_CHECK);
+		return $results;
 	}
 
 	private function buildPredictionResponse($row) {
 		$data = new stdClass();
 
-		$data->stat = $row['Stat'];
-		$data->name = $row['Name'];
+		$data->stat = $row['stat'];
+		$data->name = $row['name'];
 		$data->unit = $row['unit'];
-		$data->badge = $row['Badge'];
-		$data->current = $row['Current'];
-		$data->next = $row['Next'];
+		$data->badge = $row['badge'];
+		$data->current = $row['current'];
+		$data->next = $row['next'];
 		$data->progress = $row['progress'];
-		$data->amount_remaining = $row['Remaining'];
+		$data->amount_remaining = $row['remaining'];
 		$data->silver_remaining = $row['silver_remaining'];
 		$data->gold_remaining = $row['gold_remaining'];
 		$data->platinum_remaining = $row['platinum_remaining'];
 		$data->onyx_remaining = $row['onyx_remaining'];
-		$data->days_remaining = $row['Days'];
+		$data->days_remaining = $row['days'];
 		$data->rate = $row['slope'];
 
 		return $data;

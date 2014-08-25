@@ -6,6 +6,8 @@ require_once("code/Authentication.class.php");
 require_once("vendor/autoload.php");
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 $mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysql->connect_errno) {
@@ -71,16 +73,16 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 	$data = "";
 	switch ($view) {
 		case "breakdown":
-			$data = StatTracker::getAPBreakdownJSON($agent);
+			$data = StatTracker::getAPBreakdown($agent);
 			break;
 		case "leaderboard":
-			$data = StatTracker::getLeaderboardJSON($stat, $when);
+			$data = StatTracker::getLeaderboard($stat, $when);
 			break;
 		case "prediction":
-			$data = StatTracker::getPredictionJSON($agent, $stat);
+			$data = StatTracker::getPrediction($agent, $stat);
 			break;
 		case "graph":
-			$data = StatTracker::getGraphDataJSON($stat, $agent);
+			$data = StatTracker::getGraphData($stat, $agent);
 			break;
 		case "raw":
 			$agent->getLatestStat($stat);
@@ -90,7 +92,11 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 			break;
 	}
 
-	return $app->json($data);
+	$response = JsonResponse::create();
+	$response->setEncodingOptions($response->getEncodingOptions() | JSON_NUMERIC_CHECK);
+	$response->setData($data);
+
+	return $response;
 })->assert("view", "breakdown|leaderboard|prediction|graph")
   ->value("stat", "ap")
   ->value("view", "raw")
@@ -107,6 +113,11 @@ $app->post("/api/{auth_code}/submit", function ($auth_code) use ($app) {
 	}
 
 	return StatTracker::handleAgentStatsPost($agent, $_POST);
+});
+
+$app->after(function (Request $request, Response $response) {
+	$response->headers->set("Cache-control", "max-age=". (60 * 60 * 6) .", private");
+	$response->headers->set("Expires", date("D, d M Y H:i:s e", time() + 60 * 60 * 6));
 });
 
 $app->run();
