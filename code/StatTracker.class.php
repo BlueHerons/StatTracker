@@ -169,8 +169,8 @@ class StatTracker {
 			$response->message = sprintf("Invalid agent: %s", $agent->name);
 		}
 		else {
-			$ts = date("Y-m-d H:i:s");
-			$stmt = $mysql->prepare("INSERT INTO Data VALUES (?, ?, ?, ?);");
+			$ts = date("Y-m-d 00:00:00");
+			$stmt = $mysql->prepare("INSERT INTO Data VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 			$stmt->bind_param("sssd", $agent_name, $ts, $stat_key, $value);
 
 			foreach (self::getStats() as $stat) {
