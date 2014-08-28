@@ -169,9 +169,23 @@ class StatTracker {
 			$response->message = sprintf("Invalid agent: %s", $agent->name);
 		}
 		else {
+			$agent_name = $agent->name;
+			$stmt = $mysql->prepare("SELECT MIN(date) FROM Data WHERE agent = ?");
+			$stmt->bind_param("s", $agent_name);
+			$stmt->bind_result($min_date);
+
+			if (!$stmt->execute()) {
+					$response->error = true;
+					$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error);
+					return json_encode($response, JSON_NUMERIC_CHECK);
+			}
+			$stmt->fetch();
+			$stmt->close();
+
 			$ts = date("Y-m-d 00:00:00");
-			$stmt = $mysql->prepare("INSERT INTO Data (agent, timestamp, stat, value) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
-			$stmt->bind_param("sssd", $agent_name, $ts, $stat_key, $value);
+			$dt = date("Y-m-d");
+			$stmt = $mysql->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?), ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+			$stmt->bind_param("sssssd", $agent_name, $dt, $min_date, $ts, $stat_key, $value);
 
 			foreach (self::getStats() as $stat) {
 				if (!isset($postdata[$stat->stat])) {
@@ -186,7 +200,7 @@ class StatTracker {
 	
 				if (!$stmt->execute()) {
 					$response->error = true;
-					$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error);
+					$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error);
 				}
 
 				if ($response->error) {
