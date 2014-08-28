@@ -184,7 +184,7 @@ class StatTracker {
 
 			$ts = date("Y-m-d 00:00:00");
 			$dt = date("Y-m-d");
-			$stmt = $mysql->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?), ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+			$stmt = $mysql->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 			$stmt->bind_param("sssssd", $agent_name, $dt, $min_date, $ts, $stat_key, $value);
 
 			foreach (self::getStats() as $stat) {
