@@ -3,8 +3,6 @@ CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentLevel`(IN `agent_name` V
     READS SQL DATA
 BEGIN
 
-BEGIN
-
 DROP TABLE IF EXISTS CurrentLevel;
 
 SET @ap_obtained = 0;
