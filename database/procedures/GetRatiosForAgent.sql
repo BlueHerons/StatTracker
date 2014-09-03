@@ -25,7 +25,7 @@ CREATE TEMPORARY TABLE RatiosForAgent (
   `badge_2_level` varchar(25)
 );
 
-SELECT MAX(timestamp) INTO @latest_submission
+SELECT MAX(date) INTO @latest_submission
   FROM Data
  WHERE agent = agent_name;
 
@@ -40,13 +40,13 @@ ratio_loop: LOOP
     SELECT value INTO @stat1
       FROM Data
      WHERE agent = agent_name AND
-           timestamp = @latest_submission AND
+           date = @latest_submission AND
            stat = stat_1;
 
     SELECT value INTO @stat2
       FROM Data
      WHERE agent = agent_name AND
-           timestamp = @latest_submission AND
+           date = @latest_submission AND
            stat = stat_2;
 
     INSERT INTO RatiosForAgent VALUES(
