@@ -5,7 +5,7 @@ BEGIN
 
 DROP TABLE IF EXISTS CurrentBadges;
 
-SELECT MAX(timestamp) INTO @latest_submission
+SELECT MAX(date) INTO @latest_submission
   FROM Data
  WHERE agent = agent_name
  LIMIT 1;
@@ -19,7 +19,7 @@ SELECT q2.stat,
           FROM (SELECT stat, 
                        value
                   FROM Data 
-                 WHERE timestamp = @latest_submission AND
+                 WHERE date = @latest_submission AND
                        agent = agent_name) q1 
             INNER JOIN Badges b ON 
                        b.stat = q1.stat AND 
