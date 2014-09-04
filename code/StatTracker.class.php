@@ -170,7 +170,7 @@ class StatTracker {
 		}
 		else {
 			$agent_name = $agent->name;
-			$stmt = $mysql->prepare("SELECT MIN(date) FROM Data WHERE agent = ?");
+			$stmt = $mysql->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) FROM Data WHERE agent = ?");
 			$stmt->bind_param("s", $agent_name);
 			$stmt->bind_result($min_date);
 
