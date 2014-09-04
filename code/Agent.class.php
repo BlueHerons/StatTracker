@@ -241,12 +241,12 @@ class Agent {
 		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
 			global $mysql;
 			
-			$sql = "SELECT value, timestamp FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY timestamp DESC LIMIT 1;";
+			$sql = "SELECT value, date FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
 			$sql = sprintf($sql, $stat, $this->name);
 			$res = $mysql->query($sql);
 			$row = $res->fetch_assoc();
 			
-			$this->latest_entry = $row['timestamp'];
+			$this->latest_entry = $row['date'];
 			
 			if (!is_array($this->stats)) {
 				$this->stats = array();
@@ -315,6 +315,11 @@ class Agent {
 		return $this->badges;
 	}
 
+	/**
+	 * Gets the ratios of stats for the given agent.
+	 *
+	 * @return array top leve entries are a tatio "pair", with a sub array containing keys stat1, stat2, and ratio
+	 */
 	public function getRatios() {
 		if (!is_array($this->ratios)) {
 			global $mysql;
@@ -358,7 +363,7 @@ class Agent {
 	}
 
 	/**
-	 * Gets the next X  badges for the agent, ordered by least time remaining
+	 * Gets the next X badges for the agent, ordered by least time remaining
 	 *
 	 * @param int $limit number of badges to return, default 3
 	 *
@@ -368,17 +373,12 @@ class Agent {
 		if (!is_array($this->upcoming_badges)) {
 			global $mysql;
 
-			$sql = sprintf("CALL GetRawStatsForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-	
-			$sql = sprintf("CALL GetBadgeOverview();", $this->name);
+			$sql = sprintf("CALL GetUpcomingBadges('%s');", $this->name);
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 			}
 
-			$sql = sprintf("SELECT * FROM BadgeOverview WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
+			$sql = sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
 			$res = $mysql->query($sql);
 
 			if (!$res) {
