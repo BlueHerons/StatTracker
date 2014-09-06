@@ -1,0 +1,138 @@
+--- dashboard.twig	2014-07-18 15:06:17.612859999 -0700
++++ dashboard.twig.new	2014-07-20 12:21:40.268859999 -0700
+@@ -2,7 +2,7 @@
+ 	<div class="container">
+ 		<div class="item">
+ 			<div id="agent-info">
+-				<div class="avatar level-icon-110 {{ faction_class }} l{{ agent.level }}"/>
++				<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
+ 				<div class="about">
+ 					<div class="name {{ faction_class }}">{{ agent.name }}</div>
+ 					<div class="level">LVL <span>{{ agent.level }}</span></div>
+@@ -35,21 +35,31 @@
+ 			<div id="ap_breakdown"></div>
+ 		</div>
+ 	</div>
+-	<div class="predictions">
++
++	<div class="container">
+ {% for stat in stats if stat.graphable %}
+-		<div class="prediction {{ stat.stat }}">
++		<div class="item prediction {{ stat.stat }}">
+ 			<h3>{{ stat.name }}</h3>
+ 			<div class="summary">
+-				<div class="current-badge badge-icon-75"></div>
++				<div class="current-badge">
++					<div class="badge">
++						<div class="badge-image badge-icon-75" />
++					</div>
++				</div>
+ 				<div class="next-badge">
+-					<div class="badge-icon-75" />
+-					<p class="progress" />
++					<div class="badge">
++						<div class="badge-image progress-overlay">
++							<div class="badge-icon badge-icon-75" />
++							<p class="percent-complete">
++								<span />
++							</p>
++						</div>
++					</div>
+ 				</div>
+ 				<p class="badge-prediction" />
+ 				<p class="rate" />
+ 			</div>
+-		<div id="graph-{{ stat.stat }}">
+-	
++			<div id="graph-{{ stat.stat }}">
+ 			</div>
+ 		</div>
+ {% endfor %}
+@@ -92,18 +102,24 @@
+ 			}
+ 		},
+ 		success: function(data) {
++			CHART_WIDTH_MAX = 300;
++			CONTAINER_WIDTH_MAX = 500;
+ 			dataTable = google.visualization.arrayToDataTable(data);
++			containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
++			left = (containerWidth - CHART_WIDTH_MAX) / 2;
++			left = left < 0 ? 0 : left;
++			chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
+ 			new google.visualization.PieChart(document.getElementById('ap_breakdown')).draw(
+ 				dataTable, {
+ 				backgroundColor: '#000000',
+ 				fontSize: '14',
+-				height: 400,
+-				width: 500,
++				height: containerWidth,
++				width: containerWidth,
+ 				chartArea: {
+-					top: 0,
+-					left: 100,
+-					width: 300,
+-					height: 300
++					top: left,
++					left: left,
++					width: chartWidth,
++					height: chartWidth
+ 				},
+ 				legend: {
+ 					position: 'none'
+@@ -126,14 +142,23 @@
+ 			if (data.prediction.rate == null) {
+ 				$(".prediction.{{ stat.stat }}").hide();
+ 			}
+-			else if (data.prediction.badge != "") {
+-				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
+-				$(".prediction.{{ stat.stat }} .current-badge").addClass(data.prediction.current.toString().toLowerCase());
++			else if (data.prediction.badge != "" && data.prediction.badge != "Level") {
++				$(".prediction.{{ stat.stat }} .current-badge .badge-icon-75").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
++				$(".prediction.{{ stat.stat }} .current-badge .badge-icon-75").addClass(data.prediction.current.toLowerCase());
+ 				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
+-				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.prediction.next.toString().toLowerCase());
++				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").addClass(data.prediction.next.toLowerCase());
+ 				$(".prediction.{{ stat.stat }} .next-badge .badge-icon-75").css("opacity", data.prediction.progress / 1.5);
+-				$(".prediction.{{ stat.stat }} .next-badge .progress").html(Math.floor(data.prediction.progress * 100) +"%");
+-				$(".prediction.{{ stat.stat }} .badge-prediction").html("You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days");
++				$(".prediction.{{ stat.stat }} .next-badge .percent-complete span").html(Math.floor(data.prediction.progress * 100) +"%");
++
++				msg = "";
++				if ("{{ stat.stat }} == "ap") {
++					msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for level " + data.prediction.next + ".<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days";
++				}
++				else {
++					msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days";
++				}
++
++				$(".prediction.{{ stat.stat }} .badge-prediction").html(msg);
+ 			}
+ 			else {
+ 				$(".prediction.{{ stat.stat }} .summary .current-badge").hide();
+@@ -142,16 +167,23 @@
+ 			}
+ 
+ 			dataTable = google.visualization.arrayToDataTable(data.graph);
++			CHART_WIDTH_MAX = 400;
++			CONTAINER_WIDTH_MAX = 500;
++			containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
++			left = (containerWidth - CHART_WIDTH_MAX) / 2;
++			left = left < 0 ? 0 : left;
++			chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
++
+ 			new google.visualization.LineChart(document.getElementById('graph-{{ stat.stat }}')).draw(
+ 				dataTable, {
+ 				backgroundColor: '#000000',
+-				height: 400,
++				height: containerWidth,
+ 				pointSize: 5,
+-				width: 500,
++				width: containerWidth,
+ 				chartArea: {
+ 					top: 10,
+ 					left: 60,
+-					width: 500
++					width: chartWidth
+ 				},
+ 				legend: {
+ 					position: "in",

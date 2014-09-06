@@ -1,6 +1,6 @@
 <div id="message" />
 <div id="badges" />
-<form method="post" action="./submit-stats" id="submit-stats">
+<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
 		<div class="about">
@@ -78,7 +78,7 @@ function onPageLoad() {
 $("form#submit-stats").submit(function() {
 	$.ajax({
 		type: "POST",
-		url: StatTracker.baseUrl + "submit-stats",
+		url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
 		data: $("form#submit-stats").serialize(),
 		dataType: "json",
 		success: function(data) {

@@ -83,7 +83,7 @@
 </div>
 <script>
 function onPageLoad() {
-	$.ajax({url: StatTracker.baseUrl + "data/badges/upcoming",
+	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/badges/upcoming",
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -110,7 +110,7 @@ function onPageLoad() {
 		}
 	});
 
-	$.ajax({url: StatTracker.baseUrl + "data/ratios",
+	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ratios",
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -135,7 +135,7 @@ function onPageLoad() {
 		}
 	});
 
-	$.ajax({url: StatTracker.baseUrl + "data/ap/breakdown",
+	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ap/breakdown",
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -173,7 +173,7 @@ function onPageLoad() {
 	});
 
 	function loadStatPrediction(stat, name) {
-		$.ajax({url: StatTracker.baseUrl + "data/" + stat +"/graph",
+		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat +"/graph",
 			dataType: "json",
 			statusCode: {
 				500: function() {
