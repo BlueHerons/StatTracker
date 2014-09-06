@@ -219,13 +219,14 @@ class Agent {
 		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
 			global $mysql;
 			
-			$sql = "SELECT value, date FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
+			$sql = "SELECT value, date, UNIX_TIMESTAMP(updated) `updated` FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
 			$sql = sprintf($sql, $stat, $this->name);
 			$res = $mysql->query($sql);
 			$row = $res->fetch_assoc();
 			
 			$this->latest_entry = $row['date'];
-			
+			$this->latest_update = $row['updated'];
+
 			if (!is_array($this->stats)) {
 				$this->stats = array();
 			}
