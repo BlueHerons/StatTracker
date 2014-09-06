@@ -210,12 +210,14 @@ class StatTracker {
 			}
 
 			$stmt->close();
+			$ts = strtotime($dt);
 
-			if (!$response->error && !$agent->hasSubmitted()) {
-				$response->message = "Your stats have been received. Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
-			}
-			else if (!$response->error) {
-				$response->message = "Your stats have been received.";
+			if (!$response->error) {
+				$response->message = sprintf("Your stats for %s have been received.", date("l, F j", $ts));
+
+				if (!$agent->hasSubmitted()) {
+					$response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+				}
 			}
 		}
 
