@@ -96,8 +96,9 @@ class Agent {
 
 		if ($this->isValid()) {
 			$this->getLevel();
-			$this->getLatestStat('ap');
 			$this->hasSubmitted();
+			$this->getLatestStat('ap');
+			$this->getLatestUpdate();
 		}
 	}
 
@@ -200,6 +201,28 @@ class Agent {
 	}
 
 	/**
+	 * Gets the last timestamp for then this agent's data was updated
+	 */
+	public function getLatestUpdate($refresh = false) {
+		if (!isset($this->latest_update) || $refresh) {
+			global $mysql;
+
+			$sql = "SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = '%s';";
+			$sql = sprintf($sql, $this->name);
+
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->latest_update = $res->fetch_assoc()['updated'];
+
+		}
+
+		return $this->latest_update;		
+	}
+
+	/**
 	 * Gets the latest value of the specified stat.
 	 *
 	 * @param string|object If string, the stat's database key. If object, a Stat object for the class
@@ -219,13 +242,12 @@ class Agent {
 		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
 			global $mysql;
 			
-			$sql = "SELECT value, date, UNIX_TIMESTAMP(updated) `updated` FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
+			$sql = "SELECT value, date FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
 			$sql = sprintf($sql, $stat, $this->name);
 			$res = $mysql->query($sql);
 			$row = $res->fetch_assoc();
 			
 			$this->latest_entry = $row['date'];
-			$this->latest_update = $row['updated'];
 
 			if (!is_array($this->stats)) {
 				$this->stats = array();
