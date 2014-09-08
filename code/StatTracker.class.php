@@ -295,12 +295,7 @@ class StatTracker {
 	public static function getGraphData($stat, $agent) {
 		global $mysql;
 
-		$sql = sprintf("CALL GetRawStatsForAgent('%s');", $agent->name);
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
-
-		$sql = sprintf("CALL GetGraphDataForStat('%s');", $stat);
+		$sql = sprintf("CALL GetGraphForStat('%s', '%s');", $agent->name, $stat);
 		if (!$mysql->query($sql)) {
 			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
@@ -322,7 +317,7 @@ class StatTracker {
 		}
 
 		$response = new stdClass();
-		//$response->prediction = self::getPrediction($agent, $stat);
+		$response->prediction = self::getPrediction($agent, $stat);
 		$response->graph = $graph;
 
 		return $response;
