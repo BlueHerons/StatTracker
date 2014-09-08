@@ -1,6 +1,8 @@
 **/*.css
+**/*.diff
 **/*.swp
 
+about
 config.php
 token
 

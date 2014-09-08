@@ -76,13 +76,15 @@ function onPageLoad() {
 }
 
 $("form#submit-stats").submit(function() {
+	$("#message").hide().before("<div class='loading' />")
+	window.scrollTo(0,0);
 	$.ajax({
 		type: "POST",
 		url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
 		data: $("form#submit-stats").serialize(),
 		dataType: "json",
 		success: function(data) {
-			console.log(data);
+			$(".loading").hide();
 			if (!data.error) {
 				$("#message").html(data.message).show();
 				window.scrollTo(0,0);
