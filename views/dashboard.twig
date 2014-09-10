@@ -218,7 +218,7 @@ function onPageLoad() {
 							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(data.prediction.badge.toString().toLowerCase().replace(" ", ""));
 							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(data.prediction.next.toString().toLowerCase());
 							$(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", data.prediction.progress / 1.5);
-							msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + "days.";
+							msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days.";
 						}
 						else {
 							$(".prediction." + stat + " .badge-prediction").css("display", "block");
