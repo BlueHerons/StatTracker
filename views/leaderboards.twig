@@ -53,7 +53,7 @@ function onPageLoad() {
 
 
 	function loadLeaderboard(stat, when) {
-		$.ajax({url: StatTracker.baseUrl + "data/" + stat + "/leaderboard/" + when,
+		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
 			dataType: "json",
 			statusCode: {
 				500: function() {
