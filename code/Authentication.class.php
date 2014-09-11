@@ -101,6 +101,22 @@ class Authentication {
 		$mailer->send($message);
 	}
 
+	/**
+	 * Updates meta data about the user from the OAuth service on login
+	 *
+	 * @param string $email_address the primary identifier for the user
+	 * @param string $profile_id    the G+ id of the user
+	 */
+	public static function updateUserMeta($email_address, $profile_id) {
+		global $mysql;
+		$stmt = $mysql->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
+		$stmt->bind_param("ss", $profile_id, $email_address);
+
+		if (!$stmt->execute()) {
+			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+		}
+	}
+
 	private function __construct() {
 		$this->client = new Google_Client();
 		$this->client->setApplicationName(GOOGLE_APP_NAME);
@@ -160,6 +176,8 @@ class Authentication {
 				$response->agent = $agent;
 				$_SESSION['agent'] = serialize($agent);
 			}
+
+			self::updateUserMeta($email_address, $me->id);
 
 			return $response;
 		}
