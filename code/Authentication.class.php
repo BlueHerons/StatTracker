@@ -19,10 +19,11 @@ class Authentication {
 	 * will be updated.
 	 *
 	 * @param string $email_address the email address retrieved from authentication
+	 * @param bool   $newIfExists   Whether or not to issue a new auth code if one already exists
 	 *
 	 * @return void
 	 */
-	public static function generateAuthCode($email_address) {
+	public static function generateAuthCode($email_address, $newIfExists = false) {
 		global $mysql;
 		$length = 6;
 
@@ -31,19 +32,21 @@ class Authentication {
 		$start = rand(0, strlen($code) - $length - 1);	
 		$code = substr($code, $start, $length);
 
-		$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
-		$stmt->bind_param("s", $email_address);
-		
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
+		if (!$newIfExists) {
+			$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
+			$stmt->bind_param("s", $email_address);
+
+			if (!$stmt->execute()) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
+			}
+
+			$stmt->bind_result($num_rows);
+			$stmt->fetch();
+			$stmt->close();
 		}
 
-		$stmt->bind_result($num_rows);
-		$stmt->fetch();
-		$stmt->close();
-
-		if ($num_rows != 1) {
-			$stmt = $mysql->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?);");
+		if ($num_rows != 1 || $newIfExists) {
+			$stmt = $mysql->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
 			$stmt->bind_param("ss", $email_address, $code);
 
 			if (!$stmt->execute()) {
@@ -148,44 +151,53 @@ class Authentication {
 			return $response;
 		}
 
-		try {
-			$me = $this->plus->people->get('me');
-			$email_address = "";
-			foreach ($me->getEmails() as $email) {
-				if ($email->type == "account") {
-					$email_address = $email->value;
+		if (!isset($_SESSION['agent'])) {
+			try {
+				$me = $this->plus->people->get('me');
+				$email_address = "";
+				foreach ($me->getEmails() as $email) {
+					if ($email->type == "account") {
+						$email_address = $email->value;
+					}
+				}
+
+				if (empty($email_address)) {
+					$response->error = true;
+					$response->message = "No email address found";
+					return $response;
+				}
+
+				$response->email = $email_address;
+				$agent = Agent::lookupAgentName($email_address);
+				if (empty($agent->name) || $agent->name == "Agent") {
+					// They need to register
+					self::generateAuthCode($email_address);
+					self::updateUserMeta($email_address, $me->id);
+					self::sendAuthCode($email_address);
+					$response->status = "registration_required";
+				}
+				else {
+					// Issue a new auth code
+					self::generateAuthCode($email_address, true);
+					$agent->getAuthCode(true);
+					$_SESSION['agent'] = serialize($agent);
+					$response->status = "okay";
+					$response->agent = $agent;
 				}
 			}
-
-			if (empty($email_address)) {
+			catch (Exception $e) {
 				$response->error = true;
-				$response->message = "No email address found";
+				$response->message = $e->getMessage();
 				return $response;
 			}
-
-			$response->email = $email_address;
-			$agent = Agent::lookupAgentName($email_address);
-			if (empty($agent->name) || $agent->name == "Agent") {
-				// They need to register
-				self::generateAuthCode($email_address);
-				self::sendAuthCode($email_address);
-				$response->status = "registration_required";
-			}
-			else {
-				$response->status = "okay";
-				$response->agent = $agent;
-				$_SESSION['agent'] = serialize($agent);
-			}
-
-			self::updateUserMeta($email_address, $me->id);
-
-			return $response;
 		}
-		catch (Exception $e) {
-			$response->error = true;
-			$response->message = $e->getMessage();
-			return $response;
+		else {
+			$agent = unserialize($_SESSION['agent']);
+			$response->status = "okay";
+			$response->agent = $agent;
 		}
+
+		return $response;
 	}
 
 	public function callback() {
