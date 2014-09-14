@@ -210,6 +210,11 @@ class StatTracker {
 			}
 
 			$stmt->close();
+
+			// Need to refresh stored session data
+			$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
+			$_SESSION['agent'] = serialize($agent);
+
 			$ts = strtotime($dt);
 
 			if (!$response->error) {
