@@ -153,6 +153,28 @@ class Agent {
 	}
 
 	/**
+	 * Gets the auth code for the agent
+	 * 
+	 * @param bool $refresh Whether or not to refetch the value from the database
+	 *
+	 * @return the auth code for thw agent
+	 */
+	public function getAuthCode($refresh = false) {
+		if (!isset($this->auth_code) || $refresh) {
+			global $mysql;
+			$sql = sprintf("SELECT auth_code FROM Agent WHERE agent = '%s';", $this->name);
+			$res = $mysql->query($sql);
+			if (!$res) {
+				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+			}
+
+			$this->auth_code = $res->fetch_assoc()['auth_code'];
+		}
+
+		return $this->auth_code;
+	}
+
+	/**
 	 * Gets the current level for the Agent. Considers AP and badges.
 	 *
 	 * @returns int current Agent level
