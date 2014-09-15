@@ -16,6 +16,31 @@ if ($mysql->connect_errno) {
 
 $app = new Silex\Application();
 
+$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $format) use ($app) {
+	$agent = Agent::lookupAgentByAuthCode($auth_code);
+
+	$data = new stdClass;
+
+	$data->agent = $agent->name;
+	$data->data = array();
+	
+	// TODO: Refactor for fetching historical data
+
+	$data->data[$agent->getLatestUpdate()] = new stdClass;
+	$data->data[$agent->getLatestUpdate()]->level = $agent->getLevel();
+	$data->data[$agent->getLatestUpdate()]->badges = $agent->getBadges();
+	$data->data[$agent->getLatestUpdate()]->stats = $agent->getLatestStats(true);
+
+	switch ($format) {
+		case "json":
+			return $app->json($data);
+			break;
+	}
+})->assert("format", "json")
+  ->assert("when",   "latest")
+  ->value ("format", "json")
+  ->value ("when",   "latest");
+
 // Retrieve basic information about the agent
 $app->get("/api/{auth_code}", function($auth_code) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
