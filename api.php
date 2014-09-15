@@ -26,11 +26,13 @@ $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $form
 	
 	// TODO: Refactor for fetching historical data
 
-	$data->data[$agent->getLatestUpdate()] = new stdClass;
-	$data->data[$agent->getLatestUpdate()]->level = $agent->getLevel();
-	$data->data[$agent->getLatestUpdate()]->badges = $agent->getBadges();
-	$data->data[$agent->getLatestUpdate()]->stats = $agent->getLatestStats(true);
+	$t = new stdClass;
+	$t->timestamp = $agent->getLatestUpdate();
+	$t->badges = $agent->getBadges();
+	$t->stats = $agent->getLatestStats(true);
 
+	$data->data[] = $t;
+	
 	switch ($format) {
 		case "json":
 			return $app->json($data);
