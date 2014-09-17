@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 require_once("config.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
@@ -19,13 +17,14 @@ if ($mysql->connect_errno) {
 
 $app = new Silex\Application();
 $app['debug'] = true;
+$app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
 	'twig.path' => __DIR__ . "/views",
 ));
 
 $agent = new Agent();
-if (isset($_SESSION['agent'])) {
-	$agent = unserialize($_SESSION['agent']);
+if ($app['session']->get("agent") !== null) {
+	$agent = $app['session']->get("agent");
 }
 
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,

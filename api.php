@@ -15,6 +15,7 @@ if ($mysql->connect_errno) {
 }
 
 $app = new Silex\Application();
+$app->register(new Silex\Provider\SessionServiceProvider());
 
 $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
@@ -139,7 +140,10 @@ $app->post("/api/{auth_code}/submit", function ($auth_code) use ($app) {
 		return $app->abort(404);
 	}
 
-	return StatTracker::handleAgentStatsPost($agent, $_POST);
+	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
+	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
+
+	return $response;
 });
 
 $app->after(function (Request $request, Response $response) {
