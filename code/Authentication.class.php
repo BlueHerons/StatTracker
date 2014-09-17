@@ -133,17 +133,19 @@ class Authentication {
 	}
 
 	public function login() {
+		global $app;
+
 		$response = new StdClass();
 		$response->error = false;
 
 		// Kick off the OAuth process
-		if (empty($_SESSION['token'])) {
+		if (empty($app['session']->get("token"))) {
 			$response->status = "authentication_required";
 			$response->url = $this->client->createAuthUrl();
 			return $response;
 		}
 
-		$this->client->setAccessToken($_SESSION['token']);
+		$this->client->setAccessToken($app['session']->get("token"));
 
 		if ($this->client->isAccessTokenExpired()) {
 			$response->status = "authentication_required";
@@ -151,7 +153,7 @@ class Authentication {
 			return $response;
 		}
 
-		if (!isset($_SESSION['agent'])) {
+		if ($app['session']->get("agent") == null) {
 			try {
 				$me = $this->plus->people->get('me');
 				$email_address = "";
@@ -169,6 +171,7 @@ class Authentication {
 
 				$response->email = $email_address;
 				$agent = Agent::lookupAgentName($email_address);
+	
 				if (empty($agent->name) || $agent->name == "Agent") {
 					// They need to register
 					self::generateAuthCode($email_address);
@@ -180,7 +183,7 @@ class Authentication {
 					// Issue a new auth code
 					self::generateAuthCode($email_address, true);
 					$agent->getAuthCode(true);
-					$_SESSION['agent'] = serialize($agent);
+					$app['session']->set("agent", $agent);
 					$response->status = "okay";
 					$response->agent = $agent;
 				}
@@ -192,7 +195,7 @@ class Authentication {
 			}
 		}
 		else {
-			$agent = unserialize($_SESSION['agent']);
+			$agent = $app['session']->get("agent");
 			$response->status = "okay";
 			$response->agent = $agent;
 		}
@@ -201,6 +204,8 @@ class Authentication {
 	}
 
 	public function callback() {
+		global $app;
+
 		if (!isset($_REQUEST['code'])) {
 			throw new Exception("Invalid callback parameters");
 		}
@@ -221,7 +226,7 @@ class Authentication {
 			setcookie($name, '', time()-1000);
 			setcookie($name, '', time()-1000, '/');
 		}
-		$this->client->revokeToken($_SESSION['token']);
+		$this->client->revokeToken($app['session']->get("token"));
 		session_destroy();
 		$response = new stdClass();
 		$response->status = "logged_out";
@@ -229,6 +234,8 @@ class Authentication {
 	}
 
 	private function getToken() {
+		global $app;
+
 		$code = "";
 		if (isset($_REQUEST['code'])) {
 			$code = $_REQUEST['code'];
@@ -239,7 +246,7 @@ class Authentication {
 
 		try {
 			$this->client->authenticate($code);
-			$_SESSION['token'] = $this->client->getAccessToken();
+			$app['session']->set("token", $this->client->getAccessToken());
 		}
 		catch (Exception $e) {
 			print_r("caught except retrieveing token");
