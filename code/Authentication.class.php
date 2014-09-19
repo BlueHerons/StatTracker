@@ -182,6 +182,7 @@ class Authentication {
 				else {
 					// Issue a new auth code
 					self::generateAuthCode($email_address, true);
+					self::updateUserMeta($email_address, $me->id);
 					$agent->getAuthCode(true);
 					$app['session']->set("agent", $agent);
 					$response->status = "okay";
