@@ -146,6 +146,7 @@ function onPageLoad() {
 			}
 		},
 		success: function(data) {
+			colors = data.pop();
 			CHART_WIDTH_MAX = 300;
 			CONTAINER_WIDTH_MAX = 500;
 			dataTable = google.visualization.arrayToDataTable(data);
@@ -168,6 +169,7 @@ function onPageLoad() {
 				legend: {
 					position: 'none'
 				},
+				slices: colors,
 				tooltip: {
 					text: 'value'
 				}

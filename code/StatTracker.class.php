@@ -212,7 +212,7 @@ class StatTracker {
 			$stmt->close();
 
 			// Need to refresh stored session data
-			$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
+			$agent = \BlueHerons\StatTracker\Agent::lookupAgentByAuthCode($agent->auth_code);
 			$_SESSION['agent'] = serialize($agent);
 
 			$ts = strtotime($dt);
@@ -230,6 +230,28 @@ class StatTracker {
 	}
 
 	/**
+	 * Calculates the appropriate foreground color based on the given background color
+	 *
+	 * @param string $color hex color string
+	 *
+	 * @return string hex color string
+	 */
+	public static function getFGColor($color) {
+		$matches = array();
+		if (preg_match("/(#)?([A-Fa-f0-9]{6})/", $color, $matches)) {
+			preg_match("/([A-Fa-f0-9]{2})([A-Fa-f0-9]{2})([A-Fa-f0-9]{2})/", $matches[2], $matches);
+			$sum = (0.213 * hexdec($matches[1])) +
+			       (0.715 * hexdec($matches[2])) +
+			       (0.072 * hexdec($matches[3]));
+
+			return $sum < 0.5 ? "#FFF" : "#000";
+		}
+		else {
+			return "#FFF";
+		}
+	}
+
+	/**
 	 * Generates JSON formatted data for use in a Google Visualization API pie chart.
 	 *
 	 * @param Agent agent the agent whose data should be used
@@ -244,17 +266,30 @@ class StatTracker {
 			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
                 }
 
-		$sql = "SELECT * FROM APBreakdown;";
+		$sql = "SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;";
 		$res = $mysql->query($sql);
 		if (!$res) {
 			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
 		}
 		
 		$data = array();
+		$colors = array();
 		$data[] = array("Action", "AP Gained");
 		while ($row = $res->fetch_assoc()) {
 			$data[] = array($row['name'], $row['ap_gained']);
+			if ($row['grouping'] == 1) {
+				$color =$agent->faction == "R" ? ENL_GREEN : RES_BLUE;
+			}
+			else if ($row['grouping'] == 3) {
+				$color = $agent->faction == "R" ? RES_BLUE : ENL_GREEN;
+			}
+			else {
+				$color = "#999";
+			}
+			$colors[] = array("color" => $color, "textStyle" => array("color" => self::getFGColor($color)));
 		}
+
+		$data[] = $colors;
 
 	 	return $data;
 	}
