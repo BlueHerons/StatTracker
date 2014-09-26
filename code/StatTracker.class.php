@@ -274,7 +274,7 @@ class StatTracker {
 		
 		$data = array();
 		$colors = array();
-		$data[] = array("Action", "AP Gained");
+		//$data[] = array("Action", "AP Gained");
 		while ($row = $res->fetch_assoc()) {
 			$data[] = array($row['name'], $row['ap_gained']);
 			if ($row['grouping'] == 1) {
@@ -286,12 +286,10 @@ class StatTracker {
 			else {
 				$color = "#999";
 			}
-			$colors[] = array("color" => $color, "textStyle" => array("color" => self::getFGColor($color)));
+			$colors[] = $color;
 		}
 
-		$data[] = $colors;
-
-	 	return $data;
+	 	return array("data" => $data, "slice_colors" => $colors);
 	}
 
 	/**
@@ -347,16 +345,27 @@ class StatTracker {
 			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
 		}
 		
-		$graph = array();
+		$data = array();
 		while ($row = $res->fetch_assoc()) {
-			if (sizeof($graph) == 0) {
-				$graph[] = array_keys($row);
+			if (sizeof($data) == 0) {
+				foreach (array_keys($row) as $key) {
+					$series = new stdClass();
+					$series->name = $key;
+					$series->data = array();
+					$data[] = $series;
+				}
 			}
-				
-			$graph[] = array_values($row);
+
+			$i = 0;
+			foreach (array_values($row) as $value) {
+				$data[$i]->data[] = $value;
+
+				$i++;
+			}
 		}
 
 		$response = new stdClass();
+		$response->data = $data;
 		$response->prediction = self::getPrediction($agent, $stat);
 		$response->graph = $graph;
 
