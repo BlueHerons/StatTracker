@@ -23,6 +23,9 @@
 		{% set title = "Health" %}
 	{% elseif stat.stat == "oldest_portal" %}
 		{% set title = "Defense" %}
+	{% elseif stat.stat == "unique_missions" %}
+		{% set title = "Missions" %}
+
 	{% endif %}
 
 {% if title != "" %}
