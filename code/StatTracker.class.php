@@ -307,7 +307,7 @@ class StatTracker {
 
 		$data = new stdClass();
 		if (StatTracker::isValidStat($stat)) {
-			$sql = sprintf("CALL GetBadgePrediction2('%s', '%s');", $agent->name, $stat);
+			$sql = sprintf("CALL GetBadgePrediction('%s', '%s');", $agent->name, $stat);
 			if (!$mysql->query($sql)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error    ));        
 			}
