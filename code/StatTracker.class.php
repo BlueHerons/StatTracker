@@ -323,7 +323,7 @@ class StatTracker {
 	}
 
 	/**
-	 * Generates JSON formatted data for use in a Google Visualization API Line graph.
+	 * Generates JSON formatted data for use in a line graph.
 	 *
 	 * @param string $stat the stat to generate the data for
 	 * @param Agent agent the agent whose data should be used
@@ -366,10 +366,43 @@ class StatTracker {
 
 		$response = new stdClass();
 		$response->data = $data;
-		$response->prediction = self::getPrediction($agent, $stat);
-		$response->graph = $graph;
+		$response->prediction = self::getPrediction($agent, $stat); // TODO: move elsewhere
 
 		return $response;
+	}
+
+	public static function getTrend($agent, $stat, $when) {
+		global $mysql;
+
+		switch ($when) {
+			case "weekly":
+				$start = date("Y-m-d", strtotime("last monday", strtotime("tomorrow")));
+				$end = date("Y-m-d", strtotime("next sunday", strtotime("yesterday")));
+
+				$sql = sprintf("CALL GetDailyTrend('%s', '%s', '%s', '%s');", $agent->name, $stat, $start, $end);
+				if (!$mysql->query($sql)) {
+					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+				}
+
+				$sql = "SELECT * FROM DailyTrend";
+				$res = $mysql->query($sql);
+
+				if (!$res) {
+					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+				}
+		
+				$data = array();
+				while ($row = $res->fetch_assoc()) {
+					$data["dates"][] = $row["date"];
+					$data["target"][] = $row["target"];
+					$data["value"][] = $row["value"];
+				}
+
+				break;
+		}
+
+		return $data;
+
 	}
 
 	/**

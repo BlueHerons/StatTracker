@@ -109,6 +109,9 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 		case "prediction":
 			$data = StatTracker::getPrediction($agent, $stat);
 			break;
+		case "trend":
+			$data = StatTracker::getTrend($agent, $stat, $when);
+			break;
 		case "graph":
 			$data = StatTracker::getGraphData($stat, $agent);
 			break;
@@ -125,7 +128,7 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 	$response->setData($data);
 
 	return $response;
-})->assert("view", "breakdown|leaderboard|prediction|graph")
+})->assert("view", "breakdown|leaderboard|prediction|trend|graph")
   ->value("stat", "ap")
   ->value("view", "raw")
   ->value("when", "most-recent")

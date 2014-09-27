@@ -76,6 +76,11 @@
 				<p class="badge-prediction" />
 				<p class="rate" />
 			</div>
+			<div class="graph-selector">
+				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="graph" data-when="all-time">Past 30 days</span>
+				&nbsp;|&nbsp;
+				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="trend" data-when="weekly">This week</span>
+			</div>
 			<div id="graph-{{ stat.stat }}">
 			</div>
 		</div>
@@ -84,6 +89,17 @@
 </div>
 <script>
 function onPageLoad() {
+	$("span.graph-link[data-what='graph']").addClass("active");
+
+	$("span.graph-link").click(function() {
+		stat = $(this).attr("data-stat");
+		$("span.graph-link[data-stat='" + stat + "']").removeClass("active");
+		$(this).addClass("active");
+		$("#graph-" + stat).empty();
+		$("#graph-" + stat).after($("<div/>").addClass("loading 110"));
+		loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
+	});
+
 	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/badges/upcoming",
 		data: { ts: '{{ agent.latest_update }}' },
 		dataType: "json",
@@ -244,6 +260,21 @@ function onPageLoad() {
 					$(".prediction." + stat + " .summary .next-badge").hide();
 					$(".prediction." + stat + " .rate").html("Your average rate is " + data.prediction.rate + " " + data.prediction.unit + " per day.");
 				}
+			}
+		});
+	}
+		
+	function loadStatGraph(stat, name, what, when) {
+		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
+			data: { ts: '{{ agent.latest_update }}' },
+			dataType: "json",
+			statusCode: {
+				500: function() {
+					alert("There was an error retrieving the graph for " + name + ".");
+				}
+			},
+			success: function(response) {
+				$("#graph-" + stat + " + div.loading").remove();
 
 				CHART_WIDTH_MAX = 400;
 				CONTAINER_WIDTH_MAX = 500;
@@ -251,67 +282,138 @@ function onPageLoad() {
 				left = (containerWidth - CHART_WIDTH_MAX) / 2;
 				left = left < 0 ? 0 : left;
 				chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
-
-				dates = data.data.shift();
-				data.data[0].color = "{{ faction_color }}";
-				data.data[0].marker = { "enabled" : true };
-				data.data[1].color = "#DC3912";
-				data.data[1].marker = { "enabled" : false };
-
-				$("#graph-" + stat).highcharts({
-					chart: {
-						backgroundColor: "#000",
-						plotBackgroundColor: "#000"
-					},
-					credits: { enabled: false },
-					legend : {
-						align: "left",
-						floating: true,
-						itemStyle : {
-							color: "#FFF",
-							fontWeight: "normal"
-						},
-						itemHoverStyle: { color: "#FFF" },
-						layout: "vertical",
-						verticalAlign: "top",
-						x: 75
-					},
-					title : { text: null },
-					series: data.data,
-					xAxis: {
-						categories: dates.data,
-						labels: {
-							rotation: -40,
-							step: 3,
-							style: {
-								color: "{{ chartLabelColor }}"
-							}
-						},
-						lineColor: "{{ chartLabelColor }}",
-						tickColor: "{{ chartLabelColor }}"
-					},
-					yAxis: {
-						gridLineColor: "{{ chartLabelColor }}",
-						labels: {
-							style: {
-								color: "{{ chartLabelColor }}"
-							}
-						},
-						lineColor: "{{ chartLabelColor }}",
-						title: {
-							style: {
-								color: "{{ chartLabelColor }}"
+				
+				switch (what) {
+					case "trend":
+						$("#graph-" + stat).highcharts({
+							chart: {
+								backgroundColor: "#000",
+								plotBackgroundColor: "#000"
 							},
-							text: name
-						}
-					}
-				});
+							credits: { enabled: false },
+							legend : {
+								align: "left",
+								floating: true,
+								itemStyle : {
+									color: "#FFF",
+									fontWeight: "normal"
+								},
+								itemHoverStyle: { color: "#FFF" },
+								layout: "vertical",
+								verticalAlign: "top",
+								x: 75
+							},
+							title : { text: null },
+							plotOptions: {
+								column: {
+									color: "{{ faction_color }}"
+								},
+								spline: {
+									color: "#DC3912",
+									marker: { enabled: false }
+								}
+							},
+							series: [{
+									type: "column",
+									data: response.value,
+									name: "Gained",
+								}, {
+									type: "spline",
+									data: response.target,
+									name: "Target",
+								}],
+							xAxis: {
+								categories: response.dates,
+								labels: {
+									rotation: -40,
+									style: {
+										color: "{{ chartLabelColor }}"
+									}
+								},
+								lineColor: "{{ chartLabelColor }}",
+								tickColor: "{{ chartLabelColor }}"
+							},
+							yAxis: {
+								gridLineColor: "{{ chartLabelColor }}",
+								labels: {
+									style: {
+										color: "{{ chartLabelColor }}"
+									}
+								},
+								lineColor: "{{ chartLabelColor }}",
+								title: {
+									style: {
+										color: "{{ chartLabelColor }}"
+									},
+									text: name
+								}
+							}
+						});
+						break;
+					case "graph":
+						dates = response.data.shift();
+						response.data[0].color = "{{ faction_color }}";
+						response.data[0].marker = { "enabled" : true };
+						response.data[1].color = "#DC3912";
+						response.data[1].marker = { "enabled" : false };
+
+						$("#graph-" + stat).highcharts({
+							chart: {
+								backgroundColor: "#000",
+								plotBackgroundColor: "#000"
+							},
+							credits: { enabled: false },
+							legend : {
+								align: "left",
+								floating: true,
+								itemStyle : {
+									color: "#FFF",
+									fontWeight: "normal"
+								},
+								itemHoverStyle: { color: "#FFF" },
+								layout: "vertical",
+								verticalAlign: "top",
+								x: 75
+							},
+							title : { text: null },
+							series: response.data,
+							xAxis: {
+								categories: dates.data,
+								labels: {
+									rotation: -40,
+									step: 3,
+									style: {
+										color: "{{ chartLabelColor }}"
+									}
+								},
+								lineColor: "{{ chartLabelColor }}",
+								tickColor: "{{ chartLabelColor }}"
+							},
+							yAxis: {
+								gridLineColor: "{{ chartLabelColor }}",
+								labels: {
+									style: {
+										color: "{{ chartLabelColor }}"
+									}
+								},
+								lineColor: "{{ chartLabelColor }}",
+								title: {
+									style: {
+										color: "{{ chartLabelColor }}"
+									},
+									text: name
+								}
+							}
+						});
+						break;
+				}
 			}
 		});
 	}
 
 {% for stat in stats if stat.graphable %}
 	loadStatPrediction("{{ stat.stat }}", "{{ stat.name }}");
+	loadStatGraph("{{ stat.stat}}", "{{ stat.name }}", "graph", null);
 {% endfor %}
 }
 </script>
