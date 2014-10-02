@@ -17,9 +17,9 @@ INSERT INTO `AP` (`stat`, `grouping`, `sequence`, `ap_gain`, `factor`) VALUES
 ('links_destroyed', 1, 2, 187, 1.000),
 ('portals_captured', 3, 3, 500, 1.000),
 ('portals_discovered', 3, 0, 1000, 1.000),
+('res_deployed', 3, 4, 125, 0.000),
 ('res_destroyed', 1, 1, 75, 1.000),
-('xm_recharged', 3, 4, 10, 0.001);
-
+('xm_recharged', 3, 5, 10, 0.001);
 
 ALTER TABLE `AP`
   ADD CONSTRAINT `AP_ibfk_1` FOREIGN KEY (`stat`) REFERENCES `Stats` (`stat`);
