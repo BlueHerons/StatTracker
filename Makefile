@@ -1,6 +1,6 @@
 SHELL			= /bin/bash
 
-BUILD_DIR		= .
+BUILD_DIR		= build
 CONFIG_BASE_URL		= http:\/\/blueheronsresistance.com\/stats\/# escapes needed for sed
 DEPLOY_DIR		= /sites/blueheronsresistance.com/stats/
 GIT_REV			= $(shell git rev-parse HEAD)
@@ -22,7 +22,7 @@ config:
 
 copy: info
 	echo "  Copying files...";
-	rsync -r --exclude-from $(RSYNC_IGNORE_FILE) ./ $(BUILD_DIR);
+	rsync -r -a --exclude-from $(RSYNC_IGNORE_FILE) ./ $(BUILD_DIR);
 
 css:
 	echo "  Compiling LESS...";
