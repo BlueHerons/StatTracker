@@ -9,7 +9,7 @@ SELECT GetValueForAgentAndStatOnDate(agent_name, stat_key, DATE_SUB(start_date, 
 CREATE TEMPORARY TABLE DailyTrend AS
 SELECT date,
        @rate `target`,
-       IF (date > NOW(), NULL, COALESCE(value - @lastValue, (@lastValue + @rate) - @lastValue)) `value`,
+       IF (date > NOW(), NULL, COALESCE(value - @lastValue, 0)) `value`,
        @lastValue := COALESCE(value, @lastValue + @rate)
   FROM (SELECT @lastValue := @start) vars,
 (SELECT dl.date `date`, 
