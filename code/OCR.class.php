@@ -118,7 +118,9 @@ class OCR {
 
 			// Strip numerics from the line for comparison
 			$name_line = trim(preg_replace("/[0-9,]/", "", $line));
+			$name_line = trim(preg_replace("/".$unit."$/i", "",  $name_line));
 			$value_line = trim(str_replace(explode(" ", $stat_name), "", $line));
+			$value_line = trim(str_replace(explode(" ", $unit), "", $value_line));
 
 			$s = array (
 				"index" => $index,
@@ -126,13 +128,20 @@ class OCR {
 				"line" => $line,
 				"value_line" => $value_line,
 				"name_line" => $name_line,
+				"diff" => abs(strlen($stat_name) - strlen($name_line)),
 				"score" => levenshtein($stat_name, $name_line),
+				"threshold" => (strlen($stat_name) / 2),
 				"value" => trim(preg_replace("/[^0-9lt]/", "", $value_line)) // 1 is sometimes read as l or t
 			);
 
-			// If every character needs to be replaced, clearly not a match
-			if (strlen($name_line) == $s['score'] || $s['score'] > self::LEVENSHTEIN_THRESHOLD)
+			
+
+			// If more than half of the characters needs to be replaced, clearly not a match
+			if (($s['score'] + $s['diff']) >= $s['threshold']) {
+				echo "REJECT";
+				print_r($s);
 				continue;
+			}
 
 			$s['final_value'] = $s['value'];
 
