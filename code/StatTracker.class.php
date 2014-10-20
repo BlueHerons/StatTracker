@@ -373,36 +373,42 @@ class StatTracker {
 
 	public static function getTrend($agent, $stat, $when) {
 		global $mysql;
+		$start = "";
+		$end = "";
 
 		switch ($when) {
+			case "last-week":
+				$start = date("Y-m-d", strtotime("last monday", strtotime("6 days ago")));
+				$end = date("Y-m-d", strtotime("next sunday", strtotime("8 days ago")));
+				break;
+			case "this-week":
 			case "weekly":
+			default:
 				$start = date("Y-m-d", strtotime("last monday", strtotime("tomorrow")));
 				$end = date("Y-m-d", strtotime("next sunday", strtotime("yesterday")));
-
-				$sql = sprintf("CALL GetDailyTrend('%s', '%s', '%s', '%s');", $agent->name, $stat, $start, $end);
-				if (!$mysql->query($sql)) {
-					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-				}
-
-				$sql = "SELECT * FROM DailyTrend";
-				$res = $mysql->query($sql);
-
-				if (!$res) {
-					die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-				}
-		
-				$data = array();
-				while ($row = $res->fetch_assoc()) {
-					$data["dates"][] = $row["date"];
-					$data["target"][] = $row["target"];
-					$data["value"][] = $row["value"];
-				}
-
 				break;
 		}
 
-		return $data;
+		$sql = sprintf("CALL GetDailyTrend('%s', '%s', '%s', '%s');", $agent->name, $stat, $start, $end);
+		if (!$mysql->query($sql)) {
+			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+		}
 
+		$sql = "SELECT * FROM DailyTrend";
+		$res = $mysql->query($sql);
+
+		if (!$res) {
+			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
+		}
+		
+		$data = array();
+		while ($row = $res->fetch_assoc()) {
+			$data["dates"][] = $row["date"];
+			$data["target"][] = $row["target"];
+			$data["value"][] = $row["value"];
+		}
+
+		return $data;
 	}
 
 	/**
@@ -467,7 +473,7 @@ class StatTracker {
 		$data->platinum_remaining = $row['platinum_remaining'];
 		$data->onyx_remaining = $row['onyx_remaining'];
 		$data->days_remaining = $row['days'];
-		$data->rate = $row['slope'];
+		$data->rate = $row['rate'];
 
 		return $data;
 	}
