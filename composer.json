@@ -2,6 +2,7 @@
     "require": {
 	"google/apiclient": "~1.0@beta",
 	"swiftmailer/swiftmailer": "~5.1.0",
+	"thiagoalessio/tesseract_ocr": "0.2.0",
 	"twig/twig": "~1.8",
         "silex/silex": "~1.2"
     }
