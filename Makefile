@@ -35,9 +35,12 @@ deploy:
 	# Change the user:group below to match your server setup
 	chown -R root:www-data $(DEPLOY_DIR);
 	chmod -R 0750 $(DEPLOY_DIR);
+	rm -rf $(DEPLOY_DIR)/uploads;
+	mkdir $(DEPLOY_DIR)/uploads;
+	chmod 0777 $(DEPLOY_DIR)/uploads;
 
 info:
 	echo "  Generating build info...";
-	echo "Revision: ${GIT_REV}" > $(INFO_FILE)
+	echo ${GIT_REV} > $(INFO_FILE)
 
 
