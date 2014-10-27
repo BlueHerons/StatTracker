@@ -21,4 +21,6 @@ define("ENL_GREEN", "#2BED1B");
 define("GROUP_NAME",  "The Local Resistance");
 define("GROUP_EMAIL", "stats@localresistance.com");
 define("ADMIN_AGENT", "YourIngressAgentName");
+
+define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
 ?>
