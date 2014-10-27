@@ -37,7 +37,7 @@ class OCR {
 	 *
 	 * @return path to new PBM image
 	 */
-	public static function convertToPBM($imagePath, $deleteOriginal = false) {
+	public static function convertToPBM($imagePath, $deleteOriginal = true) {
 		$img = new Imagick();
 		$quantumRange = $img->getQuantumRange();
 		$black_point = $quantumRange['quantumRangeLong'] * 0.04;
