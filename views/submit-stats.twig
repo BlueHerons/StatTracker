@@ -1,103 +1,144 @@
-<div id="message" />
-<div id="badges" />
+<div id="message" />	
+
 <form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
 		<div class="about">
 			<div class="name {{ faction_class }}">{{ agent.name }}</div>
 			<div class="level">LVL <span>{{ agent.level }}</span></div>
-			<div class="ap"><input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') }}" /> AP</div>
+			<div class="ap">
+				<span class="current">{{ attribute(agent.stats, 'ap')|number_format }}</span>
+				<input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') }}" data-previous-value="{{ attribute(agent.stats, 'ap') }}" />
+				 AP
+			</div>
 		</div>
-		<div class="badges" />
 	</div>
-	<table>
-{% for stat in stats if stat.stat != "ap" %}
-	{% set title = "" %}
-	{% if stat.stat == "unique_visits" %}
-		{% set title = "Discovery" %}
-	{% elseif stat.stat == "hacks" %}
-		{% set title = "Building" %}
-	{% elseif stat.stat == "res_destroyed" %}
-		{% set title = "Combat" %}
-	{% elseif stat.stat == "distance_walked" %}
-		{% set title = "Health" %}
-	{% elseif stat.stat == "oldest_portal" %}
-		{% set title = "Defense" %}
-	{% elseif stat.stat == "unique_missions" %}
-		{% set title = "Missions" %}
+	
+	<div id="submit-actions">
+		<input type="file" name="screenshot" class="button upload-screenshot" />
+		<div class="fakeupload">
+			<input type="button" value = "Upload a Screenshot" />
+		</div>
+		<input type="button" name="manual-entry" value="Enter Stats Manually" />
+	</div>
+	
+		<table id="stat-entry">
+	{% for stat in stats if stat.stat != "ap" %}
+		{% set title = "" %}
+		{% if stat.stat == "unique_visits" %}
+			{% set title = "Discovery" %}
+		{% elseif stat.stat == "hacks" %}
+			{% set title = "Building" %}
+		{% elseif stat.stat == "res_destroyed" %}
+			{% set title = "Combat" %}
+		{% elseif stat.stat == "distance_walked" %}
+			{% set title = "Health" %}
+		{% elseif stat.stat == "oldest_portal" %}
+			{% set title = "Defense" %}
+		{% elseif stat.stat == "unique_missions" %}
+			{% set title = "Missions" %}
+	
+		{% endif %}
+	
+	{% if title != "" %}
+			<tr>
+				<th colspan="2">{{ title }}</th>
+			</tr>
+		{% endif %}
+			<tr>
+				<td>{{ stat.name }}</td>
+				<td><input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" /></td>
+			</tr>
+	{% endfor %}
+			<tr>
+				<td colspan="2"><input type="submit" value="Submit Stats"/></td>
+			</tr>
+		</table>
+	</form>
 
-	{% endif %}
-
-{% if title != "" %}
-		<tr>
-			<th colspan="2">{{ title }}</th>
-		</tr>
-	{% endif %}
-		<tr>
-			<td>{{ stat.name }}</td>
-			<td><input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" /></td>
-		</tr>
-{% endfor %}
-		<tr>
-			<td colspan="2"><input type="submit" value="Submit Statistics"/></td>
-		</tr>
-	</table>
-</form>
 <script>
 function onPageLoad() {
-	if (StatTracker.message == "" || StatTracker.message == null)
-		$("#message").hide();
-	else
-		$("#message").html(StatTracker.message).show();
+	$("#message").hide();
+	$("input[name='ap']").hide();
+	$("table#stat-entry").hide();
 
-	$("input[type='number']").focus(function(e) { $(e.target).select().one("mouseup", function(f) { f.preventDefault(); }); });
+	$("input[name='screenshot']").on("change", function() {
+		var file = $("input[name='screenshot']").prop("files")[0];
+		var data = new FormData();
+		data.append("screenshot", file);
+		$("#agent-info").hide();
+		$("#message").show().html("Processing screenshot...").after("<div class='loading' />");
+		$("#submit-actions").hide();
+		$.ajax({
+			type: "POST",
+			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
+			data: data,
+			dataType: "json",
+			cache: false,
+			processData: false,
+			contentType: false,
+			success: function(response) {
+				$("#message").html("Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.");
+				$("#agent-info").show();
+				$("#agent-info .ap .current").hide();
+				$("#agent-info .ap input").show();
+				$("table#stat-entry").show();
 
-	$.ajax({url: StatTracker.baseUrl + "data/badges",
-		dataType: "json",
-		statusCode: {
-			500 : function() {
-				alert("There was an error retrieving your badges.");
+				for (stat in response) {
+					val = response[stat];
+					$("input[type='number'][name='"+ stat +"']").val(val);
+					if (val == null || val == "") {
+						$("input[type='number'][name='"+ stat +"']").addClass("error");
+						$("#message").html("Some stats could not be read from your screenshot. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
+					}
+					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") > val) {
+						$("input[type='number'][name='"+ stat +"']").addClass("error");
+						$("#message").html("Some stats appear to have lower values than your previous entry. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
+					}
+					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") < val) {
+						$("input[type='number'][name='"+ stat +"']").addClass("increase");
+					}
+				}
+			},
+			error: function(response) {
+				console.log(response);
+				$("#message").html("An error occured while processing your screenshot.");
+				$("form#ocr").show();
+			},
+			complete: function() {
+				$(".loading").hide();
 			}
-		},
-		success: function(data) {
-			for (badge in data) {
-				if (badge == "level") continue;
-				name = badge.replace("_", " ");
-				name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-				key = badge.replace("_", "");
-				level = data[badge];
-				name += " (" + level.charAt(0).toUpperCase() + level.substr(1) + ")";
-				url = StatTracker.baseUrl + "resources/images/" + key + "_" + level + ".png";
-				img = $(document.createElement("img")).attr("src", url)
-				                                      .attr("alt", name)
-				                                      .attr("title", name)
-                                                                      .addClass("small-badge-icon");
-				$(".badges").append(img);
+		});
+	});
+
+	$("input[name='manual-entry']").on("click", function() {
+		$("#submit-actions").hide();
+		$("#agent-info .ap .current").hide();
+		$("#agent-info .ap input").show();
+		$("table#stat-entry").show();
+	});
+
+	$("form#submit-stats").submit(function() {
+		$("#message").hide().before("<div class='loading' />")
+		window.scrollTo(0,0);
+		$.ajax({
+			type: "POST",
+			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
+			data: $("form#submit-stats").serialize(),
+			dataType: "json",
+			success: function(data) {
+				$(".loading").hide();
+				if (!data.error) {
+					$("#message").show().html(data.message).show();
+					window.scrollTo(0,0);
+				}
+				else {
+					alert(data.message);
+				}
 			}
-		}
+		});
+	
+		return false;
 	});
 }
-
-$("form#submit-stats").submit(function() {
-	$("#message").hide().before("<div class='loading' />")
-	window.scrollTo(0,0);
-	$.ajax({
-		type: "POST",
-		url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
-		data: $("form#submit-stats").serialize(),
-		dataType: "json",
-		success: function(data) {
-			$(".loading").hide();
-			if (!data.error) {
-				$("#message").html(data.message).show();
-				window.scrollTo(0,0);
-			}
-			else {
-				alert(data.message);
-			}
-		}
-	});
-
-	return false;
-});
 </script>

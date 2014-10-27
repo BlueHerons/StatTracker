@@ -28,17 +28,69 @@ body {
 	}
 
 	form {
-		input[type="submit"] {
-			background: rgba(0, 89, 81, 1);
-			border: 2px solid rgba(0, 216, 225, 1);
-			color: rgba(0, 255, 255, 1);
-			width: 100%;
-			height: 40px;
-			font-family: "Coda";
-			font-size: 16pt;
-		}
-
 	}
+}
+
+input[type="number"] {
+	background-color: black;
+	border: 0;
+	color: @header-color;
+	font-family: "Coda";
+	font-size: 12pt;
+	text-align: right;
+}
+
+input[type="number"].increase {
+	border: 1px solid green;
+}
+
+input[type="number"].error {
+	border: 1px solid red;
+}
+
+input[type="number"].warning {
+	border: 1px solid yellow;
+}
+
+input[type="number"][value=""] {
+	border: 1px solid red;
+}
+
+input[type="submit"], input[type="button"], input.button {
+	background: rgba(0, 89, 81, 1);
+	border: 2px solid rgba(0, 216, 225, 1);
+	color: rgba(0, 255, 255, 1);
+	cursor: pointer;
+	width: 100%;
+	height: 40px;
+	font-family: "Coda";
+	font-size: 16pt;
+}
+
+input[type="file"] {
+	border: 1px solid red;
+	cursor: pointer;
+	height: 40px;
+	opacity: 0;
+	position: relative;
+	width: 100%;
+	z-index: 2;
+}
+
+div.fakeupload {
+	position: relative;
+	top: -40px;
+	left: 0px;
+	z-index: 1;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+	visibility: hidden;
+}
+
+input[type="file"].upload-screenshot::before {
+	content: "Upload a Screenshot";
+	-webkit-user-select: none;
 }
 
 .tabs {
@@ -335,6 +387,11 @@ table {
 	}
 }
 
+#submit-actions {
+	margin: 40px auto;
+	max-width: 440px;
+}
+
 #upcoming_badges {
 	margin: 0 auto;
 	width: @upcoming-badge-width;
@@ -444,40 +501,35 @@ table {
 
 }
 
-form#submit-stats {
-	table {
-		clear: both;
-		font-size: 1em;
-		margin-left: auto;
-		margin-right: auto;
-		max-width: 440px;
-		width: 95%;
+form {
 
-		th {
-			background: rgba(148,124,43,1);/* Old Browsers */
-			background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
-			background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
-			background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
-			background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
-			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
-		}
+}
+
+form#ocr {
+	margin: 0 auto;
+	max-height: 40px;
+	max-width: 440px;
+}
+
+table#stat-entry {
+	clear: both;
+	font-size: 1em;
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 440px;
+	width: 95%;
+
+	th {
+		background: rgba(148,124,43,1);/* Old Browsers */
+		background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
+		background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
+		background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
+		background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
 	}
 
 	td:nth-child(2) {
 		text-align: right;
-	}
-
-	input[type="number"] {
-		background-color: black;
-		border: 0;
-		color: @header-color;
-		font-family: "Coda";
-		font-size: 12pt;
-		text-align: right;
-	}
-
-	input[type="number"][value=""] {
-		border: 1px solid red;
 	}
 
 	input[type="submit"] {
