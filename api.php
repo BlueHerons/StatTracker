@@ -3,6 +3,7 @@ require_once("config.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
 require_once("code/Authentication.class.php");
+require_once("code/OCR.class.php");
 require_once("vendor/autoload.php");
 
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,7 @@ if ($mysql->connect_errno) {
 
 $app = new Silex\Application();
 $app->register(new Silex\Provider\SessionServiceProvider());
+$app['debug'] = true;
 
 $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
@@ -136,7 +138,7 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 
 
 // Allow agents to submit stats
-$app->post("/api/{auth_code}/submit", function ($auth_code) use ($app) {
+$app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
@@ -147,6 +149,25 @@ $app->post("/api/{auth_code}/submit", function ($auth_code) use ($app) {
 	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
 	return $response;
+});
+
+$app->post("/api/{auth_code}/ocr", function($auth_code) use ($app) {
+	$agent = Agent::lookupAgentByAuthCode($auth_code);
+
+	if (!$agent->isValid()) {
+		return $app->abort(404);
+	}
+
+	if (empty($_FILES) || empty($_FILES['screenshot'])) {
+		return $app->abort(400);
+	}
+
+	$file = UPLOAD_DIR . OCR::getTempFileName();
+	move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+	$data = OCR::scanAgentProfile($file);
+
+	return $app->json($data);
+
 });
 
 $app->after(function (Request $request, Response $response) {
