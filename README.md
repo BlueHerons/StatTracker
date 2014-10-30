@@ -9,7 +9,7 @@ Stat Tracker relies on agents to submit thier own data. It does not pull any dat
 To run your own instance of Stat Tracker, you will need:
 
  * A LAMP (**L** inux, **A** pache, **M** ySQL, **P** HP) server
-   * [composer](http://getcomposer.org), [lessc](http://lesscss.org/#using-less) and `make` must be installed.
+   * [composer](http://getcomposer.org), [lessc](http://lesscss.org/#using-less), [ocrad](http://www.gnu.org/software/ocrad/) and `make` must also be installed.
  * A [Google Developer](http://console.developers.google.com) account (for OAuth)
  * An SMTP server (Your existing email service should provide one)
  
