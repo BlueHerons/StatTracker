@@ -144,10 +144,21 @@ function onPageLoad() {
 			$("#ratios").html("");
 			data.forEach(function(ratio, i, arr) {
 				html = tmpl.clone();
-				$(html).find(".badge-1 .badge-image").addClass(ratio.stat1.badge.replace("_", ""))
+				ratio.stat1.badge = ratio.stat1.badge.replace("_", "");
+				ratio.stat2.badge = ratio.stat2.badge.replace("_", "");
+
+				if (ratio.stat1.badge == "level") {
+					ratio.stat1.level = "level-icon-75 {{faction_class}} l" + ratio.stat1.level;
+				}
+
+				if (ratio.stat2.badge == "level") {
+					ratio.stat2.level = "level-icon-75 {{faction_class}} l" + ratio.stat2.level;
+				}
+
+				$(html).find(".badge-1 .badge-image").addClass(ratio.stat1.badge)
 				                                     .addClass(ratio.stat1.level)
                                                                      .attr("title", ratio.stat1.name);
-				$(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge.replace("_", ""))
+				$(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge)
                       				                     .addClass(ratio.stat2.level)
 				                                     .attr("title", ratio.stat2.name);
 				$(html).find(".value").html(ratio.ratio);
