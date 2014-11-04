@@ -151,19 +151,32 @@ $app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	return $response;
 });
 
-$app->post("/api/{auth_code}/ocr", function($auth_code) use ($app) {
+$app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
 		return $app->abort(404);
 	}
 
-	if (empty($_FILES) || empty($_FILES['screenshot'])) {
-		return $app->abort(400);
+	$content_type = $request->headers->get("content_type");
+	$file = UPLOAD_DIR . OCR::getTempFileName();
+
+	switch ($content_type) {
+		case "application/x-www-form-urlencoded":
+			// Not a file upload, but a POST of bytes
+			$hndl = fopen($file, "w+");
+			fwrite($hndl, file_get_contents("php://input"));
+			fclose($hndl);
+			break;
+		case "multipart/form-data":
+			// Typically an HTTP file upload
+			move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+			break;
+		default:
+			return $app->abort(400, "Bad request of type " . $content_type);
+			break;
 	}
 
-	$file = UPLOAD_DIR . OCR::getTempFileName();
-	move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
 	$data = OCR::scanAgentProfile($file);
 
 	return $app->json($data);
