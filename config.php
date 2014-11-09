@@ -23,4 +23,6 @@ define("GROUP_EMAIL", "stats@localresistance.com");
 define("ADMIN_AGENT", "YourIngressAgentName");
 
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
+define("COMMIT_HASH", "");
+define("TAG_NAME", "");
 ?>
