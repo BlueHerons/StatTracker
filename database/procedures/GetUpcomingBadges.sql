@@ -23,12 +23,7 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
          b.name,
          b.level,
          d.value / b.amount_required,
-         ((b.amount_required - d.value) /
-         (SELECT value 
-            FROM Cache 
-           WHERE agent = agent_name AND
-                 stat = b.stat AND
-                 `key` = 'rate')) remaining
+         (b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat) `remaining`
     FROM Data d
     JOIN Badges b ON d.stat = b.stat 
    WHERE d.agent = agent_name AND 
