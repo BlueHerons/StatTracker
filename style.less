@@ -7,9 +7,11 @@
 
 @upcoming-badge-height: 85;
 @upcoming-badge-width: 270;
+@upcoming-badge-time-margin: @upcoming-badge-height / 3.3;
 
 @ratio-height: 105;
 @ratio-width: 180;
+@ratio-seperator-padding: @ratio-height / 5;
 
 body {
 	background: rgba(0, 0, 0, 1);
@@ -375,7 +377,7 @@ table {
 	color: white;
 	font-size: 20px;
 	padding: 5px 0;
-	height: @upcoming-badge-height;
+	height: ~"@{upcoming-badge-height}px";
 
 	.badge {
 		float: left;
@@ -383,7 +385,7 @@ table {
 	}
 
 	.time-remaining {
-		padding-top: @upcoming-badge-height / 3.3;
+		padding-top: ~"@{upcoming-badge-time-margin}px";
 		padding-left: 10px;
 	}
 }
@@ -395,20 +397,20 @@ table {
 
 #upcoming_badges {
 	margin: 0 auto;
-	width: @upcoming-badge-width;
+	width: ~"@{upcoming-badge-width}px";
 }
 
 #ratios {
 	margin: 0 auto;
-	min-width: @ratio-width;
-	width: @ratio-width;
+	min-width: ~"@{ratio-width}px";
+	width: ~"@{ratio-width}px";
 
 	.ratio {
 		clear: left;
 		color: white;
 		display: block;
 		font-size: 20px;
-		height: @ratio-height;
+		height: ~"@{ratio-height}px";
 		padding-bottom: 20px;
 		padding-left: 4px;
 
@@ -419,7 +421,7 @@ table {
 			}
 
 			.seperator {
-				padding-top: @ratio-height / 5;
+				padding-top: ~"@{ratio-seperator-padding}px";
 				padding-left: 10px;
 				padding-right: 10px;
 			}
@@ -526,7 +528,6 @@ table#stat-entry {
 		background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
 		background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
 		background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
-		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#927c2b', endColorstr='#f1e767', GradientType=1 );/* IE6-9 */
 	}
 
 	td:nth-child(2) {
