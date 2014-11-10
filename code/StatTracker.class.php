@@ -24,6 +24,19 @@ class StatTracker {
 				$stat->unit = $row['unit'];
 				$stat->graphable = $row['graph'];
 				$stat->leaderboard = $row['leaderboard'];
+				$stat->badges = array();
+
+				$sql = "SELECT level, amount_required FROM Badges WHERE stat = '%s' ORDER BY `amount_required` ASC;";
+				$sql = sprintf($sql, $stat->stat);
+				$res2 = $mysql->query($sql);
+				if (!is_object($res)) {
+					die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+				}
+
+				while ($row2 = $res2->fetch_assoc()) {
+					$stat->badges[$row2['amount_required']] = $row2['level'];
+				}
+
 				self::$fields[$row['stat']] = $stat;
 			}
 		}
