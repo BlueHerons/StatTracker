@@ -1,4 +1,7 @@
 DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `GetCurrentBadges` $$
+
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentBadges`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN

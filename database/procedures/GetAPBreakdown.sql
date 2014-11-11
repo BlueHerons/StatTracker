@@ -1,4 +1,7 @@
 DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `GetAPBreakdown` $$
+
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetAPBreakdown`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
