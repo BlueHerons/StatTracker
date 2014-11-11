@@ -158,7 +158,7 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 		return $app->abort(404);
 	}
 
-	$content_type = $request->headers->get("content_type");
+	$content_type = explode(";", $request->headers->get("content_type"))[0];
 	$file = UPLOAD_DIR . OCR::getTempFileName();
 
 	switch ($content_type) {
