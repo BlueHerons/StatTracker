@@ -21,6 +21,7 @@ define("ENL_GREEN", "#2BED1B");
 define("GROUP_NAME",  "The Local Resistance");
 define("GROUP_EMAIL", "stats@localresistance.com");
 define("ADMIN_AGENT", "YourIngressAgentName");
+//define("EMAIL_SUBMISSION", "stats@blueheronsresistance.com"); /* Uncomment this line if you want to support email submission. Read more on the wiki */
 
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
 define("COMMIT_HASH", "");
