@@ -35,6 +35,7 @@ $app->get('/{page}', function ($page) use ($app) {
 	    $page == "leaderboards") {
 	
 		return $app['twig']->render("index.twig", array(
+			"constants" => array("ga_id" => GOOGLE_ANALYTICS_ID),
 			"version_string" => empty(TAG_NAME) ? "version " . substr(COMMIT_HASH, 0, 7) : TAG_NAME,
 			"page" => $page
 		));
