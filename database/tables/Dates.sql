@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS `Dates`;
+
 CREATE TABLE `Dates` (
   `date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

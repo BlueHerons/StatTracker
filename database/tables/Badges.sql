@@ -2,7 +2,8 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `Badges`;
-CREATE TABLE IF NOT EXISTS `Badges` (
+
+CREATE TABLE EXISTS `Badges` (
   `name` varchar(20) NOT NULL,
   `level` enum('None','Bronze','Silver','Gold','Platinum','Onyx','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16') NOT NULL,
   `stat` varchar(20) NOT NULL,
@@ -11,7 +12,8 @@ CREATE TABLE IF NOT EXISTS `Badges` (
   KEY `stat` (`stat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
+INSERT INTO `Badges` 
+(`name`, `level`, `stat`, `amount_required`) VALUES
 ('Builder', 'None', 'res_deployed', 0),
 ('Builder', 'Bronze', 'res_deployed', 2000),
 ('Builder', 'Silver', 'res_deployed', 10000),

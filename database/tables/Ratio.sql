@@ -2,6 +2,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `Ratio`;
+
 CREATE TABLE `Ratio` (
   `stat_1` varchar(20) CHARACTER SET latin1 NOT NULL,
   `stat_2` varchar(20) CHARACTER SET latin1 NOT NULL,

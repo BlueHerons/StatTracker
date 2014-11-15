@@ -1,28 +1,15 @@
 DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `GetBadgePrediction` $$
+
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgePrediction`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
     READS SQL DATA
 BEGIN
 
 DROP TABLE IF EXISTS BadgePrediction;
 
-SELECT count(*),
-       SUM(timepoint),
-       SUM(value),
-       SUM(timepoint * timepoint),
-       SUM(value * timepoint)
-  INTO @n,
-       @sumX,
-       @sumY,
-       @sumX2,
-       @sumXY
-  FROM Data 
- WHERE agent = agent_name AND
-       stat = stat_key AND
-       value > 0 AND
-       date >= DATE_SUB(NOW(), INTERVAL 30 DAY);
-
-SELECT (((@n * @sumXY) - (@sumX * @sumY)) / ((@n * @sumX2) - (@sumX * @sumX))) INTO @slope;
-SELECT ((@sumY - (@slope * @sumX)) / @n) INTO @intercept;
+SELECT GetRateForAgentAndStat(agent_name, stat_key) INTO @slope;
+SELECT GetInterceptForAgentAndStat(agent_name, stat_key) INTO @intercept;
 
 SELECT value 
   INTO @min
@@ -67,9 +54,6 @@ IF @days < 0 THEN
 	SELECT 0 INTO @days;
 END IF;
 
-CALL UpdateCache(agent_name, stat_key, 'rate', @slope);
-CALL UpdateCache(agent_name, stat_key, 'intercept', @intercept);
-
 CREATE TEMPORARY TABLE BadgePrediction
 	SELECT stat_key `stat`, 
 	       @stat `name`,
@@ -86,4 +70,5 @@ CREATE TEMPORARY TABLE BadgePrediction
 	       ROUND(@slope, 2) `slope`;
 
 END $$
+
 DELIMITER ;

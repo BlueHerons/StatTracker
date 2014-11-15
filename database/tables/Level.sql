@@ -1,7 +1,9 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `Level` (
+DROP TABLE IF EXISTS `Level`;
+
+CREATE TABLE `Level` (
   `level` tinyint(4) NOT NULL,
   `ap_required` int(11) NOT NULL,
   `silver_required` tinyint(4) NOT NULL,

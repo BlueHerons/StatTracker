@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS `Data` (
   `timepoint` int(3) NOT NULL COMMENT 'Days since first submission',
   `stat` varchar(20) NOT NULL,
   `value` int(11) NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '[DEPRECATED]',
   `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Last updated',
   PRIMARY KEY (`agent`,`date`,`timestamp`,`stat`),
   KEY `stat` (`stat`),

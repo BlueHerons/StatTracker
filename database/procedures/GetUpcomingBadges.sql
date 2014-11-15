@@ -1,5 +1,7 @@
 DELIMITER $$
 
+DROP PROCEDURE IF EXISTS `GetUpcomingBadges` $$
+
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetUpcomingBadges`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -7,7 +9,7 @@ BEGIN
 DROP TABLE IF EXISTS UpcomingBadges;
 
 CREATE TEMPORARY TABLE UpcomingBadges (
-	stat VARCHAR(20),
+    stat VARCHAR(20),
     badge VARCHAR(20),
     next VARCHAR(10),
     progress DOUBLE(3,2),
@@ -25,10 +27,12 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
          d.value / b.amount_required,
          (b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat) `remaining`
     FROM Data d
-    JOIN Badges b ON d.stat = b.stat 
+    JOIN Badges b ON d.stat = b.stat
+    JOIN Stats s ON d.stat = s.stat
    WHERE d.agent = agent_name AND 
          d.date = @latest_submission AND
-         b.amount_required > d.value
+         b.amount_required > d.value AND
+         s.prediction = 1
 GROUP BY b.stat
 ORDER BY remaining ASC;
 

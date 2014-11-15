@@ -1,4 +1,7 @@
 DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `GetRatiosForAgent` $$
+
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetRatiosForAgent`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
@@ -35,7 +38,6 @@ ratio_loop: LOOP
     FETCH row_cursor INTO stat_1, stat_2, message;
 
     IF done THEN LEAVE ratio_loop; END IF;
-
 
     SELECT value INTO @stat1
       FROM Data
