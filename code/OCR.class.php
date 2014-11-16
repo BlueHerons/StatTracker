@@ -254,7 +254,8 @@ class OCR {
 		$i = 0;
 
 		foreach ($stats as $stat) {
-			$data[$stat->stat] = $elements[$i++];
+			if ($stat->ocr)
+				$data[$stat->stat] = $elements[$i++];
 		}
 
 		return $data;
