@@ -52,7 +52,17 @@
 		{% endif %}
 			<tr>
 				<td>{{ stat.name }}</td>
-				<td><input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" /></td>
+				<td>
+				{% if stat.stat == "innovator" %}
+				<select name="{{ stat.stat }}">
+					{% for required, badge in stat.badges %}
+					<option value="{{ required }}" {% if required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
+					{% endfor %}
+				</select>
+				{% else %}
+				<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
+				{% endif %}
+				</td>
 			</tr>
 	{% endfor %}
 			<tr>

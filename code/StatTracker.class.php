@@ -11,7 +11,7 @@ class StatTracker {
 	public static function getStats() {
 		if (!is_array(self::$fields)) {
 			global $mysql;
-			$sql = "SELECT stat, name, unit, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
+			$sql = "SELECT stat, name, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
 			$res = $mysql->query($sql);
 			if (!is_object($res)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
@@ -22,8 +22,22 @@ class StatTracker {
 				$stat->stat = $row['stat'];
 				$stat->name = $row['name'];
 				$stat->unit = $row['unit'];
+				$stat->ocr = $row['ocr'];
 				$stat->graphable = $row['graph'];
 				$stat->leaderboard = $row['leaderboard'];
+				$stat->badges = array();
+
+				$sql = "SELECT level, amount_required FROM Badges WHERE stat = '%s' ORDER BY `amount_required` ASC;";
+				$sql = sprintf($sql, $stat->stat);
+				$res2 = $mysql->query($sql);
+				if (!is_object($res)) {
+					die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
+				}
+
+				while ($row2 = $res2->fetch_assoc()) {
+					$stat->badges[$row2['amount_required']] = $row2['level'];
+				}
+
 				self::$fields[$row['stat']] = $stat;
 			}
 		}

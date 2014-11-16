@@ -544,8 +544,17 @@ table#stat-entry {
 		background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
 	}
 
+	td {
+		text-align: left;
+	}
+
 	td:nth-child(2) {
+		color: @header-color;
 		text-align: right;
+
+		span {
+			padding-right: 13px;
+		}
 	}
 
 	input[type="submit"] {
