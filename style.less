@@ -537,11 +537,23 @@ table#stat-entry {
 	width: 95%;
 
 	th {
-		background: rgba(148,124,43,1);/* Old Browsers */
-		background: -moz-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* FF3.6+ */
-		background: -o-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* Opera 11.10+ */
-		background: -ms-linear-gradient(left, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%); /* IE 10+ */
-		background: linear-gradient(to right, rgba(146,124,43,1) 0%, rgba(241,231,103,0) 100%);/* W3C */
+		border-top: solid 1px #7a6428;
+		border-bottom: solid 1px #7a6428;
+		/*color:rgb(244, 207, 71);*/
+		/* fallback */
+		background-color: #0d0a05;
+		background-image: url("./resources/images/linear_bg_1.png");
+		background-repeat: repeat-y;
+		/* Safari 4-5, Chrome 1-9 */
+		background: -webkit-gradient(linear, left top, right top, from(#0d0a05), to(#4a3d19));
+		/* Safari 5.1, Chrome 10+ */
+		background: -webkit-linear-gradient(left, #4a3d19, #0d0a05);
+		/* Firefox 3.6+ */
+		background: -moz-linear-gradient(left, #4a3d19, #0d0a05);
+		/* IE 10 */
+		background: -ms-linear-gradient(left, #4a3d19, #0d0a05);
+		/* Opera 11.10+ */
+		background: -o-linear-gradient(left, #4a3d19, #0d0a05);
 	}
 
 	td {
