@@ -1,10 +1,12 @@
 <div class="quick-links">
 {% for stat in stats %}
+	{% if stat.hasLeaderboard() %}
 	<a href="#{{ stat.stat }}">{{ stat.name }}</a> {% if not loop.last %} &nbsp;|&nbsp; {% endif %}
+	{% endif %}
 {% endfor %}
 </div>
 
-{% for stat in stats %}
+{% for stat in stats if stat.hasLeaderboard() %}
 	<div class="leaderboard {{ stat.stat }}">
 		<a name="{{ stat.stat }}">
 			<h3>{{ stat.name }}</h3>

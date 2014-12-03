@@ -507,6 +507,10 @@ class Stat {
 	public $graphable;
 	public $leaderboard;
 
+	public function hasLeaderboard() {
+		return $this->leaderboard > 0;
+	}
+
 	public function hasAllTimeLeaderboard() {
 		return ($this->leaderboard & 0x1) == 1;
 	}
