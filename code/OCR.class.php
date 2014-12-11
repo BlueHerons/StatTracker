@@ -201,8 +201,6 @@ class OCR {
 		$step = 'start';
 		$elements = array();
 		foreach($lines as $line) {
-			error_log($step);
-			error_log($line);
 			if ($step == 'start' && preg_match('/^\s*([\d\s\|.egiloqt,]+)\s*AP\s*$/sxmi', $line, $values)) {
 				$step = 'ap';
 				array_push($elements, $values[1]);
