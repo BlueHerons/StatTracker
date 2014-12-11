@@ -177,7 +177,7 @@ class OCR {
 	 *
 	 * @return array of lines read from the image
 	 */
-	public static function executeOCR($imagePath, $deleteImage = true) {
+	public static function executeOCR($imagePath, $deleteImage = false) {
 		exec("/usr/bin/ocrad -i $imagePath", $lines);
 
 		if ($deleteImage) {
@@ -201,40 +201,50 @@ class OCR {
 		$step = 'start';
 		$elements = array();
 		foreach($lines as $line) {
+			error_log($step);
+			error_log($line);
 			if ($step == 'start' && preg_match('/^\s*([\d\s\|.egiloqt,]+)\s*AP\s*$/sxmi', $line, $values)) {
 				$step = 'ap';
 				array_push($elements, $values[1]);
 			} elseif ($step == 'ap' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
 				$step = 'discovery';
 				$count = 0;
-			} elseif ($step == 'discovery' && preg_match('/^\s*Building\s*$/sxmi', $line)) {
+			} elseif ($step == 'discovery' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
 				// inject a 0 if only 2 stats, which means that the agent has 0 portals discovered
 				if ($count == 2) {
 					$temp = array_pop($elements);
 					array_push($elements, '0');
 					array_push($elements, $temp);
 				}
+				$step = 'health';
+			} elseif ($step == 'health' && preg_match('/^\s*Building\s*$/sxmi', $line)) {
 				$step = 'building';
 			} elseif ($step == 'building' && preg_match('/^\s*Combat\s*$/sxmi', $line)) {
 				$step = 'combat';
-			} elseif ($step == 'combat' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
-				$step = 'health';
-			} elseif ($step == 'health' && preg_match('/^\s*Defense\s*$/sxmi', $line)) {
+			} elseif ($step == 'combat' && preg_match('/^\s*Defense\s*$/sxmi', $line)) {
 				$step = 'defense';
 			} elseif ($step == 'defense' && preg_match('/^\s*Missions\s*$/sxmi', $line)) {
 				$step = 'missions';
+			} elseif ($step == 'defense' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
+				// Inject a 0 for missions completed
+				array_push($elements, 0);
+				$step = 'resources';
+			} elseif ($step == 'missions' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
+				$step = 'resources';
 			} elseif ($step == 'discovery' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:XM)?\s*$/sxmi', $line, $values)) {
 				$count++;
+				array_push($elements, $values[1]);
+			} elseif ($step == 'health' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:km|kln)\s*$/sxmi', $line, $values)) {
 				array_push($elements, $values[1]);
 			} elseif ($step == 'building' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:MUs|XM|km|kln)?\s*$/sxmi', $line, $values)) {
 				array_push($elements, $values[1]);
 			} elseif ($step == 'combat' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 				array_push($elements, $values[1]);
-			} elseif ($step == 'health' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:km|kln)\s*$/sxmi', $line, $values)) {
-				array_push($elements, $values[1]);
 			} elseif ($step == 'defense' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:(?:(?:km|kln|MU)-)?(?:days|clays|ilays|cl_ys|__ys|d_ys|_ays|\(l_ys))\s*$/sxmi', $line, $values)) {
 				array_push($elements, $values[1]);
 			} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+				array_push($elements, $values[1]);
+			} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 				array_push($elements, $values[1]);
 			} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
 				$warning = sprintf($lang['maybe because'], $values[1]);
