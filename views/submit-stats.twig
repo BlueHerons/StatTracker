@@ -28,27 +28,15 @@
 	</div>
 	
 		<table id="stat-entry">
+	{% set last_title = "" %}
 	{% for stat in stats if stat.stat != "ap" %}
-		{% set title = "" %}
-		{% if stat.stat == "unique_visits" %}
-			{% set title = "Discovery" %}
-		{% elseif stat.stat == "hacks" %}
-			{% set title = "Building" %}
-		{% elseif stat.stat == "res_destroyed" %}
-			{% set title = "Combat" %}
-		{% elseif stat.stat == "distance_walked" %}
-			{% set title = "Health" %}
-		{% elseif stat.stat == "oldest_portal" %}
-			{% set title = "Defense" %}
-		{% elseif stat.stat == "unique_missions" %}
-			{% set title = "Missions" %}
-	
-		{% endif %}
-	
-	{% if title != "" %}
+		{% set title = stat.group %}	
+
+		{% if title != last_title and title != "" %}
 			<tr>
 				<th colspan="2">{{ title }}</th>
 			</tr>
+			{% set last_title = title %}
 		{% endif %}
 			<tr>
 				<td>{{ stat.name }}</td>

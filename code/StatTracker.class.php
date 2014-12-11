@@ -11,7 +11,7 @@ class StatTracker {
 	public static function getStats() {
 		if (!is_array(self::$fields)) {
 			global $mysql;
-			$sql = "SELECT stat, name, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
+			$sql = "SELECT stat, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
 			$res = $mysql->query($sql);
 			if (!is_object($res)) {
 				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
@@ -21,6 +21,7 @@ class StatTracker {
 				$stat = new Stat();
 				$stat->stat = $row['stat'];
 				$stat->name = $row['name'];
+				$stat->group = $row['group'];
 				$stat->unit = $row['unit'];
 				$stat->ocr = $row['ocr'];
 				$stat->graphable = $row['graph'];
@@ -503,6 +504,7 @@ class Stat {
 
 	public $stat;
 	public $name;
+	public $group;
 	public $unit;
 	public $graphable;
 	public $leaderboard;
