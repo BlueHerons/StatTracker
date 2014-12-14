@@ -56,37 +56,11 @@
 	</div>
 
 	<div class="container">
-{% for stat in stats if stat.graphable %}
-		<div class="item prediction {{ stat.stat }}">
-			<h3>{{ stat.name }}</h3>
-			<div class="summary">
-				<div class="current-badge">
-					<div class="badge">
-						<div class="badge-image badge-icon-75" />
-					</div>
-				</div>
-				<div class="next-badge">
-					<div class="badge">
-						<div class="badge-image badge-icon-75 progress-overlay" />
-						<p class="percent-complete">
-							<span />
-						</p>
-					</div>
-				</div>
-				<p class="badge-prediction" />
-				<p class="rate" />
-			</div>
-			<div class="graph-selector">
-				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="graph" data-when="all-time">Past 30 days</span>
-				&nbsp;|&nbsp;
-				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="trend" data-when="weekly">This week</span>
-				&nbsp;|&nbsp;
-				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="trend" data-when="last-week">Last week</span>
-	
-			</div>
-			<div id="graph-{{ stat.stat }}">
-			</div>
-		</div>
+{% for stat in stats if stat.graphable and stat.badges|length > 0 %}
+	{% include 'stat_graph.twig' %}
+{% endfor %}
+{% for stat in stats if stat.graphable and stat.badges|length == 0 %}
+	{% include 'stat_graph.twig' %}
 {% endfor %}
 	</div>
 </div>
