@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `Stats` (
 
 INSERT INTO `Stats` (`order`, `stat`, `name`, `unit`, `group`, `ocr`, `graph`, `leaderboard`, `prediction`) VALUES
 (0, 'ap', 'AP', 'AP', '', 1, 1, 7, 0),
-(25, 'distance_walked', 'Distance Walked', 'km', 'Health', 1, 1, 7, 0),
+(25, 'distance_walked', 'Distance Walked', 'km', 'Health', 1, 1, 7, 1),
 (40, 'fields_created', 'Control Fields Created', 'fields', 'Building', 1, 1, 7, 1),
 (90, 'fields_destroyed', 'Enemy Control Fields Destroyed', 'fields', 'Combat', 1, 1, 7, 0),
 (125, 'hacks', 'Hacks', 'hacks', 'Resource Gathering', 1, 1, 7, 1),
@@ -41,8 +41,7 @@ INSERT INTO `Stats` (`order`, `stat`, `name`, `unit`, `group`, `ocr`, `graph`, `
 (30, 'res_deployed', 'Resonators Deployed', 'deployments', 'Building', 1, 1, 7, 1),
 (75, 'res_destroyed', 'Resonators Destroyed', 'resonators', 'Combat', 1, 1, 7, 1),
 (70, 'unique_captures', 'Unique Portals Captured', 'unique captures', 'Building', 1, 1, 7, 1),
-(120, 'unique_missions', 'Unique Missions Completed', 'missions', 'Missions', 1, 0, 7, 0),
+(120, 'unique_missions', 'Unique Missions Completed', 'missions', 'Missions', 1, 1, 7, 1),
 (10, 'unique_visits', 'Unique Portals Visited', 'visits', 'Discovery', 1, 1, 7, 1),
 (20, 'xm_collected', 'XM Collected', 'XM', 'Discovery', 1, 1, 7, 0),
 (60, 'xm_recharged', 'XM Recharged', 'XM', 'Building', 1, 1, 7, 1);
-
