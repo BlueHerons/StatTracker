@@ -10,7 +10,7 @@ CREATE TABLE `AP` (
   `ap_gain` int(4) NOT NULL,
   `factor` double(4,3) NOT NULL DEFAULT '1.000' COMMENT 'Factor to multiply value by before multiplying by ap_gain',
   PRIMARY KEY (`stat`,`ap_gain`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `AP`
 (`stat`,               `grouping`, `sequence`, `ap_gain`, `factor`) VALUES
