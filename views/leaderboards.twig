@@ -47,14 +47,15 @@ function onPageLoad() {
 	
 	$("span.leaderboard-link").click(function() {
 		stat = $(this).attr("data-stat");
-		$("span.leaderboard-link[data-stat='" + stat + "']").removeClass("active");
-		$(this).addClass("active");
 		$(".leaderboard." + stat + " table tbody").empty();
 		loadLeaderboard(stat, $(this).attr("data-when"));	
 	});
 
 
 	function loadLeaderboard(stat, when) {
+		$("span.leaderboard-link[data-stat='" + stat + "']").removeClass("active");
+		$("span.leaderboard-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
+
 		$(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
 		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
 			dataType: "json",
@@ -87,7 +88,11 @@ function onPageLoad() {
 	}
 
 {% for stat in stats %}
+	{% if stat.hasWeeklyLeaderboard() %}
 	loadLeaderboard("{{ stat.stat }}", "this-week");
+	{% else %}
+	loadLeaderboard("{{ stat.stat }}", "alltime");
+	{% endif %}
 {% endfor %}
 }
 </script>
