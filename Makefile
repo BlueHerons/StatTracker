@@ -1,12 +1,12 @@
-SHELL			= /bin/bash
+SHELL             = /bin/bash
 
-BUILD_DIR		= build
-CONFIG_BASE_URL		= http:\/\/blueheronsresistance.com\/stats\/# escapes needed for sed
-DEPLOY_DIR		= /sites/blueheronsresistance.com/stats/
-GIT_REV			= $(shell git rev-parse HEAD)
-GIT_TAG                 = $(shell git describe --exact-match $(GIT_REV))
-INFO_FILE		= about
-RSYNC_IGNORE_FILE	= .rsync_ignore
+BUILD_DIR         = build
+CONFIG_BASE_URL   = http:\/\/blueheronsresistance.com\/stats\/# escapes needed for sed
+DEPLOY_DIR        = /sites/blueheronsresistance.com/stats/
+GIT_REV           = $(shell git rev-parse HEAD)
+GIT_TAG           = $(shell git describe --exact-match $(GIT_REV))
+INFO_FILE         = about
+RSYNC_IGNORE_FILE = .rsync_ignore
 
 .SILENT:
 
