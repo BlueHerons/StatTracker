@@ -44,12 +44,16 @@ $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when
 	$data->agent = $agent->name;
 	$data->data = array();
 	
-	// TODO: Refactor for fetching historical data
-
 	$t = new stdClass;
-	$t->timestamp = $agent->getLatestUpdate();
-	$t->badges = $agent->getBadges();
-	$t->stats = $agent->getLatestStats(true);
+
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
+		die("date");
+	}
+	else if ($when == "latest") {
+		$t->timestamp = $agent->getLatestUpdate();
+		$t->badges = $agent->getBadges();
+		$t->stats = $agent->getLatestStats(true);
+	}
 
 	$data->data[] = $t;
 	
