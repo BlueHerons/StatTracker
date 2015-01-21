@@ -19,7 +19,24 @@ $app = new Silex\Application();
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app['debug'] = true;
 
-$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $format) use ($app) {
+// Assert that auth_code and stat parameters, if present, match expected format
+$validateRequest = function(Request $request, Silex\Application $app) {
+	function validateParameter($param, $regex) {
+		if (strlen($param) > 0) {
+			return preg_match($regex, $param) === 1;
+		}
+		else {
+			return true;
+		}
+	}
+
+	// Ensure {auth_code} is 6 hexidecimal digits
+	if (!validateParameter($request->get("auth_code"), "/^[a-f0-9]{6}$/")) { return $app->abort(400); }
+	// Ensure {stat} is alpha characters and an underscore
+	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $app->abort(400); }
+};
+
+$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	$data = new stdClass;
@@ -41,7 +58,8 @@ $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $form
 			return $app->json($data);
 			break;
 	}
-})->assert("format", "json")
+})->before($validateRequest)
+  ->assert("format", "json")
   ->assert("when",   "latest")
   ->value ("format", "json")
   ->value ("when",   "latest");
@@ -55,7 +73,7 @@ $app->get("/api/{auth_code}", function($auth_code) use ($app) {
 	}
 
 	return $app->json($agent);
-});
+})->before($validateRequest);
 
 // Retrieve badge information for the agent
 $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($app) {
@@ -77,7 +95,8 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 	}
 
 	return $app->json($data);
-})->assert("what", "current|upcoming")
+})->before($validateRequest)
+  ->assert("what", "current|upcoming")
   ->value("what", "current");
 
 // Retrieve ratio information for the agent
@@ -90,7 +109,7 @@ $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
 
 	$data = $agent->getRatios();
 	return $app->json($data);
-});
+})->before($validateRequest);
 
 // Retrieve raw or compiled data for a single stat for the agent
 $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code, $stat, $view, $when, $format) use ($app) {
@@ -130,7 +149,8 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 	$response->setData($data);
 
 	return $response;
-})->assert("view", "breakdown|leaderboard|prediction|trend|graph")
+})->before($validateRequest)
+  ->assert("view", "breakdown|leaderboard|prediction|trend|graph")
   ->value("stat", "ap")
   ->value("view", "raw")
   ->value("when", "most-recent")
@@ -149,7 +169,7 @@ $app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
 	return $response;
-});
+})->before($validateRequest);
 
 $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
@@ -181,7 +201,7 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 
 	return $app->json($data);
 
-});
+})->before($validateRequest);
 
 $app->after(function (Request $request, Response $response) {
 	$response->headers->set("Cache-control", "max-age=". (60 * 60 * 6) .", private");
