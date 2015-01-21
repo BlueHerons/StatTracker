@@ -218,6 +218,19 @@ table {
 	}
 }
 
+.blank-badge-icon-50 {
+	height: 50px;
+	width: 50px;
+	background-image: url("./resources/images/blank_badges_50.png");
+	background-position: 0px -100px;
+}
+
+.blank-badge-icon-50.bronze   { background-position: 0px 0px; }
+.blank-badge-icon-50.silver   { background-position: 0px -50px; }
+.blank-badge-icon-50.gold     { background-position: 0px -100px; }
+.blank-badge-icon-50.platinum { background-position: 0px -150px; }
+.blank-badge-icon-50.onyx     { background-position: 0px -200px; }
+
 .badge-icon-75 {
 	height: 75px;
 	width: 75px;
@@ -309,6 +322,21 @@ table {
 .badge-icon-75.trekker.platinum { background-position: -825px -225px; }
 .badge-icon-75.trekker.onyx     { background-position: -825px -300px; }
 
+.badges_remaining {
+
+	.badge-list {
+		clear: left;
+
+		div {
+			float: left;
+		}
+		
+		.required {
+			opacity: .5;
+		}
+	}
+}
+
 .container {
 	.item { 
 		display: inline-block;
@@ -393,7 +421,7 @@ table {
 	margin-top: 50px;
 }
 
- .loading.110 {
+.loading.110 {
 	height: 110px;
 	width: 110px;
 	background-size: 110px 110px;
