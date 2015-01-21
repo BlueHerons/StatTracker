@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS `Dates`;
 
 CREATE TABLE `Dates` (
   `date` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Dates` (`date`) VALUES
 ('2014-04-20'),

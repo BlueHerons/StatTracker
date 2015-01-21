@@ -12,7 +12,7 @@ CREATE TABLE `Level` (
   `onyx_required` tinyint(4) NOT NULL,
   PRIMARY KEY (`level`),
   UNIQUE KEY `ap_required` (`ap_required`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Level` (`level`, `ap_required`, `silver_required`, `gold_required`, `platinum_required`, `onyx_required`) VALUES
 ( 1,        0, 0, 0, 0, 0),

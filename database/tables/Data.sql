@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `Data` (
   KEY `stat` (`stat`),
   KEY `agent_timestamp` (`agent`,`timestamp`),
   KEY `agent_date` (`agent`,`date`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 ALTER TABLE `Data`

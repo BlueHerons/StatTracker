@@ -9,7 +9,7 @@ CREATE TABLE `Ratio` (
   `message` text COLLATE latin1_general_cs NOT NULL,
   PRIMARY KEY (`stat_1`,`stat_2`),
   KEY `stat_2` (`stat_2`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Ratio` VALUES
 ('links_created', 'fields_created', ''),

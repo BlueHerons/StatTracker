@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `Badges` (
   `amount_required` int(11) NOT NULL,
   PRIMARY KEY (`name`,`level`),
   KEY `stat` (`stat`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Builder', 'None', 'res_deployed', 0),

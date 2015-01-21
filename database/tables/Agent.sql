@@ -12,5 +12,4 @@ CREATE TABLE IF NOT EXISTS `Agent` (
   UNIQUE KEY `auth_code` (`auth_code`),
   KEY `faction` (`faction`),
   KEY `agent` (`agent`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
