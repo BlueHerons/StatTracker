@@ -16,18 +16,12 @@ class Agent {
 	 * @return string Agent object
 	 */
 	public static function lookupAgentName($email_address) {
-		global $mysql;
+		global $db;
 
-		$stmt = $mysql->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
-		$stmt->bind_param("s", $email_address);
-
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-		}
-
-		$stmt->bind_result($agent, $faction, $auth_code);
-		$stmt->fetch();
-		$stmt->close();
+		$stmt = $db->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
+		$stmt->execute(array($email_address));
+		extract($stmt->fetch());
+		$stmt->closeCursor();
 
 		if (empty($agent)) {
 			return new Agent();
@@ -35,7 +29,6 @@ class Agent {
 		else {
 			$agent = new Agent($agent, $auth_code);
 			$agent->faction = $faction;
-
 			return $agent;
 		}
 	}
@@ -49,18 +42,11 @@ class Agent {
 	 * @return object Agent object
 	 */
 	public static function lookupAgentByAuthCode($auth_code) {
-		global $mysql;
-
-		$stmt = $mysql->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
-		$stmt->bind_param("s", $auth_code);
-
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-		}
-
-		$stmt->bind_result($agent, $faction);
-		$stmt->fetch();
-		$stmt->close();
+		global $db;
+		$stmt = $db->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
+		$stmt->execute(array($auth_code));
+		extract($stmt->fetch());
+		$stmt->closeCursor();
 
 		if (empty($agent)) {
 			return new Agent();
@@ -68,7 +54,6 @@ class Agent {
 		else {
 			$agent = new Agent($agent, $auth_code);
 			$agent->faction = $faction;
-	
 			return $agent;
 		}
 	}
@@ -88,8 +73,6 @@ class Agent {
 		if (!is_string($agent)) {
 			throw new Exception("Agent name must be a string");
 		}
-
-		$agent = self::sanitizeAgentName($agent);
 
 		$this->name = $agent;
 		$this->auth_code = $auth_code;
@@ -112,47 +95,6 @@ class Agent {
 	}
 
 	/**
-	 * Sanitizes the agent name.
-`	 *
-	 * If the agent name exists in the database, that name will also be retrieved.
-	 *
-	 * @param string $name the name to sanitize
-	 *
-	 * @return the sanitized name
-	 */
-	private static function sanitizeAgentName($name) {
-		$name = filter_var($name, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
-
-		global $mysql;
-
-		$sql = "SELECT agent FROM Agent WHERE agent = '%s';";
-		$sql = sprintf($sql, $name);
-		$res = $mysql->query($sql);
-
-		if (!$res) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-		
-		if ($res->num_rows == 1) {
-			return $res->fetch_assoc()['agent'];
-		}
-
-		$sql = "SELECT * FROM Data WHERE agent = '%s' LIMIT 1;";
-		$sql = sprintf($sql, $name);
-		$res = $mysql->query($sql);
-	
-		if (!$res) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-
-		if ($res->num_rows == 1) {
-			return $res->fetch_assoc()['agent'];
-		}
-
-		return $name;
-	}
-
-	/**
 	 * Gets the auth code for the agent
 	 * 
 	 * @param bool $refresh Whether or not to refetch the value from the database
@@ -161,14 +103,13 @@ class Agent {
 	 */
 	public function getAuthCode($refresh = false) {
 		if (!isset($this->auth_code) || $refresh) {
-			global $mysql;
-			$sql = sprintf("SELECT auth_code FROM Agent WHERE agent = '%s';", $this->name);
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			global $db;
+			$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
+			$stmt->execute(array($this->name));
+			extract($stmt->fetch());
+			$stmt->closeCursor();
 
-			$this->auth_code = $res->fetch_assoc()['auth_code'];
+			$this->auth_code = $auth_code;
 		}
 
 		return $this->auth_code;
@@ -181,20 +122,16 @@ class Agent {
 	 */
 	public function getLevel() {
 		if (!isset($this->level)) {
-			global $mysql;
+			global $db;
+			$stmt = $db->prepare("CALL GetCurrentLevel(?);");
+			$stmt->execute(array($this->name));
+			$stmt->closeCursor();
 
-			$sql = sprintf("CALL GetCurrentLevel('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			$stmt = $db->query("SELECT level FROM CurrentLevel;");
+			extract($stmt->fetch());
+			$stmt->closeCursor();
 
-			$sql = "SELECT level FROM CurrentLevel;";
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$this->level = $res->fetch_assoc()['level'];
+			$this->level = $level;
 		}
 
 		return $this->level;
@@ -205,18 +142,13 @@ class Agent {
 	 */
 	public function hasSubmitted($refresh = false) {
 		if (!isset($this->has_submitted) || $refresh) {
-			global $mysql;
+			global $db;
+			$stmt = $db->prepare("SELECT count(stat) > 0 AS result FROM Data WHERE stat = 'ap' AND agent = ?;");
+			$stmt->execute(array($this->name));
+			extract($stmt->fetch());
+			$stmt->closeCursor();
 
-			$sql = "SELECT count(stat) > 0 AS result FROM Data WHERE stat = 'ap' AND agent = '%s';";
-			$sql = sprintf($sql, $this->name);
-
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$this->has_submitted = $res->fetch_assoc()['result'] == 1;
-
+			$this->has_submitted = $result;
 		}
 
 		return $this->has_submitted;
@@ -227,18 +159,13 @@ class Agent {
 	 */
 	public function getLatestUpdate($refresh = false) {
 		if (!isset($this->latest_update) || $refresh) {
-			global $mysql;
+			global $db;
+			$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?;");
+			$stmt->execute(array($this->name));
+			extract($stmt->fetch());
+			$stmt->closeCursor();
 
-			$sql = "SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = '%s';";
-			$sql = sprintf($sql, $this->name);
-
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$this->latest_update = $res->fetch_assoc()['updated'];
-
+			$this->latest_update = $updated;
 		}
 
 		return $this->latest_update;		
@@ -262,20 +189,19 @@ class Agent {
 		}
 	
 		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
-			global $mysql;
-			
-			$sql = "SELECT value, date FROM Data WHERE stat = '%s' AND agent ='%s' ORDER BY date DESC LIMIT 1;";
-			$sql = sprintf($sql, $stat, $this->name);
-			$res = $mysql->query($sql);
-			$row = $res->fetch_assoc();
-			
-			$this->latest_entry = $row['date'];
+			global $db;
+			$stmt = $db->prepare("SELECT value, date FROM Data WHERE stat = ? AND agent = ? ORDER BY date DESC LIMIT 1;");
+			$stmt->execute(array($stat, $this->name));
+			extract($stmt->fetch());
+			$stmt->closeCursor();
+
+			$this->latest_entry = $date;
 
 			if (!is_array($this->stats)) {
 				$this->stats = array();
 			}
 	
-			$this->stats[$stat] = $row['value'];
+			$this->stats[$stat] = $value;
 		}
 
 		return $this->stats[$stat];
@@ -308,31 +234,26 @@ class Agent {
 	 */
 	public function getBadges($refresh = false) {
 		if (!is_array($this->badges) || $refresh) {
-			global $mysql;
+			global $db;
+			$stmt = $db->prepare("CALL GetCurrentBadges(?);");
+			$stmt->execute(array($this->name));
+			$stmt->closeCursor();
 
-			$sql = sprintf("CALL GetCurrentBadges('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$sql = "SELECT * FROM CurrentBadges;";
-			$res = $mysql->query($sql);
-
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			$stmt = $db->query("SELECT * FROM CurrentBadges;");
 
 			if (!is_array($this->badges)) {
 				$this->badges = array();
 			}
 			
-			while ($row = $res->fetch_assoc()) {
-				$badge = str_replace(" ", "_", $row['badge']);
+			while ($row = $stmt->fetch()) {
+				extract($row);
+				$badge = str_replace(" ", "_", $badge);
 				$badge = strtolower($badge);
 
-				$this->badges[$badge] = strtolower($row['level']);
+				$this->badges[$badge] = strtolower($level);
 			}
 
+			$stmt->closeCursor();
 		}
 
 		return $this->badges;
@@ -341,45 +262,41 @@ class Agent {
 	/**
 	 * Gets the ratios of stats for the given agent.
 	 *
-	 * @return array top leve entries are a tatio "pair", with a sub array containing keys stat1, stat2, and ratio
+	 * @return array top level entries are a ratio "pair", with a sub array containing keys stat1, stat2, and ratio
 	 */
 	public function getRatios() {
 		if (!is_array($this->ratios)) {
-			global $mysql;
-
-			$sql = sprintf("CALL GetRatiosForAgent('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			global $db;
+			$stmt = $db->prepare("CALL GetRatiosForAgent(?);");
+			$stmt->execute(array($this->name));
+			$stmt->closeCursor();
 	
-			$sql = sprintf("SELECT * FROM RatiosForAgent WHERE badge_1 IS NOT NULL AND badge_2 IS NOT NULL;", $this->name);
-			$res = $mysql->query($sql);
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			$stmt = $db->query("SELECT * FROM RatiosForAgent WHERE badge_1 IS NOT NULL AND badge_2 IS NOT NULL;");
 
 			$this->ratios = array();
 			
-			while ($row = $res->fetch_assoc()) {
-				$badge = str_replace(" ", "_", $row['badge']);
+			while ($row = $stmt->fetch()) {
+				extract($row);
+				$badge = str_replace(" ", "_", $badge);
 				$badge = strtolower($badge);
 
 				$this->ratio[] = array(
 					"stat1" => array(
-						"stat" => $row['stat_1'],
-						"badge" => strtolower(str_replace(" ", "_", $row['badge_1'])),
-						"level" => strtolower($row['badge_1_level']),
-						"name" => $row['stat_1_name']
+						"stat" => $stat_1,
+						"badge" => strtolower(str_replace(" ", "_", $badge_1)),
+						"level" => strtolower($badge_1_level),
+						"name" => $stat_1_name
 					),
 					"stat2" => array(
-						"stat" => $row['stat_2'],
-						"badge" => strtolower(str_replace(" ", "_", $row['badge_2'])),
-						"level" => strtolower($row['badge_2_level']),
-						"name" => $row['stat_2_name']
+						"stat" => $stat_2,
+						"badge" => strtolower(str_replace(" ", "_", $badge_2)),
+						"level" => strtolower($badge_2_level),
+						"name" => $stat_2_name
 					),
-					"ratio" => $row['ratio']
+					"ratio" => $ratio
 				);
 			}
+			$stmt->closeCursor();
 		}
 
 		return $this->ratio;
@@ -394,37 +311,30 @@ class Agent {
 	 */
 	public function getUpcomingBadges($limit = 4) {
 		if (!is_array($this->upcoming_badges)) {
-			global $mysql;
+			global $db;
+			$stmt = $db->prepare("CALL GetUpcomingBadges(?);");
+			$stmt->execute(array($this->name));
+			$stmt->closeCursor();
 
-			$sql = sprintf("CALL GetUpcomingBadges('%s');", $this->name);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
-
-			$sql = sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %s;", $limit);
-
-			$res = $mysql->query($sql);
-
-			if (!$res) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			// sprintf still used intentionally
+			$stmt = $db->query(sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %d;", $limit));
 
 			if (!is_array($this->upcoming_badges)) {
 				$this->upcoming_badges = array();
 			}
 			
-			while ($row = $res->fetch_assoc()) {
-				$badge = str_replace(" ", "_", $row['badge']);
+			while ($row = $stmt->fetch()) {
+				extract($row);
+				$badge = str_replace(" ", "_", $badge);
 				$badge = strtolower($badge);
 
 				$this->upcoming_badges[] = array(
 					"name" => $badge,
-					"level" => strtolower($row['next']),
-					"progress" => $row['progress'],
-					"days_remaining" => $row['days_remaining']
+					"level" => strtolower($next),
+					"progress" => $progress,
+					"days_remaining" => $days_remaining
 				);
 			}
-
 		}
 
 		return $this->upcoming_badges;

@@ -10,10 +10,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-$mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-if ($mysql->connect_errno) {
-	die(sprintf("%s: %s", $mysql->connect_errno, $mysql->connect_error));
-}
+$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
+	PDO::ATTR_EMULATE_PREPARES   => false,
+	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+));
 
 $app = new Silex\Application();
 $app->register(new Silex\Provider\SessionServiceProvider());

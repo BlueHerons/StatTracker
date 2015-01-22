@@ -10,37 +10,34 @@ class StatTracker {
 	 */
 	public static function getStats() {
 		if (!is_array(self::$fields)) {
-			global $mysql;
-			$sql = "SELECT stat, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;";
-			$res = $mysql->query($sql);
-			if (!is_object($res)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-			}
+			global $db;
+			$stmt = $db->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+			$rows = $stmt->fetchAll();
 
-			while ($row = $res->fetch_assoc()) {
+			foreach($rows as $row) {
 				$stat = new Stat();
-				$stat->stat = $row['stat'];
-				$stat->name = $row['name'];
-				$stat->group = $row['group'];
-				$stat->unit = $row['unit'];
-				$stat->ocr = $row['ocr'];
-				$stat->graphable = $row['graph'];
-				$stat->leaderboard = $row['leaderboard'];
+				extract($row);
+				$stat->stat = $key;
+				$stat->name = $name;
+				$stat->group = $group;
+				$stat->unit = $unit;
+				$stat->ocr = $ocr;
+				$stat->graphable = $graph;
+				$stat->leaderboard = $leaderboard;
 				$stat->badges = array();
 
-				$sql = "SELECT level, amount_required FROM Badges WHERE stat = '%s' ORDER BY `amount_required` ASC;";
-				$sql = sprintf($sql, $stat->stat);
-				$res2 = $mysql->query($sql);
-				if (!is_object($res)) {
-					die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-				}
+				$stmt = $db->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
+				$stmt->execute(array($stat->stat));
 
-				while ($row2 = $res2->fetch_assoc()) {
-					$stat->badges[$row2['amount_required']] = $row2['level'];
+				while ($row2 = $stmt->fetch()) {
+					extract($row2);
+					$stat->badges[$amount_required] = $level;
 				}
+				$stmt->closeCursor();
 
-				self::$fields[$row['stat']] = $stat;
+				self::$fields[$key] = $stat;
 			}
+			$stmt->closeCursor();
 		}
 
 		return self::$fields;
@@ -74,12 +71,11 @@ class StatTracker {
 	 * @return void
 	 */
 	public static function generateAuthCode($email_address) {
-		global $mysql;
+		global $db;
 		$length = 6;
+		$auth_code = "";
 
-		$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE auth_code = ?;");
-		$stmt->bind_param("s", $auth_code);
-		$stmt->bind_result($num_rows);
+		$stmt = $db->prepare("SELECT COUNT(*) FROM Agent WHERE auth_code = ?;");
 
 		do {
 			$code = md5($email_address);
@@ -89,39 +85,28 @@ class StatTracker {
 
 			$auth_code = $code;
 
-			if (!$stmt->execute()) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-			}
+			$stmt->execute(array($auth_code));
 			$stmt->fetch();
 		}
-		while ($num_rows != 0);
-		$stmt->close();
+		while ($stmt->rowCount() != 0);
+		$stmt->closeCursor();
 
-		$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
-		$stmt->bind_param("s", $email_address);
+		$stmt = $db->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
+		$stmt->execute(array($email_address));
 		
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-		}
-
-		$stmt->bind_result($num_rows);
-		$stmt->fetch();
-		$stmt->close();
+		$num_rows = $stmt->rowCount();
+		$stmt->closeCursor();
 
 		if ($num_rows == 1) {
-			$stmt = $mysql->prepare("UPDATE Agent SET auth_code = ? WHERE email = ?;");
-			$stmt->bind_param("ss", $code, $email_address);
+			$stmt = $db->prepare("UPDATE Agent SET auth_code = ? WHERE email = ?;");
+			$stmt->execute(array($auth_code, $email_address));
 		}
 		else {
-			$stmt = $mysql->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?);");
-			$stmt->bind_param("ss", $email_address, $code);
+			$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?);");
+			$stmt->execute(array($email_address, $auth_code));
 		}
 
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-		}
-
-		$stmt->close();
+		$stmt->closeCursor();
 	}
 
 	/**
@@ -133,19 +118,13 @@ class StatTracker {
 	 * @return void
 	 */
 	public static function sendAuthCode($email_address) {
-		global $mysql;
+		global $db;
 		require_once("vendor/autoload.php");
 
-		$stmt = $mysql->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
-		$stmt->bind_param("s", $email_address);
-		
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-		
-		$stmt->bind_result($auth_code);
-		$stmt->fetch();
-		$stmt->close();
+		$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt->execute(array($email_address));
+		extract($stmt->fetch());
+		$stmt->closeCursor();
 
 		$msg = "Thanks for registering with ". GROUP_NAME ."'s Stat Tracker. In order to validate your " .
 		       "identity, please message the following code to <strong>@". ADMIN_AGENT ."</strong> in " .
@@ -176,7 +155,7 @@ class StatTracker {
 	 *
 	 */
 	public static function handleAgentStatsPOST($agent, $postdata) {
-		global $mysql;
+		global $db;
 		$response = new StdClass();
 		$response->error = false;
 
@@ -185,66 +164,62 @@ class StatTracker {
 			$response->message = sprintf("Invalid agent: %s", $agent->name);
 		}
 		else {
-			$agent_name = $agent->name;
-			$stmt = $mysql->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) FROM Data WHERE agent = ?");
-			$stmt->bind_param("s", $agent_name);
-			$stmt->bind_result($min_date);
+			$stmt = $db->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
 
-			if (!$stmt->execute()) {
-					$response->error = true;
-					$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error);
-					return json_encode($response, JSON_NUMERIC_CHECK);
-			}
-			$stmt->fetch();
-			$stmt->close();
+			try {
+				$stmt->execute(array($agent->name));
+				extract($stmt->fetch());
 
-			$ts = date("Y-m-d 00:00:00");
-			$dt = date("Y-m-d");
-			$stmt = $mysql->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
-			$stmt->bind_param("sssssd", $agent_name, $dt, $min_date, $ts, $stat_key, $value);
+				$ts = date("Y-m-d 00:00:00");
+				$dt = date("Y-m-d");
+				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
-			foreach (self::getStats() as $stat) {
-				if (!isset($postdata[$stat->stat])) {
-					if ($stat->stat == "innovator") {
-						$agent->getLatestStats(true);
-						$postdata[$stat->stat] = $agent->stats[$stat->stat];
+				foreach (self::getStats() as $stat) {
+					if (!isset($postdata[$stat->stat])) {
+						if ($stat->stat == "innovator") {
+							$agent->getLatestStats(true);
+							$postdata[$stat->stat] = $agent->stats[$stat->stat];
+						}
+						else {
+							continue;
+						}
 					}
-					else {
-						continue;
+
+					$stat_key = $stat->stat;
+					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
+					$value = !is_numeric($value) ? 0 : $value;
+
+					$stmt->execute(array($agent->name, $dt, $min_date, $ts, $stat_key, $value));
+
+					if ($response->error) {
+						break;
 					}
 				}
-	
-				$agent_name = $agent->name;
-				$stat_key = $stat->stat;
 
-				$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
-				$value = !is_numeric($value) ? 0 : $value;
-	
-				if (!$stmt->execute()) {
-					$response->error = true;
-					$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error);
-				}
+				$stmt->closeCursor();
 
-				if ($response->error) {
-					break;
-				}
-			}
+				// Need to refresh stored session data
+				$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
+				$_SESSION['agent'] = serialize($agent);
 
-			$stmt->close();
+				$ts = strtotime($dt);
 
-			// Need to refresh stored session data
-			$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
-			$_SESSION['agent'] = serialize($agent);
+				if (!$response->error) {
+					$response->message = sprintf("Your stats for %s have been received.", date("l, F j", $ts));
 
-			$ts = strtotime($dt);
-
-			if (!$response->error) {
-				$response->message = sprintf("Your stats for %s have been received.", date("l, F j", $ts));
-
-				if (!$agent->hasSubmitted()) {
-					$response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+					if (!$agent->hasSubmitted()) {
+						$response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+					}
 				}
 			}
+			catch (Exception $e) {
+				$response->error = true;
+				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $db->errorCode(), $db->errorInfo());
+			}
+			finally {
+				$stmt->closeCursor();
+			}
+
 		}
 
 		return json_encode($response, JSON_NUMERIC_CHECK);
@@ -280,23 +255,18 @@ class StatTracker {
 	 * @return string Object AP Breakdown object
 	 */
 	public function getAPBreakdown($agent) {
-		global $mysql;
-	
-		$sql = sprintf("CALL GetAPBreakdown('%s');", $agent->name);
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-                }
+		global $db;
 
-		$sql = "SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;";
-		$res = $mysql->query($sql);
-		if (!$res) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-		
+		$stmt = $db->prepare("CALL GetAPBreakdown(?);");
+		$stmt->execute(array($agent->name));
+		$stmt->closeCursor();
+
+		$stmt = $db->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
+
 		$data = array();
 		$colors = array();
-		//$data[] = array("Action", "AP Gained");
-		while ($row = $res->fetch_assoc()) {
+
+		while ($row = $stmt->fetch()) {
 			$data[] = array($row['name'], $row['ap_gained']);
 			if ($row['grouping'] == 1) {
 				$color =$agent->faction == "R" ? ENL_GREEN : RES_BLUE;
@@ -309,6 +279,7 @@ class StatTracker {
 			}
 			$colors[] = $color;
 		}
+		$stmt->closeCursor();
 
 	 	return array("data" => $data, "slice_colors" => $colors);
 	}
@@ -324,20 +295,15 @@ class StatTracker {
 	 * @return Object prediciton object
 	 */
 	public static function getPrediction($agent, $stat) {
-		global $mysql;
+		global $db;
 
 		$data = new stdClass();
 		if (StatTracker::isValidStat($stat)) {
-			$sql = sprintf("CALL GetBadgePrediction('%s', '%s');", $agent->name, $stat);
-			if (!$mysql->query($sql)) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error    ));        
-			}
+			$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
+			$stmt->execute(array($agent->name, $stat));
 
-			$sql = "SELECT * FROM BadgePrediction";
-			$res = $mysql->query($sql);
-			$row = $res->fetch_assoc();
-
-			$data = self::buildPredictionResponse($row);
+			$stmt = $db->query("SELECT * FROM BadgePrediction");
+			$data = self::buildPredictionResponse($stmt->fetch());
 		}
 
 		return $data;
@@ -352,22 +318,14 @@ class StatTracker {
 	 * @return string Object Graph Data object
 	 */
 	public static function getGraphData($stat, $agent) {
-		global $mysql;
-
-		$sql = sprintf("CALL GetGraphForStat('%s', '%s');", $agent->name, $stat);
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
+		global $db;
+		$stmt = $db->prepare("CALL GetGraphForStat(?, ?);");
+		$stmt->execute(array($agent->name, $stat));
 	
-		$sql = "SELECT * FROM GraphDataForStat;";
-		$res = $mysql->query($sql);
-
-		if (!$res) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
+		$stmt = $db->query("SELECT * FROM GraphDataForStat;");
 		
 		$data = array();
-		while ($row = $res->fetch_assoc()) {
+		while ($row = $stmt->fetch()) {
 			if (sizeof($data) == 0) {
 				foreach (array_keys($row) as $key) {
 					$series = new stdClass();
@@ -384,6 +342,7 @@ class StatTracker {
 				$i++;
 			}
 		}
+		$stmt->closeCursor();
 
 		$response = new stdClass();
 		$response->data = $data;
@@ -393,7 +352,7 @@ class StatTracker {
 	}
 
 	public static function getTrend($agent, $stat, $when) {
-		global $mysql;
+		global $db;
 		$start = "";
 		$end = "";
 
@@ -410,24 +369,19 @@ class StatTracker {
 				break;
 		}
 
-		$sql = sprintf("CALL GetDailyTrend('%s', '%s', '%s', '%s');", $agent->name, $stat, $start, $end);
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
+		$stmt = $db->prepare("CALL GetDailyTrend(?, ?, ?, ?);");
+		$stmt->execute(array($agent->name, $stat, $start, $end));
+		$stmt->closeCursor();
 
-		$sql = "SELECT * FROM DailyTrend";
-		$res = $mysql->query($sql);
-
-		if (!$res) {
-			die(sprintf("%s: (%s) %s", __LINE__, $mysql->errno, $mysql->error));
-		}
+		$stmt = $db->query("SELECT * FROM DailyTrend");
 		
 		$data = array();
-		while ($row = $res->fetch_assoc()) {
+		while ($row = $stmt->fetch()) {
 			$data["dates"][] = $row["date"];
 			$data["target"][] = $row["target"];
 			$data["value"][] = $row["value"];
 		}
+		$stmt->closeCursor();
 
 		return $data;
 	}
@@ -441,32 +395,31 @@ class StatTracker {
 	 * @return string JSON string
 	 */
 	public static function getLeaderboard($stat, $when) {
-		global $mysql;
+		global $db;
 		$monday = strtotime('last monday', strtotime('tomorrow'));
+		$stmt = null;
 		switch ($when) {
 			case "this-week":
 				$thisweek = date("Y-m-d", $monday);
-				$sql = sprintf("CALL GetWeeklyLeaderboardForStat('%s', '%s');", $stat, $thisweek);
+				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt->execute(array($stat, $thisweek));
 				break;
 			case "last-week":
 				$lastweek = date("Y-m-d", strtotime('7 days ago', $monday));
-				$sql = sprintf("CALL GetWeeklyLeaderboardForStat('%s', '%s');", $stat, $lastweek);
+				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt->execute(array($stat, $lastweek));
 				break;
 			case "alltime":
 			default:
-				$sql = sprintf("CALL GetLeaderboardForStat('%s');", $stat);
+				$stmt = $db->prepare("CALL GetLeaderboardForStat(?);");
+				$stmt->execute(array($stat));
 				break;
 		}
+		$stmt->closeCursor();
 
-		if (!$mysql->query($sql)) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
+		$stmt = $db->query("SELECT * FROM LeaderboardForStat;");
 
-		$sql = "SELECT * FROM LeaderboardForStat;";
-		$res = $mysql->query($sql);
-		$results = array();
-
-		while($row = $res->fetch_assoc()) {
+		while($row = $stmt->fetch()) {
 			$results[] = array(
 				"rank" => $row['rank'],
 				"agent" => $row['agent'],
@@ -474,6 +427,7 @@ class StatTracker {
 				"age" => $row['age']
 			);
 		}
+		$stmt->closeCursor();
 
 		return $results;
 	}

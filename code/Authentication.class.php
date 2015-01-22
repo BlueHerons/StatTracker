@@ -24,36 +24,26 @@ class Authentication {
 	 * @return void
 	 */
 	public static function generateAuthCode($email_address, $newIfExists = false) {
-		global $mysql;
+		global $db;
 		$length = 6;
 
 		$code = md5($email_address);
 		$code = str_shuffle($code);
 		$start = rand(0, strlen($code) - $length - 1);	
 		$code = substr($code, $start, $length);
+		$num_rows = 0;
 
 		if (!$newIfExists) {
-			$stmt = $mysql->prepare("SELECT COUNT(*) FROM Agent WHERE email = ?;");
-			$stmt->bind_param("s", $email_address);
-
-			if (!$stmt->execute()) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-			}
-
-			$stmt->bind_result($num_rows);
-			$stmt->fetch();
-			$stmt->close();
+			$stmt = $db->prepare("SELECT agent FROM Agent WHERE email = ?;");
+			$stmt->execute(array($email_address));
+			$num_rows = $stmt->rowCount();
+			$stmt->closeCursor();
 		}
 
 		if ($num_rows != 1 || $newIfExists) {
-			$stmt = $mysql->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
-			$stmt->bind_param("ss", $email_address, $code);
-
-			if (!$stmt->execute()) {
-				die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $stmt->errno, $stmt->error));
-			}
-
-			$stmt->close();
+			$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
+			$stmt->execute(array($email_address, $code));
+			$stmt->closeCursor();
 		}
 	}
 
@@ -66,19 +56,13 @@ class Authentication {
 	 * @return void
 	 */
 	public static function sendAuthCode($email_address) {
-		global $mysql;
+		global $db;
 		require_once("vendor/autoload.php");
 
-		$stmt = $mysql->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
-		$stmt->bind_param("s", $email_address);
-		
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
-		
-		$stmt->bind_result($auth_code);
-		$stmt->fetch();
-		$stmt->close();
+		$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt->execute(array($email_address));
+		extract($stmt->fetch());
+		$stmt->closeCursor();
 
 		$msg = "Thanks for registering with the Blue Heron's Stat Tracker. In order to validate your " .
 		       "identity, please message the following code to <strong>@CaptCynicism</strong> in " .
@@ -111,13 +95,10 @@ class Authentication {
 	 * @param string $profile_id    the G+ id of the user
 	 */
 	public static function updateUserMeta($email_address, $profile_id) {
-		global $mysql;
-		$stmt = $mysql->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
-		$stmt->bind_param("ss", $profile_id, $email_address);
-
-		if (!$stmt->execute()) {
-			die(sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $mysql->errno, $mysql->error));
-		}
+		global $db;
+		$stmt = $db->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
+		$stmt->execute(array($profile_id, $email_address));
+		$stmt->closeCursor();
 	}
 
 	private function __construct() {
