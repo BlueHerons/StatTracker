@@ -1,5 +1,5 @@
 var StatTracker = new function() {
-	this.baseUrl = "http://api.johnluetke.net/ingress/stats/";
+	this.baseUrl = "{{ app.request.scheme }}://{{ app.request.httphost }}{{ app.request.basepath }}/"; <!-- must have trailing slash -->
 	this.pageToLoad = "dashboard";
 	this.message = null;
 
