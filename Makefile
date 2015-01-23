@@ -10,7 +10,7 @@ RSYNC_IGNORE_FILE = .rsync_ignore
 
 .SILENT:
 
-build: clean css copy config
+build: clean copy config
 
 clean:
 	echo "  Cleaning build dir...";
