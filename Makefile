@@ -27,10 +27,6 @@ copy:
 	echo "  Copying files...";
 	rsync -r -a --exclude-from $(RSYNC_IGNORE_FILE) ./ $(BUILD_DIR);
 
-css:
-	echo "  Compiling LESS...";
-	lessc style.less > style.css;
-
 deploy:
 	echo "  Deploying...";
 	rm -rf $(DEPLOY_DIR)*;

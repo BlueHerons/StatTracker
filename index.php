@@ -8,6 +8,7 @@ require_once("vendor/autoload.php");
 const ENL_GREEN = "#2BED1B";
 const RES_BLUE = "#00BFFF";
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 $db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
@@ -82,6 +83,29 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
 	));
+});
+
+$app->get("/resources/{resource}", function(Request $request, $resource) use ($app) {
+	switch ($resource) {
+		case "style.css":
+			$file = "./resources/style.less";
+			$lastModified = filemtime($file);
+			$css = new Symfony\Component\HttpFoundation\Response("", 200, array("Content-Type" => "text/css"));
+			$css->setLastModified(new \DateTime("@".filemtime($file)));
+
+			if ($css->isNotModified($request)) {
+				$css->setNotModified();
+			}
+			else {
+				$parser = new Less_Parser(array("compress" => true));
+				$parser->parseFile($file, $request->getBaseUrl());
+				$css->setLastModified(new \DateTime("@".filemtime($file)));
+				$css->setContent($parser->getCss());
+			}
+
+			return $css;
+			break;
+	}
 });
 
 $app->run();
