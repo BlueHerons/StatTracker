@@ -13,10 +13,6 @@
 	<script type="text/javascript" src="{{ app.request.basepath }}/scripts/jquery.tablesorter.min.js"></script>
 	<script type="text/javascript" src="{{ app.request.basepath }}/scripts/StatTracker.js"></script>
 	<script>
-	function onSignInCallback(authResult) {
-		StatTracker.signinCallback(authResult);
-	}
-
 	$(document).ready(function() {
 		$("#login-dialog").hide();
 		$("#login-dialog").dialog({
