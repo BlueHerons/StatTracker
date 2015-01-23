@@ -1,29 +1,57 @@
 <?php
+//
+// STAT TRACKER CONFIGURATION FILE
+//
+
+// Database host. Example: database.thelocalresistance.com
 define("DB_HOST", "");
+// Database name. Example: StatTracker
 define("DB_NAME", "");
+// Database user. Must have read/write access to database specified above.
 define("DB_USER", "");
+// Password for the database user specified above.
 define("DB_PASS", "");
 
-define("SMTP_HOST", "");
-define("SMTP_PORT", "");
-define("SMTP_ENCR", "");
+// Email configuration. Stat Tracker uses email for registration and optionally stat submission.
+// Email host. Example: smtp.gmail.com
+define("SMTP_HOST", "smtp.gmail.com");
+// Email port. If using Gmail, use 465. Other hosts may require a different value.
+define("SMTP_PORT", "465");
+// Email encryption. If using Gmail, use ssl. Other host may require a different value.
+define("SMTP_ENCR", "ssl");
+// Email username. If using Gmail, the email address that you sign in with.
 define("SMTP_USER", "");
+// Email password.
 define("SMTP_PASS", "");
 
+// Google OAuth configuration. This is used for authentication. You will need to set this up at
+// https://console.developers.google.com. More information is available on the Stat Tracker wiki.
 define("GOOGLE_CLIENT_ID",     "");
 define("GOOGLE_CLIENT_SECRET", "");
 define("GOOGLE_APP_NAME",      "");
 define("GOOGLE_REDIRECT_URL",  "");
 
+// Enter the values appropriate for your local group.
+// The name of your community. Example: Blue Herons Resistance
+define("GROUP_NAME",  "The Local Resistance");
+// The email that should be included in the "From" field of all emails. Note: Your SMTP server may ignore this value,
+// and instead use the one specified in SMTP_USER.
+define("GROUP_EMAIL", "stats@localresistance.com");
+// This name of the agent who should recieve activation codes from agents trying to register.
+define("ADMIN_AGENT", "YourIngressAgentName");
+// The address that agents should email screenshots of their profile to for Email submissions. This is an optional
+// feature that requires additional set up steps. More information is available on the Stat Tracker wiki.
+//define("EMAIL_SUBMISSION", "stats@thelocalresistance.com");
+// Google Analytics tracking ID. This is an optional feature. Uncomment this line and insert you GA tracking ID to enable.
+//define("GOOGLE_ANALYTICS_ID", "");
+
+// You should not need to change any values below this line.
+
+// Colors to use when displaying agent names.
 define("RES_BLUE",  "#00BFFF");
 define("ENL_GREEN", "#2BED1B");
 
-define("GROUP_NAME",  "The Local Resistance");
-define("GROUP_EMAIL", "stats@localresistance.com");
-define("ADMIN_AGENT", "YourIngressAgentName");
-//define("EMAIL_SUBMISSION", "stats@thelocalresistance.com"); /* Uncomment this line if you want to support email submission. Read more on the wiki */
-//define("GOOGLE_ANALYTICS_ID", ""); /* Uncomment this line and insert you GA tracking ID to enable Google Analytics */
-
+// Folder to temporarily store screenshot uploads. RW access required.
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
 define("COMMIT_HASH", "");
 define("TAG_NAME", "");
