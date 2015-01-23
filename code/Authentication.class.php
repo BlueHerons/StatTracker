@@ -56,6 +56,7 @@ class Authentication {
 	 * @return void
 	 */
 	public static function sendAuthCode($email_address) {
+		global $app;
 		global $db;
 		require_once("vendor/autoload.php");
 
@@ -66,11 +67,12 @@ class Authentication {
 
 		$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
 		       "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
-		       "faction comms:<p/>".
-		       "<pre>%s</pre> " .
-		       "<p/> ".
+		       "faction comms:".
+		       "<p/>%s<p/>" .
 		       "You will recieve a reply message once you have been activated. This may take up to " .
-		       "24 hours. Once you recieve the reply, simply refresh Stat Tracker.";
+		       "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
+		       "<p/>".
+		       $_SERVER['HTTP_REFERER'];
 
 		$msg = sprintf($msg, $auth_code);
 
