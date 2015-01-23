@@ -18,7 +18,6 @@ clean:
 
 config: copy
 	echo "  Updating configuration...";
-	sed -i -e 's/\(\s*\)\(this.baseUrl = \).*/\1\2"$(CONFIG_BASE_URL)";/' $(BUILD_DIR)/scripts/StatTracker.js;
 	sed -i -e 's/\(define("GOOGLE_REDIRECT_URL", "\).*\(authenticate?action=callback\)");/\1$(CONFIG_BASE_URL)\2");/' $(BUILD_DIR)/config.php
 	sed -i -e 's/\(define("COMMIT_HASH", "\).*\");/\1${GIT_REV}\");/' $(BUILD_DIR)/config.php
 	sed -i -e 's/\(define("TAG_NAME", "\).*\");/\1${GIT_TAG}\");/' $(BUILD_DIR)/config.php

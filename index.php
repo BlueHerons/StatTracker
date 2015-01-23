@@ -18,7 +18,11 @@ $app = new Silex\Application();
 $app['debug'] = true;
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
-	'twig.path' => __DIR__ . "/views",
+	'twig.path' => array(
+		__DIR__ . "/views",
+		__DIR__ . "/resources",
+		__DIR__ . "/resources/scripts",
+	)
 ));
 
 $agent = new Agent();
@@ -82,10 +86,10 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 	));
 });
 
-$app->get("/resources/{resource}", function(Request $request, $resource) use ($app) {
+$app->get("/resources/{resource_dir}/{resource}", function(Request $request, $resource) use ($app) {
 	switch ($resource) {
 		case "style.css":
-			$file = "./resources/style.less";
+			$file = "./resources/css/style.less";
 			$lastModified = filemtime($file);
 			$css = new Symfony\Component\HttpFoundation\Response("", 200, array("Content-Type" => "text/css"));
 			$css->setLastModified(new \DateTime("@".filemtime($file)));
@@ -101,6 +105,20 @@ $app->get("/resources/{resource}", function(Request $request, $resource) use ($a
 			}
 
 			return $css;
+			break;
+		case "stat-tracker.js":
+			$js = new Symfony\Component\HttpFoundation\Response();
+
+			if ($js->isNotModified($request)) {
+				$js->setNotModified();
+			}
+			else {
+				$content = $app['twig']->render("stat-tracker.js.twig");
+				$js->headers->set("Content-Type", "application/javascript");
+				$js->setContent($content);
+			}
+
+			return $js;
 			break;
 	}
 });

@@ -21,7 +21,7 @@ To run your own instance of Stat Tracker, you will need:
 4. Execute each SQL script in `database/tables`, and then in `database/procedures`
   * You will need to create a MySQL user named `admin` to satisfy the definer in the procedure definitions.
 5. In `Makefile`, change `CONFIG_BASE_URL` to the same `http[s]://server/path/to/files` you specified in the Google OAuth setup.
-6. Run `make build` to inject `CONFIG_BASE_URL` into [config.php](config.php#L16) and [StatTracker.js](scripts/StatTracker.js#L2)
+6. Run `make build` to inject `CONFIG_BASE_URL` into [config.php](config.php#L32)
 
 ## Administration
 
