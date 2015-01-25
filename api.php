@@ -1,8 +1,8 @@
 <?php
 require_once("config.php");
+require_once("code/autoload.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
-require_once("code/Authentication.class.php");
 require_once("code/OCR.class.php");
 require_once("vendor/autoload.php");
 

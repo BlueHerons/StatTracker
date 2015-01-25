@@ -1,8 +1,8 @@
 <?php
 require_once("config.php");
+require_once("code/autoload.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
-require_once("code/Authentication.class.php");
 require_once("vendor/autoload.php");
 
 use Symfony\Component\HttpFoundation\Request;
@@ -49,10 +49,10 @@ $app->get('/{page}', function ($page) use ($app) {
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
-				return $app->json(Authentication::getInstance()->login());
+				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->login());
 				break;
 			case "callback":
-				if (Authentication::getInstance()->callback()) {
+				if (\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->callback()) {
 					return $app->redirect("./dashboard");
 				}
 				else {
@@ -60,7 +60,7 @@ $app->get('/{page}', function ($page) use ($app) {
 				}
 				break;
 			case "logout":
-				return $app->json(Authentication::getInstance()->logout());
+				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->logout());
 				break;
 			default:
 				$app->abort(405, "Invalid Authentication action");

@@ -1,17 +1,10 @@
 <?php
-class Authentication {
+namespace BlueHerons\StatTracker\Authentication;
 
-	private static $instance;
+class GooglePlusProvider implements IAuthenticationProvider {
+
 	private $client;
 	private $plus;
-
-	public static function getInstance() {
-		if (self::$instance == null) {
-			self::$instance = new Authentication();
-		}
-
-		return self::$instance;
-	}
 
 	/**
 	 * Generates an authorization code for the given email address. If the email address is not
@@ -103,8 +96,8 @@ class Authentication {
 		$stmt->closeCursor();
 	}
 
-	private function __construct() {
-		$this->client = new Google_Client();
+	public function __construct() {
+		$this->client = new \Google_Client();
 		$this->client->setApplicationName(GOOGLE_APP_NAME);
 		$this->client->setClientId(GOOGLE_CLIENT_ID);
 		$this->client->setClientSecret(GOOGLE_CLIENT_SECRET);
@@ -112,13 +105,13 @@ class Authentication {
 
 		$this->client->setScopes("https://www.googleapis.com/auth/plus.profile.emails.read");
 
-		$this->plus = new Google_Service_Plus($this->client);
+		$this->plus = new \Google_Service_Plus($this->client);
 	}
 
 	public function login() {
 		global $app;
 
-		$response = new StdClass();
+		$response = new \StdClass();
 		$response->error = false;
 
 		// Kick off the OAuth process
@@ -153,7 +146,7 @@ class Authentication {
 				}
 
 				$response->email = $email_address;
-				$agent = Agent::lookupAgentName($email_address);
+				$agent = \Agent::lookupAgentName($email_address);
 	
 				if (empty($agent->name) || $agent->name == "Agent") {
 					// They need to register
