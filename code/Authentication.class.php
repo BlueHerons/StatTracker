@@ -23,7 +23,7 @@ class Authentication {
 	 *
 	 * @return void
 	 */
-	public static function generateAuthCode($email_address, $newIfExists = false) {
+	private static function generateAuthCode($email_address, $newIfExists = false) {
 		global $db;
 		$length = 6;
 
@@ -55,7 +55,7 @@ class Authentication {
 	 *
 	 * @return void
 	 */
-	public static function sendAuthCode($email_address) {
+	private static function sendAuthCode($email_address) {
 		global $app;
 		global $db;
 		require_once("vendor/autoload.php");
