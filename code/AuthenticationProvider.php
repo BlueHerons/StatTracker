@@ -48,7 +48,7 @@ class AuthenticationProvider {
 	 *
 	 * Most providers should generate an auth_code and use that as a challenge during the registration process. If
 	 * that is not possible given a provider, then a rather generic email will be sent to the user, instructing
-	 /* to contact the specified ADMIN_AGENT.
+	 * to contact the specified ADMIN_AGENT.
 	 *
 	 * @param string $email_address The address to send the registration email to.
 	 *
