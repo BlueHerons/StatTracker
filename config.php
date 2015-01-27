@@ -24,13 +24,6 @@ define("SMTP_USER", "");
 // Email password.
 define("SMTP_PASS", "");
 
-// Google OAuth configuration. This is used for authentication. You will need to set this up at
-// https://console.developers.google.com. More information is available on the Stat Tracker wiki.
-define("GOOGLE_CLIENT_ID",     "");
-define("GOOGLE_CLIENT_SECRET", "");
-define("GOOGLE_APP_NAME",      "");
-define("GOOGLE_REDIRECT_URL",  "");
-
 // Enter the values appropriate for your local group.
 // The name of your community. Example: Blue Herons Resistance
 define("GROUP_NAME",  "The Local Resistance");
@@ -44,6 +37,14 @@ define("ADMIN_AGENT", "YourIngressAgentName");
 //define("EMAIL_SUBMISSION", "stats@thelocalresistance.com");
 // Google Analytics tracking ID. This is an optional feature. Uncomment this line and insert you GA tracking ID to enable.
 //define("GOOGLE_ANALYTICS_ID", "");
+
+// Authentication Provider Configuration. PLEASE READ THE WIKI ON GITHUB TO UNDERSTAND THIS.
+// Google OAuth configuration. https://console.developers.google.com. Only required if you use Google as your provider.
+// This provider requires email configuration. See "SMTP_*" constants.
+define("GOOGLE_CLIENT_ID",     "");
+define("GOOGLE_CLIENT_SECRET", "");
+define("GOOGLE_APP_NAME",      "");
+define("GOOGLE_REDIRECT_URL",  "");
 
 // You should not need to change any values below this line.
 
