@@ -1,100 +1,15 @@
 <?php
 namespace BlueHerons\StatTracker\Authentication;
 
+use PDOException;
+use StdClass;
+
+use BlueHerons\StatTracker\AuthenticationProvider;
+
 class GooglePlusProvider implements IAuthenticationProvider {
 
 	private $client;
 	private $plus;
-
-	/**
-	 * Generates an authorization code for the given email address. If the email address is not
-	 * already in the database, it will be inserted. If it already exists, the authorization code
-	 * will be updated.
-	 *
-	 * @param string $email_address the email address retrieved from authentication
-	 * @param bool   $newIfExists   Whether or not to issue a new auth code if one already exists
-	 *
-	 * @return void
-	 */
-	private static function generateAuthCode($email_address, $newIfExists = false) {
-		global $db;
-		$length = 6;
-
-		$code = md5($email_address);
-		$code = str_shuffle($code);
-		$start = rand(0, strlen($code) - $length - 1);	
-		$code = substr($code, $start, $length);
-		$num_rows = 0;
-
-		if (!$newIfExists) {
-			$stmt = $db->prepare("SELECT agent FROM Agent WHERE email = ?;");
-			$stmt->execute(array($email_address));
-			$num_rows = $stmt->rowCount();
-			$stmt->closeCursor();
-		}
-
-		if ($num_rows != 1 || $newIfExists) {
-			$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
-			$stmt->execute(array($email_address, $code));
-			$stmt->closeCursor();
-		}
-	}
-
-	/**
-	 * Sends the autorization code for the given email address to that address. The email includes
-	 * instructions on how to complete the registration process as well.
-	 *
-	 * @param string $email_address The address to send the respective authorization code to.
-	 *
-	 * @return void
-	 */
-	private static function sendAuthCode($email_address) {
-		global $app;
-		global $db;
-		require_once("vendor/autoload.php");
-
-		$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
-		$stmt->execute(array($email_address));
-		extract($stmt->fetch());
-		$stmt->closeCursor();
-
-		$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
-		       "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
-		       "faction comms:".
-		       "<p/>%s<p/>" .
-		       "You will recieve a reply message once you have been activated. This may take up to " .
-		       "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
-		       "<p/>".
-		       $_SERVER['HTTP_REFERER'];
-
-		$msg = sprintf($msg, $auth_code);
-
-		$transport = Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
-				->setUsername(SMTP_USER)
-				->setPassword(SMTP_PASS);
-
-		$mailer = Swift_Mailer::newInstance($transport);
-
-		$message = Swift_Message::newInstance('Stat Tracker Registration')
-				->setFrom(array(GROUP_EMAIL => GROUP_NAME))
-				->setTo(array($email_address))
-				->setBody($msg, 'text/html', 'iso-8859-2');
-
-		$mailer->send($message);
-	}
-
-	/**
-	 * Updates meta data about the user from the OAuth service on login
-	 *
-	 * @param string $email_address the primary identifier for the user
-	 * @param string $profile_id    the G+ id of the user
-	 */
-	public static function updateUserMeta($email_address, $profile_id) {
-		global $db;
-		$stmt = $db->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
-		$stmt->execute(array($profile_id, $email_address));
-		$stmt->closeCursor();
-	}
 
 	public function __construct() {
 		$this->client = new \Google_Client();
@@ -111,7 +26,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	public function login() {
 		global $app;
 
-		$response = new \StdClass();
+		$response = new StdClass();
 		$response->error = false;
 
 		// Kick off the OAuth process
@@ -141,7 +56,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
 				if (empty($email_address)) {
 					$response->error = true;
-					$response->message = "No email address found";
+					$response->message = "Google did not provide an email address.";
 					return $response;
 				}
 
@@ -152,7 +67,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 					// They need to register
 					self::generateAuthCode($email_address);
 					self::updateUserMeta($email_address, $me->id);
-					self::sendAuthCode($email_address);
+					AuthenticationProvider::sendRegistrationEmail($email_address);
 					$response->status = "registration_required";
 				}
 				else {
@@ -180,21 +95,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		return $response;
 	}
 
-	public function callback() {
-		global $app;
-
-		if (!isset($_REQUEST['code'])) {
-			throw new Exception("Invalid callback parameters");
-		}
-
-		$token = $this->getToken();
-		if (!$token) {
-			throw new Exception("No token available");
-		}
-	
-		return true;
-	}
-
 	public function logout() {
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
@@ -210,6 +110,63 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		return $response;
 	}
 
+	public function callback() {
+		global $app;
+
+		if (!isset($_REQUEST['code'])) {
+			throw new Exception("Invalid callback parameters");
+		}
+
+		if (!$this->getToken()) {
+			throw new Exception("No token available");
+		}
+	
+		return true;
+	}
+
+	/**
+	 * Generates an authorization code for the given email address. If the email address is not
+	 * already in the database, it will be inserted. If it already exists, the authorization code
+	 * will be updated. 
+	 *
+	 * @param string $email_address the email address retrieved from authentication
+	 * @param bool   $newIfExists   Whether or not to issue a new auth code if one already exists
+	 *
+	 * @return void
+	 */
+	private function generateAuthCode($email_address, $newIfExists = false) {
+		global $db;
+		$length = 6;
+
+		$code = md5($email_address);
+		$code = str_shuffle($code);
+		$start = rand(0, strlen($code) - $length - 1);	
+		$code = substr($code, $start, $length);
+		$num_rows = 0;
+
+		if (!$newIfExists) {
+			$stmt = $db->prepare("SELECT agent FROM Agent WHERE email = ?;");
+			$stmt->execute(array($email_address));
+			$num_rows = $stmt->rowCount();
+			$stmt->closeCursor();
+		}
+
+		if ($num_rows != 1 || $newIfExists) {
+			try {
+				$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
+				$stmt->execute(array($email_address, $code));
+				$stmt->closeCursor();
+			}
+			catch (PDOException $e) {
+				// Failing to insert an auth code will cause a generic registration email to be sent to the user.
+				error_log($e);
+			}
+		}
+	}
+
+	/**
+	 * Helper function to process the authorization code from Google.
+	 */
 	private function getToken() {
 		global $app;
 
@@ -231,5 +188,25 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Updates meta data about the user from the OAuth service on login. This isn't used by the app, but helps to
+	 * validate who a registering user is.
+	 *
+	 * @param string $email_address the primary identifier for the user
+	 * @param string $profile_id    the G+ id of the user
+	 */
+	public static function updateUserMeta($email_address, $profile_id) {
+		global $db;
+		try {
+			$stmt = $db->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
+			$stmt->execute(array($profile_id, $email_address));
+			$stmt->closeCursor();
+		}
+		catch (PDOException $e) {
+			// This exception is not vital to functionality, so eat it.
+			error_log($e);
+		}
 	}
 }
