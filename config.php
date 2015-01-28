@@ -55,5 +55,5 @@ define("ENL_GREEN", "#2BED1B");
 // Folder to temporarily store screenshot uploads. RW access required.
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
 define("COMMIT_HASH", "");
-define("TAG_NAME", "");
+define("VERSION", "");
 ?>
