@@ -29,6 +29,7 @@
         	});
 
 		StatTracker.pageToLoad = "{{ page }}";
+		StatTracker.getContributors();
 		StatTracker.authenticate();
 	});
 
@@ -75,6 +76,7 @@
 	<footer>
 		<p>Stat Tracker {{ version_string }}</p>
 		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker">GitHub</a>
+		<p id="contributors">Brought to you by <span>[loading...]</span></p>
 	</footer>
 </body>
 </html>

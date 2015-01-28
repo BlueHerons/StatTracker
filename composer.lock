@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "b42dcde33240670fb53150f2da82976b",
+    "hash": "91cf3d958cabe451a03e080b2d5814b9",
     "packages": [
         {
             "name": "google/apiclient",
@@ -106,6 +106,46 @@
                 "stylesheet"
             ],
             "time": "2014-06-05 16:09:50"
+        },
+        {
+            "name": "php-curl-class/php-curl-class",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-curl-class/php-curl-class.git",
+                "reference": "59e8e40626bda2b9286a16a0163aa7842e4434ab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-curl-class/php-curl-class/zipball/59e8e40626bda2b9286a16a0163aa7842e4434ab",
+                "reference": "59e8e40626bda2b9286a16a0163aa7842e4434ab",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Unlicense"
+            ],
+            "description": "PHP Curl Class is an object-oriented wrapper of the PHP cURL extension.",
+            "homepage": "https://github.com/php-curl-class/php-curl-class",
+            "keywords": [
+                "class",
+                "curl",
+                "php"
+            ],
+            "time": "2014-07-07 05:39:42"
         },
         {
             "name": "pimple/pimple",

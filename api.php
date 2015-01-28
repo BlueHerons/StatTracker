@@ -6,9 +6,12 @@ require_once("code/Agent.class.php");
 require_once("code/OCR.class.php");
 require_once("vendor/autoload.php");
 
+use Curl\Curl;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 $db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
 	PDO::ATTR_EMULATE_PREPARES   => false,
@@ -36,6 +39,19 @@ $validateRequest = function(Request $request, Silex\Application $app) {
 	// Ensure {stat} is alpha characters and an underscore
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $app->abort(400); }
 };
+
+// Pass-though call to GitHub to retrieve everyone how has contributed to the repository
+$app->get("/api/contributors", function(Request $request) use ($app) {
+	$url = sprintf("https://api.github.com/repos/%s/%s/contributors?per_page=%d", "BlueHerons", "StatTracker", 10);
+
+	$request = new Curl();
+	$request->setUserAgent(GROUP_NAME . " Stat Tracker/" . COMMIT_HASH);
+	$request->get($url);
+
+	$response = $request->response;
+
+	return $app->json($response);
+});
 
 $app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
