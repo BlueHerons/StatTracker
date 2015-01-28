@@ -36,7 +36,7 @@ $app->get('/{page}', function ($page) use ($app) {
 	if ($page == "dashboard" ||
 	    $page == "submit-stats" ||
 	    $page == "leaderboards") {
-	
+		$app['session']->set("page_after_login", $page);
 		return $app['twig']->render("index.twig", array(
 			"constants" => array(
 				"ga_id" => GOOGLE_ANALYTICS_ID,
@@ -55,7 +55,9 @@ $app->get('/{page}', function ($page) use ($app) {
 				break;
 			case "callback":
 				if (\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->callback()) {
-					return $app->redirect("./dashboard");
+					$page = $app['session']->get("page_after_login");
+					$page = empty($page) ? "dashboard" : $page;
+					return $app->redirect("./{$page}");
 				}
 				else {
 					$app->abort(500, "An error occured during authentication");
