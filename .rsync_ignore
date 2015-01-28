@@ -10,5 +10,5 @@ composer.*
 config.php.*
 database/
 template*
-*.less
+*.diff
 *.sh
