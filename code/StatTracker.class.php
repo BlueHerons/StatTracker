@@ -333,7 +333,7 @@ class StatTracker {
 			$results[] = array(
 				"rank" => $row['rank'],
 				"agent" => $row['agent'],
-				"value" => number_format($row['value']),
+				"value" => $row['value'],
 				"age" => $row['age']
 			);
 		}
