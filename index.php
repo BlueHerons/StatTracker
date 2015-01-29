@@ -5,6 +5,8 @@ require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
 require_once("vendor/autoload.php");
 
+use BlueHerons\StatTracker\AuthenticationProvider;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -51,17 +53,13 @@ $app->get('/{page}', function ($page) use ($app) {
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
-				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->login());
+				return $app->json(AuthenticationProvider::getInstance()->login());
 				break;
 			case "callback":
-				if (\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->callback()) {
-					$page = $app['session']->get("page_after_login");
-					$page = empty($page) ? "dashboard" : $page;
-					return $app->redirect("./{$page}");
-				}
-				else {
-					$app->abort(500, "An error occured during authentication");
-				}
+				AuthenticationProvider::getInstance()->callback();
+				$page = $app['session']->get("page_after_login");
+				$page = empty($page) ? "dashboard" : $page;
+				return $app->redirect("./{$page}");
 				break;
 			case "logout":
 				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->logout());
