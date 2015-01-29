@@ -118,7 +118,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
 
 		try {
-			if (!empty($code)) {
+			if (!isset($code)) {
 				throw new Exception("Google responded incorrectly to the authentication request. Please try again later.");
 			}
 
