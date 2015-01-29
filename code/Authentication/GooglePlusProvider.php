@@ -1,8 +1,6 @@
 <?php
 namespace BlueHerons\StatTracker\Authentication;
 
-use Exception;
-use Google_Client;
 use PDOException;
 use StdClass;
 
@@ -14,7 +12,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	private $plus;
 
 	public function __construct() {
-		$this->client = new Google_Client();
+		$this->client = new \Google_Client();
 		$this->client->setApplicationName(GOOGLE_APP_NAME);
 		$this->client->setClientId(GOOGLE_CLIENT_ID);
 		$this->client->setClientSecret(GOOGLE_CLIENT_SECRET);
@@ -115,20 +113,15 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	public function callback() {
 		global $app;
 
-		$code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
-
-		try {
-			if (!empty($code)) {
-				throw new Exception("Google responded incorrectly to the authentication request. Please try again later.");
-			}
-
-			$this->client->authenticate($code);
-			$app['session']->set("token", $this->client->getAccessToken());
+		if (!isset($_REQUEST['code'])) {
+			throw new Exception("Invalid callback parameters");
 		}
-		catch (Exception $e) {
-			error_log("Google authentication callback failure");
-			error_log(print_r($e, true));
+
+		if (!$this->getToken()) {
+			throw new Exception("No token available");
 		}
+	
+		return true;
 	}
 
 	/**
@@ -169,6 +162,32 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				error_log($e);
 			}
 		}
+	}
+
+	/**
+	 * Helper function to process the authorization code from Google.
+	 */
+	private function getToken() {
+		global $app;
+
+		$code = "";
+		if (isset($_REQUEST['code'])) {
+			$code = $_REQUEST['code'];
+		}
+		else {
+			$code = file_get_contents("php://input");
+		}
+
+		try {
+			$this->client->authenticate($code);
+			$app['session']->set("token", $this->client->getAccessToken());
+		}
+		catch (Exception $e) {
+			print_r("caught except retrieveing token");
+			return $e;
+		}
+
+		return true;
 	}
 
 	/**
