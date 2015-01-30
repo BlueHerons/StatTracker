@@ -229,6 +229,8 @@ class OCR {
 				$step = 'resources';
 			} elseif ($step == 'missions' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
 				$step = 'resources';
+			} elseif ($step == 'resources' && preg_match('/^\s*Mentoring\s*$/sxmi', $line)) {
+				$step = 'mentoring';
 			} elseif ($step == 'discovery' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:XM)?\s*$/sxmi', $line, $values)) {
 				$count++;
 				array_push($elements, $values[1]);

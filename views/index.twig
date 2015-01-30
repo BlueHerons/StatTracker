@@ -2,21 +2,19 @@
 <html>
 <head>
 	<title>Stat Tracker - Blue Herons Resistance</title>
-	<link href='http://fonts.googleapis.com/css?family=Coda:400,700' rel='stylesheet' type='text/css' />
-	<link rel="shortcut icon" href="favicon.ico" />
-	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-	<link href="style.css" rel="stylesheet" />
 	<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+	<link rel="shortcut icon" href="favicon.ico" />
+	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Coda:400,700" />
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+	<link rel="stylesheet" href="{{ app.request.basepath }}/resources/css/style.css" />
+
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="https://code.highcharts.com/4.0/highcharts.js"></script>
-	<script type="text/javascript" src="{{ app.request.basepath }}/scripts/jquery.tablesorter.min.js"></script>
-	<script type="text/javascript" src="{{ app.request.basepath }}/scripts/StatTracker.js"></script>
+	<script type="text/javascript" src="//code.highcharts.com/4.0/highcharts.js"></script>
+	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/jquery.tablesorter.min.js"></script>
+	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/stat-tracker.js"></script>
 	<script>
-	function onSignInCallback(authResult) {
-		StatTracker.signinCallback(authResult);
-	}
-
 	$(document).ready(function() {
 		$("#login-dialog").hide();
 		$("#login-dialog").dialog({
@@ -31,6 +29,7 @@
         	});
 
 		StatTracker.pageToLoad = "{{ page }}";
+		StatTracker.getContributors();
 		StatTracker.authenticate();
 	});
 
@@ -75,8 +74,9 @@
 	</div>
 
 	<footer>
-		<p>Stat Tracker {{ version_string }}</p>
+		<p>Stat Tracker {{ attribute(constants, "version") }}</p>
 		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker">GitHub</a>
+		<p id="contributors">Brought to you by <span>[loading...]</span></p>
 	</footer>
 </body>
 </html>

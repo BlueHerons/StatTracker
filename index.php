@@ -1,25 +1,30 @@
 <?php
 require_once("config.php");
+require_once("code/autoload.php");
 require_once("code/StatTracker.class.php");
 require_once("code/Agent.class.php");
-require_once("code/Authentication.class.php");
 require_once("vendor/autoload.php");
 
-const ENL_GREEN = "#2BED1B";
-const RES_BLUE = "#00BFFF";
+use BlueHerons\StatTracker\AuthenticationProvider;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-$mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-if ($mysql->connect_errno) {
-	die(sprintf("%s: %s", $mysql->connect_errno, $mysql->connect_error));
-}
+$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
+	PDO::ATTR_EMULATE_PREPARES   => false,
+	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+));
 
 $app = new Silex\Application();
 $app['debug'] = true;
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
-	'twig.path' => __DIR__ . "/views",
+	'twig.path' => array(
+		__DIR__ . "/views",
+		__DIR__ . "/resources",
+		__DIR__ . "/resources/scripts",
+	)
 ));
 
 $agent = new Agent();
@@ -33,10 +38,12 @@ $app->get('/{page}', function ($page) use ($app) {
 	if ($page == "dashboard" ||
 	    $page == "submit-stats" ||
 	    $page == "leaderboards") {
-	
+		$app['session']->set("page_after_login", $page);
 		return $app['twig']->render("index.twig", array(
-			"constants" => array("ga_id" => GOOGLE_ANALYTICS_ID),
-			"version_string" => empty(TAG_NAME) ? "version " . substr(COMMIT_HASH, 0, 7) : TAG_NAME,
+			"constants" => array(
+				"ga_id" => GOOGLE_ANALYTICS_ID,
+				"version" => empty(VERSION) ? "development" : VERSION,
+			),
 			"page" => $page
 		));
 	}
@@ -46,18 +53,16 @@ $app->get('/{page}', function ($page) use ($app) {
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
-				return $app->json(Authentication::getInstance()->login());
+				return $app->json(AuthenticationProvider::getInstance()->login());
 				break;
 			case "callback":
-				if (Authentication::getInstance()->callback()) {
-					return $app->redirect("./dashboard");
-				}
-				else {
-					$app->abort(500, "An error occured during authentication");
-				}
+				AuthenticationProvider::getInstance()->callback();
+				$page = $app['session']->get("page_after_login");
+				$page = empty($page) ? "dashboard" : $page;
+				return $app->redirect("./{$page}");
 				break;
 			case "logout":
-				return $app->json(Authentication::getInstance()->logout());
+				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->logout());
 				break;
 			default:
 				$app->abort(405, "Invalid Authentication action");
@@ -81,6 +86,43 @@ $app->get('/page/{page}', function($page) use ($app, $agent) {
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
 	));
+});
+
+$app->get("/resources/{resource_dir}/{resource}", function(Request $request, $resource) use ($app) {
+	switch ($resource) {
+		case "style.css":
+			$file = "./resources/css/style.less";
+			$lastModified = filemtime($file);
+			$css = new Symfony\Component\HttpFoundation\Response("", 200, array("Content-Type" => "text/css"));
+			$css->setLastModified(new \DateTime("@".filemtime($file)));
+
+			if ($css->isNotModified($request)) {
+				$css->setNotModified();
+			}
+			else {
+				$parser = new Less_Parser(array("compress" => true));
+				$parser->parseFile($file, $request->getBaseUrl());
+				$css->setLastModified(new \DateTime("@".filemtime($file)));
+				$css->setContent($parser->getCss());
+			}
+
+			return $css;
+			break;
+		case "stat-tracker.js":
+			$js = new Symfony\Component\HttpFoundation\Response();
+
+			if ($js->isNotModified($request)) {
+				$js->setNotModified();
+			}
+			else {
+				$content = $app['twig']->render("stat-tracker.js.twig");
+				$js->headers->set("Content-Type", "application/javascript");
+				$js->setContent($content);
+			}
+
+			return $js;
+			break;
+	}
 });
 
 $app->run();
