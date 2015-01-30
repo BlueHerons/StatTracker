@@ -53,35 +53,32 @@ $app->get("/api/contributors", function(Request $request) use ($app) {
 	return $app->json($response);
 });
 
-$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when, $format) use ($app) {
+$app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
-	$data = new stdClass;
+	$response = new stdClass;
 
-	$data->agent = $agent->name;
-	$data->data = array();
+	$response->agent = $agent->name;
 	
 	$t = new stdClass;
 
 	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
-		die("date");
+		$response->date = date("c", $agent->getUpdateTime($when));
 	}
 	else if ($when == "latest") {
-		$t->timestamp = $agent->getLatestUpdate();
-		$t->badges = $agent->getBadges();
-		$t->stats = $agent->getLatestStats(true);
+		$response->date = date("c", $agent->getUpdateTimestamp());
+		$response->badges = $agent->getBadges();
+		$response->stats = $agent->getLatestStats(true);
 	}
 
-	$data->data[] = $t;
-	
 	switch ($format) {
 		case "json":
-			return $app->json($data);
+			return $app->json($response);
 			break;
 	}
 })->before($validateRequest)
   ->assert("format", "json")
-  ->assert("when",   "latest")
+  ->assert("when",   "latest|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
   ->value ("format", "json")
   ->value ("when",   "latest");
 
