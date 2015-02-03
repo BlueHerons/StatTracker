@@ -103,19 +103,20 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
 
-	switch ($what) {
-		case "current":
-			$data = $agent->getBadges();
-			break;
-		case "upcoming":
-			$data = $agent->getUpcomingBadges($limit);
-			break;
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $what)) {
+		$data = $agent->getBadges($what);
+	}
+	else if ($what == "upcoming") {
+		$data = $agent->getUpcomingBadges($limit);
+	}
+	else {
+		$data = $agent->getBadges();
 	}
 
 	return $app->json($data);
 })->before($validateRequest)
-  ->assert("what", "current|upcoming")
-  ->value("what", "current");
+  ->assert("what", "today|upcoming|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
+  ->value("what", "today");
 
 // Retrieve ratio information for the agent
 $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {

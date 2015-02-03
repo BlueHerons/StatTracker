@@ -159,11 +159,18 @@ class Agent {
 	 * be the update for that day
 	 */
 	public function getUpdateTimestamp($date = "today", $refresh = false) {
-		if (!isset($this->update_time) || $refresh) {
+		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
 			global $db;
 			$date = ($date == "today") ? date("Y-m-d") : $date;
 			$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(updated) `updated` FROM Data WHERE agent = ? AND `date` = ? LIMIT 1;");
 			$stmt->execute(array($this->name, $date));
+
+			// If the agent hasnt submitted today, get the last submission
+			if ($stmt->rowCount() == 0) {
+				$stmt = $db->prepare("SELECT MAX(UNIX_TIMESTAMP(updated)) `updated` FROM Data WHERE agent = ? LIMIT 1;");
+				$stmt->execute(array($this->name));
+			}
+
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
@@ -237,17 +244,22 @@ class Agent {
 	public function getBadges($date = "today", $refresh = false) {
 		if (!is_array($this->badges) || $refresh) {
 			global $db;
-			$stmt = null;
+
+			$stmt = $db->prepare("CALL GetBadges(?, ?);");
+
 			if ($date == "today") {
-				$stmt = $db->prepare("CALL GetCurrentBadges(?);");
-				$stmt->execute(array($this->name));
-				$stmt->closeCursor();
-			}
-			else {
-				// TODO: GetBadges(agent, date) SP
+				$today = true;
+				$date = date("Y-m-d");
 			}
 
-			$stmt = $db->query("SELECT * FROM CurrentBadges;");
+			$stmt->execute(array($this->name, $date));
+			$stmt->closeCursor();
+
+			$stmt = $db->query("SELECT * FROM _Badges;");
+
+			if ($today && $stmt->rowCount() == 0) {
+				$this->getBadges(date("Y-m-d", $this->getUpdateTimestamp()), true);
+			}
 
 			if (!is_array($this->badges)) {
 				$this->badges = array();
