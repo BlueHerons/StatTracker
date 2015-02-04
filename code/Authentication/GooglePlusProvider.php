@@ -105,6 +105,8 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	}
 
 	public function logout() {
+		global $app;
+
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
 			$parts = explode('=', $cookie);
