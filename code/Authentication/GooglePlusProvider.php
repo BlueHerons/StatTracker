@@ -90,8 +90,15 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		}
 		else {
 			$agent = $app['session']->get("agent");
-			$response->status = "okay";
-			$response->agent = $agent;
+
+			// Ensure auth_code is valid
+			if (\Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
+				$response->status = "okay";
+				$response->agent = $agent;
+			}
+			else {
+				return $this->logout();
+			}
 		}
 
 		return $response;
