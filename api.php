@@ -165,7 +165,7 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 			$data = StatTracker::getGraphData($stat, $agent);
 			break;
 		case "raw":
-			$agent->getLatestStat($stat);
+			$agent->getStat($stat);
 			$data = new stdClass();
 			$data->value = $agent->stats[$stat];
 			$data->timestamp = $agent->latest_entry;

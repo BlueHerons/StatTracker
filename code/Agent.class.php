@@ -80,7 +80,7 @@ class Agent {
 		if ($this->isValid()) {
 			$this->getLevel();
 			$this->hasSubmitted();
-			$this->getLatestStat('ap');
+			$this->getStat('ap');
 			$this->getUpdateTimestamp();
 		}
 	}
@@ -216,30 +216,32 @@ class Agent {
 	}
 
 	/**
-	 * Gets the latest value of the specified stat.
+	 * Gets the value of the specified stat.
 	 *
 	 * @param string|object If string, the stat's database key. If object, a Stat object for the class
 	 * #param boolean $refresh whether or not to refresh the cached value
 	 *
 	 * @return the value for the stat
 	 */
-	public function getLatestStat($stat, $refresh = false) {
+	public function getStat($stat, $when = "latest", $refresh = false) {
 		if (!StatTracker::isValidStat($stat)) {
 			throw new Exception(sprintf("'%s' is not a valid stat", $stat));
 		}
-
-		if (is_object($stat)) {
+		else if (is_object($stat)) {
 			$stat = $stat->stat;
 		}
 	
-		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
+		if (!isset($this->stats[$stat]) || $refresh) {
 			global $db;
-			$stmt = $db->prepare("SELECT value, date FROM Data WHERE stat = ? AND agent = ? ORDER BY date DESC LIMIT 1;");
-			$stmt->execute(array($stat, $this->name));
+
+			if ($when == "latest") {
+				$when = date("Y-m-d", $this->getUpdateTimestamp());
+			}
+
+			$stmt = $db->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
+			$stmt->execute(array($stat, $this->name, $when));
 			extract($stmt->fetch());
 			$stmt->closeCursor();
-
-			$this->latest_entry = $date;
 
 			if (!is_array($this->stats)) {
 				$this->stats = array();
