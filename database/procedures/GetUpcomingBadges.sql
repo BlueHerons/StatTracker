@@ -25,19 +25,17 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
          b.name,
          b.level,
          d.value / b.amount_required,
-         (b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat) `remaining`
+         ((b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat)) remaining
     FROM Data d
     JOIN Badges b ON d.stat = b.stat
     JOIN Stats s ON d.stat = s.stat
    WHERE d.agent = agent_name AND 
          d.date = @latest_submission AND
          b.amount_required > d.value AND
+         d.value > 0 AND
          s.prediction = 1
 GROUP BY b.stat
 ORDER BY remaining ASC;
-
-DELETE FROM UpcomingBadges WHERE stat IN 
-       ('ap', 'portals_discovered', 'oldest_portal');
 
 END $$
 DELIMITER ;
