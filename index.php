@@ -76,7 +76,7 @@ $app->get('/{page}', function ($page) use ($app) {
 
 $app->get('/page/{page}', function($page) use ($app, $agent) {
 	if ($page == "submit-stats") {
-		$agent->getLatestStats(true);
+		$agent->getStats("latest", true);
 	}
 
 	return $app['twig']->render($page.".twig", array(

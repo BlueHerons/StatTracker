@@ -77,7 +77,7 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 	else if ($when == "latest") {
 		$response->date = date("c", $agent->getUpdateTimestamp());
 		$response->badges = $agent->getBadges();
-		$response->stats = $agent->getLatestStats(true);
+		$response->stats = $agent->getStats("latest", true);
 	}
 
 	switch ($format) {

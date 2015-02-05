@@ -252,23 +252,6 @@ class Agent {
 	}
 
 	/**
-	 * Gets the latest entry for all stats for this agent
-	 *
-	 * @param boolean $refresh whether or not to refresh the cached value
-	 *
-	 * @return array with stat database key as the index
-	 */
-	public function getLatestStats($refresh = false) {
-		if (!is_array($this->stats) || $refresh) {
-			foreach (StatTracker::getStats() as $stat) {
-				$this->getLatestStat($stat->stat, $refresh);
-			}
-		}
-
-		return $this->stats;
-	}
-
-	/**
 	 * Gets an array of badges for the current player. array index is the badge name, and the array value 
 	 * is the level of the current badge
 	 *
