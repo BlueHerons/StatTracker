@@ -63,7 +63,16 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 	$t = new stdClass;
 
 	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
-		$response->date = date("c", $agent->getUpdateTime($when));
+		$ts = $agent->getUpdateTimestamp($when, true);
+
+		if ($ts == null) {
+			return $app->abort(404);
+		}
+		else {
+			$response->date = date("c", $ts);
+			$response->badges = $agent->getBadges($when, true);
+			$response->stats = $agent->getStats($when, true);
+		}
 	}
 	else if ($when == "latest") {
 		$response->date = date("c", $agent->getUpdateTimestamp());

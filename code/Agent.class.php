@@ -158,17 +158,17 @@ class Agent {
 	 * Gets the timestamp for which the last update was made for the agent. If $data is provided, the timestamp will 
 	 * be the update for that day
 	 */
-	public function getUpdateTimestamp($date = "today", $refresh = false) {
+	public function getUpdateTimestamp($date = "latest", $refresh = false) {
 		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
 			global $db;
-			$date = ($date == "today") ? date("Y-m-d") : $date;
-			$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(updated) `updated` FROM Data WHERE agent = ? AND `date` = ? LIMIT 1;");
-			$stmt->execute(array($this->name, $date));
-
-			// If the agent hasnt submitted today, get the last submission
-			if ($stmt->rowCount() == 0) {
-				$stmt = $db->prepare("SELECT MAX(UNIX_TIMESTAMP(updated)) `updated` FROM Data WHERE agent = ? LIMIT 1;");
+			$stmt = null;
+			if ($date == "latest") {
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? LIMIT 1;");
 				$stmt->execute(array($this->name));
+			}
+			else {
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? AND date = ?;");
+				$stmt->execute(array($this->name, $date));
 			}
 
 			extract($stmt->fetch());
@@ -178,6 +178,41 @@ class Agent {
 		}
 
 		return $this->update_time;
+	}
+
+	/**
+	 * Gets the values of all stats.
+	 *
+	 * @param string|date $when "latest" to get the latest stats submitted by the agent, or a date in "yyyy-mm-dd"
+	 *                    format to retrieve  stats on that date
+	 * @param boolean $refresh whether or not to refresh the cached values
+	 *
+	 * @return array values for stats
+	 */
+	public function getStats($when = "latest", $refresh = true) {
+		if (!is_array($this->stats) || $refresh) {
+			global $db;
+
+			if ($when == "latest") {
+				$when = date("Y-m-d", $this->getUpdateTimestamp());
+			}
+
+			$stmt = $db->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
+			$stmt->execute(array($this->name, $when));
+
+			if (!is_array($this->stats)) {
+				$this->stats = array();
+			}
+
+			while ($row = $stmt->fetch()) {
+				extract($row);
+				$this->stats[$stat] = $value;
+			}
+
+			$stmt->closeCursor();
+		}
+
+		return $this->stats;
 	}
 
 	/**
