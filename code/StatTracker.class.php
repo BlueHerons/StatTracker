@@ -87,7 +87,7 @@ class StatTracker {
 				foreach (self::getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
 						if ($stat->stat == "innovator") {
-							$agent->getLatestStats(true);
+							$agent->getStats("latest", true);
 							$postdata[$stat->stat] = $agent->stats[$stat->stat];
 						}
 						else {

@@ -53,31 +53,41 @@ $app->get("/api/contributors", function(Request $request) use ($app) {
 	return $app->json($response);
 });
 
-$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when, $format) use ($app) {
+$app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
-	$data = new stdClass;
+	$response = new stdClass;
 
-	$data->agent = $agent->name;
-	$data->data = array();
+	$response->agent = $agent->name;
 	
-	// TODO: Refactor for fetching historical data
-
 	$t = new stdClass;
-	$t->timestamp = $agent->getLatestUpdate();
-	$t->badges = $agent->getBadges();
-	$t->stats = $agent->getLatestStats(true);
 
-	$data->data[] = $t;
-	
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
+		$ts = $agent->getUpdateTimestamp($when, true);
+
+		if ($ts == null) {
+			return $app->abort(404);
+		}
+		else {
+			$response->date = date("c", $ts);
+			$response->badges = $agent->getBadges($when, true);
+			$response->stats = $agent->getStats($when, true);
+		}
+	}
+	else if ($when == "latest") {
+		$response->date = date("c", $agent->getUpdateTimestamp());
+		$response->badges = $agent->getBadges();
+		$response->stats = $agent->getStats("latest", true);
+	}
+
 	switch ($format) {
 		case "json":
-			return $app->json($data);
+			return $app->json($response);
 			break;
 	}
 })->before($validateRequest)
   ->assert("format", "json")
-  ->assert("when",   "latest")
+  ->assert("when",   "latest|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
   ->value ("format", "json")
   ->value ("when",   "latest");
 
@@ -102,19 +112,20 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
 
-	switch ($what) {
-		case "current":
-			$data = $agent->getBadges();
-			break;
-		case "upcoming":
-			$data = $agent->getUpcomingBadges($limit);
-			break;
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $what)) {
+		$data = $agent->getBadges($what);
+	}
+	else if ($what == "upcoming") {
+		$data = $agent->getUpcomingBadges($limit);
+	}
+	else {
+		$data = $agent->getBadges();
 	}
 
 	return $app->json($data);
 })->before($validateRequest)
-  ->assert("what", "current|upcoming")
-  ->value("what", "current");
+  ->assert("what", "today|upcoming|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
+  ->value("what", "today");
 
 // Retrieve ratio information for the agent
 $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
@@ -154,7 +165,7 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 			$data = StatTracker::getGraphData($stat, $agent);
 			break;
 		case "raw":
-			$agent->getLatestStat($stat);
+			$agent->getStat($stat);
 			$data = new stdClass();
 			$data->value = $agent->stats[$stat];
 			$data->timestamp = $agent->latest_entry;
