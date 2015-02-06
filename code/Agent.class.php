@@ -162,7 +162,7 @@ class Agent {
 		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
 			global $db;
 			$stmt = null;
-			if ($date == "latest") {
+			if ($date == "latest" || new DateTime() < new DateTime($when)) {
 				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? LIMIT 1;");
 				$stmt->execute(array($this->name));
 			}
@@ -193,7 +193,7 @@ class Agent {
 		if (!is_array($this->stats) || $refresh) {
 			global $db;
 
-			if ($when == "latest") {
+			if ($when == "latest" || new DateTime() < new DateTime($when)) {
 				$when = date("Y-m-d", $this->getUpdateTimestamp());
 			}
 
@@ -234,7 +234,7 @@ class Agent {
 		if (!isset($this->stats[$stat]) || $refresh) {
 			global $db;
 
-			if ($when == "latest") {
+			if ($when == "latest" || new DateTime() < new DateTime($when)) {
 				$when = date("Y-m-d", $this->getUpdateTimestamp());
 			}
 
