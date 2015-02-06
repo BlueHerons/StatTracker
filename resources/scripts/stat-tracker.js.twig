@@ -8,6 +8,7 @@ var StatTracker = new function() {
 		$.ajax({url: this.baseUrl + "page/" + this.pageToLoad,
 			type: "GET",
 			dataType: "html",
+			data: location.search.substring(1),
 			statusCode: {
 				500: function() {
 					alert("Internal Server Error");

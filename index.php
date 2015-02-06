@@ -74,17 +74,25 @@ $app->get('/{page}', function ($page) use ($app) {
 })->assert('page', '[a-z-]+')
   ->value('page', 'dashboard');
 
-$app->get('/page/{page}', function($page) use ($app, $agent) {
+$app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
+	$page_parameters = array();
+	
 	if ($page == "submit-stats") {
 		$agent->getStats("latest", true);
+		$date = $request->get("date");
+		if ($date == null) {
+			$date = date("Y-m-d");
+		}
+		$page_parameters['date'] = $date;
 	}
 
 	return $app['twig']->render($page.".twig", array(
 		"agent" => $agent,
 		"constants" => array("email_submission" => EMAIL_SUBMISSION),
-		"stats" => StatTracker::getStats(),
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
+		"parameters" => $page_parameters,
+		"stats" => StatTracker::getStats(),
 	));
 });
 

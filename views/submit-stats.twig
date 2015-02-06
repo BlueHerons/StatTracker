@@ -26,38 +26,49 @@
 		</div>
 		{% endif %}
 	</div>
-	
-		<table id="stat-entry">
+
+	<div id="stat-navigation">
+		{% set prev_date = attribute(parameters, "date")|date_modify("-1 day") %}
+		{% set next_date = attribute(parameters, "date")|date_modify("+1 day") %}
+		<a href="./submit-stats?date={{ prev_date|date("Y-m-d") }}">
+			&laquo; {{ prev_date|date("Y-m-d") }}
+		</a>
+		<a href="./submit-stats?date={{ next_date|date("Y-m-d") }}">
+			{{ next_date|date("Y-m-d") }} &raquo;
+		</a>
+	</div>
+
+	<table id="stat-entry">
 	{% set last_title = "" %}
 	{% for stat in stats if stat.stat != "ap" %}
 		{% set title = stat.group %}	
 
 		{% if title != last_title and title != "" %}
-			<tr>
-				<th colspan="2">{{ title }}</th>
-			</tr>
+		<tr>
+			<th colspan="2">{{ title }}</th>
+		</tr>
 			{% set last_title = title %}
 		{% endif %}
-			<tr>
-				<td>{{ stat.name }}</td>
-				<td>
-				{% if stat.stat == "innovator" %}
-				<select name="{{ stat.stat }}">
-					{% for required, badge in stat.badges %}
-					<option value="{{ required }}" {% if required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
-					{% endfor %}
-				</select>
-				{% else %}
-				<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
-				{% endif %}
-				</td>
-			</tr>
+		<tr>
+			<td>{{ stat.name }}</td>
+			<td>
+			{% if stat.stat == "innovator" %}
+			<select name="{{ stat.stat }}">
+				{% for required, badge in stat.badges %}
+				<option value="{{ required }}" {% if required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
+				{% endfor %}
+			</select>
+			{% else %}
+			<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
+			{% endif %}
+			</td>
+		</tr>
 	{% endfor %}
-			<tr>
-				<td colspan="2"><input type="submit" value="Submit Stats"/></td>
-			</tr>
-		</table>
-	</form>
+		<tr>
+			<td colspan="2"><input type="submit" value="Submit Stats"/></td>
+		</tr>
+	</table>
+</form>
 
 <script>
 function onPageLoad() {
