@@ -36,6 +36,7 @@
 		<a href="./submit-stats?date={{ next_date|date("Y-m-d") }}">
 			{{ next_date|date("Y-m-d") }} &raquo;
 		</a>
+		<input type="hidden" name="date" value="{{ attribute(parameters, "date") }}" />
 	</div>
 
 	<table id="stat-entry">
@@ -75,6 +76,19 @@ function onPageLoad() {
 	$("#message").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
+	$("#stat-navigation").hide();
+
+	function manualEntry() {
+		$("#submit-actions").hide();
+		$("#stat-navigation").show();
+		$("#agent-info .ap .current").hide();
+		$("#agent-info .ap input").show();
+		$("table#stat-entry").show();
+	};
+
+	if (StatTracker.getQueryVar("date")) {
+		manualEntry();
+	}
 
 	$("input[name='screenshot']").on("change", function() {
 		var file = $("input[name='screenshot']").prop("files")[0];
@@ -125,12 +139,7 @@ function onPageLoad() {
 		});
 	});
 
-	$("input[name='manual-entry']").on("click", function() {
-		$("#submit-actions").hide();
-		$("#agent-info .ap .current").hide();
-		$("#agent-info .ap input").show();
-		$("table#stat-entry").show();
-	});
+	$("input[name='manual-entry']").on("click", function() { manualEntry(); });
 
 	$("form#submit-stats").submit(function() {
 		$("#message").hide().before("<div class='loading' />")
