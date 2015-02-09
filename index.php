@@ -83,7 +83,9 @@ $app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
 		if ($date == null) {
 			$date = date("Y-m-d");
 		}
+
 		$page_parameters['date'] = $date;
+		$page_parameters['today'] = $date == date("Y-m-d");
 	}
 
 	return $app['twig']->render($page.".twig", array(

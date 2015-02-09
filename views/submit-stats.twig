@@ -33,9 +33,11 @@
 		<a href="./submit-stats?date={{ prev_date|date("Y-m-d") }}">
 			&laquo; {{ prev_date|date("Y-m-d") }}
 		</a>
+		{% if not attribute(parameters, "today") %}
 		<a href="./submit-stats?date={{ next_date|date("Y-m-d") }}">
 			{{ next_date|date("Y-m-d") }} &raquo;
 		</a>
+		{% endif %}
 		<input type="hidden" name="date" value="{{ attribute(parameters, "date") }}" />
 	</div>
 
