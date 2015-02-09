@@ -78,14 +78,20 @@ $app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
 	$page_parameters = array();
 	
 	if ($page == "submit-stats") {
-		$agent->getStats("latest", true);
 		$date = $request->get("date");
-		if ($date == null) {
+		if ($date == null || new DateTime() < new DateTime($date)) {
+			$agent->getStats("latest", true);
 			$date = date("Y-m-d");
+		}
+		else {
+			$agent->getStats($date, true);
 		}
 
 		$page_parameters['date'] = $date;
 		$page_parameters['today'] = $date == date("Y-m-d");
+	}
+	else {
+		$agent->getStats("latest", true);
 	}
 
 	return $app['twig']->render($page.".twig", array(
