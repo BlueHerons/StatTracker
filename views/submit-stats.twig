@@ -8,7 +8,7 @@
 			<div class="level">LVL <span>{{ agent.level }}</span></div>
 			<div class="ap">
 				<span class="current">{{ attribute(agent.stats, 'ap')|number_format }}</span>
-				<input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') }}" data-previous-value="{{ attribute(agent.stats, 'ap') }}" />
+				<input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') is defined ? attribute(agent.stats, 'ap') : 0 }}" data-previous-value="{{ attribute(agent.stats, 'ap') is defined ? attribute(agent.stats, 'ap') : 0 }}" />
 				 AP
 			</div>
 		</div>
@@ -55,8 +55,8 @@
 			<td>
 			{% if stat.stat == "innovator" %}
 			<select name="{{ stat.stat }}">
-				{% for required, badge in stat.badges %}
-				<option value="{{ required }}" {% if required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
+				{% for amount_required, badge in stat.badges %}
+				<option value="{{ amount_required }}" {% if attribute(agent.stats, stat.stat) is defined and amount_required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
 				{% endfor %}
 			</select>
 			{% else %}
