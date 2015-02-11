@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetGraphForStat` $$
 
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetGraphForStat`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
+CREATE PROCEDURE `GetGraphForStat`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
     READS SQL DATA
 BEGIN
 

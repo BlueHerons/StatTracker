@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` TIMESTAMP)
+CREATE PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` TIMESTAMP)
     READS SQL DATA
 BEGIN
 

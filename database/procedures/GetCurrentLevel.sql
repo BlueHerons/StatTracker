@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetCurrentLevel` $$
 
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentLevel`(IN `agent_name` VARCHAR(15))
+CREATE PROCEDURE `GetCurrentLevel`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
 
