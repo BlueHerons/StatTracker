@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS `GetInterceptForAgentAndStat` $$
 
-CREATE DEFINER=`admin`@`localhost` FUNCTION `GetInterceptForAgentAndStat`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20)) RETURNS int(10)
+CREATE FUNCTION `GetInterceptForAgentAndStat`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20)) RETURNS int(10)
     READS SQL DATA
 BEGIN
 
