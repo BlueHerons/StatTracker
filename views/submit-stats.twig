@@ -28,17 +28,7 @@
 	</div>
 
 	<div id="stat-navigation">
-		{% set prev_date = attribute(parameters, "date")|date_modify("-1 day") %}
-		{% set next_date = attribute(parameters, "date")|date_modify("+1 day") %}
-		<a href="./submit-stats?date={{ prev_date|date("Y-m-d") }}">
-			&laquo; {{ prev_date|date("Y-m-d") }}
-		</a>
-		{% if not attribute(parameters, "today") %}
-		<a href="./submit-stats?date={{ next_date|date("Y-m-d") }}">
-			{{ next_date|date("Y-m-d") }} &raquo;
-		</a>
-		{% endif %}
-		<input type="hidden" name="date" value="{{ attribute(parameters, "date") }}" />
+		<label for="date">Stats for: </label><input type="text" name="date" value="{{ attribute(parameters, "date") }}" />
 	</div>
 
 	<table id="stat-entry">
@@ -79,6 +69,12 @@ function onPageLoad() {
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
 	$("#stat-navigation").hide();
+	$("#stat-navigation input[name='date']").datepicker({
+		dateFormat: "yy-mm-dd"
+	});
+	$("#stat-navigation input[name='date']").on("change", function() {
+		window.location = window.pathname + "?date=" + $(this).val();
+	});
 
 	function manualEntry() {
 		$("#submit-actions").hide();

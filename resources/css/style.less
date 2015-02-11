@@ -43,7 +43,7 @@ footer {
 	text-align: center;
 }
 
-input[type="number"] {
+input[type="number"], input[type="text"][name="date"] {
 	background-color: black;
 	border: 0;
 	color: @header-color;
@@ -433,12 +433,8 @@ table {
 	max-width: 440px;
 	margin: 10px auto;
 
-	a:nth-child(1) {
-		float: left;
-	}
-
-	a:nth-child(2) {
-		float: right;
+	input[type="text"][name="date"] {
+		text-align: left;
 	}
 }
 
