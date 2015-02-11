@@ -7,4 +7,5 @@ config.php
 token
 
 build/
+uploads/
 vendor/

@@ -1,6 +1,8 @@
 <?php
 //
 // STAT TRACKER CONFIGURATION FILE
+// 
+// Make the necessary changes for your instance of Stat Tracker, and save this file as "config.php"
 //
 
 // Database host. Example: database.thelocalresistance.com
