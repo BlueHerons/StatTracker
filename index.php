@@ -88,7 +88,6 @@ $app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
 		}
 
 		$page_parameters['date'] = $date;
-		$page_parameters['today'] = $date == date("Y-m-d");
 	}
 	else {
 		$agent->getStats("latest", true);
