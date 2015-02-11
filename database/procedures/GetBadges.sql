@@ -1,6 +1,6 @@
 DELIMITER $$
 
-CREATE DEFINER=`StatTracker_ADM`@`localhost` PROCEDURE `GetBadges`(IN `agent_name` VARCHAR(15), IN `submission_date` DATE)
+CREATE PROCEDURE `GetBadges`(IN `agent_name` VARCHAR(15), IN `submission_date` DATE)
     READS SQL DATA
 BEGIN
 

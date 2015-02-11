@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`jluetke`@`localhost` PROCEDURE `GetDailyTrend`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20), IN `start_date` DATE, IN `end_date` DATE)
+CREATE PROCEDURE `GetDailyTrend`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20), IN `start_date` DATE, IN `end_date` DATE)
     NO SQL
 BEGIN
 
