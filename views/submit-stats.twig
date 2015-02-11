@@ -20,7 +20,7 @@
 			<input type="button" value = "Upload a Screenshot" />
 		</div>
 		<input type="button" name="manual-entry" value="Enter Stats Manually" />
-		{% if not(attribute(constants, "email_submission") == "EMAIL_SUBMISSION") %}
+		{% if not(attribute(constants, "email_submission") == null) %}
 		<div class="email">
 			You can also email a screenshot of your profile to<br/>{{ attribute(constants, "email_submission") }}
 		</div>
