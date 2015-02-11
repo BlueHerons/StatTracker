@@ -81,8 +81,8 @@ class StatTracker {
 				extract($stmt->fetch());
 
 				$ts = date("Y-m-d 00:00:00");
-				$dt = date("Y-m-d");
-				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
+				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
 				foreach (self::getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
@@ -99,7 +99,7 @@ class StatTracker {
 					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
 					$value = !is_numeric($value) ? 0 : $value;
 
-					$stmt->execute(array($agent->name, $dt, $min_date, $ts, $stat_key, $value));
+					$stmt->execute(array($agent->name, $dt, $dt, $min_date, $stat_key, $value));
 
 					if ($response->error) {
 						break;
