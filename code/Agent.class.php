@@ -163,7 +163,7 @@ class Agent {
 			global $db;
 			$stmt = null;
 			if ($date == "latest" || new DateTime() < new DateTime($when)) {
-				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? LIMIT 1;");
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(IF(date = DATE_FORMAT(MAX(updated), \"%Y-%m-%d\"), MAX(updated), MAX(date))) `updated` FROM Data WHERE agent = ?");
 				$stmt->execute(array($this->name));
 			}
 			else {
@@ -194,14 +194,15 @@ class Agent {
 			global $db;
 
 			if ($when == "latest" || new DateTime() < new DateTime($when)) {
-				$when = date("Y-m-d", $this->getUpdateTimestamp());
+				$when = date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh));
 			}
 
 			$stmt = $db->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
 			$stmt->execute(array($this->name, $when));
 
-			if (!is_array($this->stats)) {
+			if (!is_array($this->stats) || $refresh) {
 				$this->stats = array();
+				$this->stats['ap'] = 0;
 			}
 
 			while ($row = $stmt->fetch()) {
@@ -235,7 +236,7 @@ class Agent {
 			global $db;
 
 			if ($when == "latest" || new DateTime() < new DateTime($when)) {
-				$when = date("Y-m-d", $this->getUpdateTimestamp());
+				$when = date("Y-m-d", $this->getUpdateTimestamp($when, $refresh));
 			}
 
 			$stmt = $db->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
@@ -278,7 +279,7 @@ class Agent {
 			$stmt = $db->query("SELECT * FROM _Badges;");
 
 			if ($today && $stmt->rowCount() == 0) {
-				$this->getBadges(date("Y-m-d", $this->getUpdateTimestamp()), true);
+				$this->getBadges(date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh)), true);
 			}
 
 			if (!is_array($this->badges)) {
