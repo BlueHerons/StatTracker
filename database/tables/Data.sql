@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `Data` (
   `stat` varchar(20) NOT NULL,
   `value` int(11) NOT NULL,
   `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Last updated',
-  PRIMARY KEY (`agent`,`date`,`timestamp`,`stat`),
+  PRIMARY KEY (`agent`,`date`,`stat`),
   KEY `stat` (`stat`),
   KEY `agent_timestamp` (`agent`,`timestamp`),
   KEY `agent_date` (`agent`,`date`)
