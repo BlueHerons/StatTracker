@@ -70,9 +70,15 @@ class StatTracker {
 	 * @return value of the named constant if it is defined, null otherwise
 	 */
 	public static function getConstant($name, $default = null) {
-		return (!defined($name || empty(constant($name)))) ? 
-			$default :
-			constant($name);
+		if ($name == "VERSION") {
+			$file = dirname(dirname(__FILE__)) . "/VERSION";
+			return file_exists($file) ? file($file)[0] : $default;
+		}
+		else {
+			return (!defined($name || empty(constant($name)))) ? 
+				$default :
+				constant($name);
+		}
 	}
 
 	/**

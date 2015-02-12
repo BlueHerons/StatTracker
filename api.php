@@ -45,7 +45,7 @@ $app->get("/api/contributors", function(Request $request) use ($app) {
 	$url = sprintf("https://api.github.com/repos/%s/%s/contributors?per_page=%d", "BlueHerons", "StatTracker", 10);
 
 	$request = new Curl();
-	$request->setUserAgent(GROUP_NAME . " Stat Tracker/" . VERSION);
+	$request->setUserAgent(GROUP_NAME . " Stat Tracker/" . StatTracker::getConstant("VERSION", "bleeding edge"));
 	$request->get($url);
 
 	$response = $request->response;

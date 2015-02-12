@@ -2,9 +2,8 @@
 **/*.diff
 **/*.swp
 
-about
 config.php
-token
+VERSION
 
 build/
 uploads/
