@@ -44,7 +44,7 @@ function onPageLoad() {
 				$.each(data, function() {
 					updated = (this.age == 0) ? "Today" :
 							(this.age == 1) ? "Yesterday" : this.age + " days ago";
-					row = "<tr><td>" + this.rank + "</td><td>" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
+					row = "<tr><td>" + this.rank + "</td><td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
 	
 					if ($(".leaderboard." + stat + " table tbody tr").length == 0) {
 						$(".leaderboard." + stat + " table tbody").append(row);
