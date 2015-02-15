@@ -27,11 +27,11 @@
 		{% endif %}
 	</div>
 
-	<div id="stat-navigation">
-		<label for="date">Stats for: </label><input type="text" name="date" value="{{ attribute(parameters, "date") }}" />
-	</div>
-
 	<table id="stat-entry">
+		<tr>
+			<td><label for="date">Date</label></td>
+			<td><input type="text" name="date" value="{{ attribute(parameters, "date") }}" /></td>
+		</tr>
 	{% set last_title = "" %}
 	{% for stat in stats if stat.stat != "ap" %}
 		{% set title = stat.group %}	
@@ -69,11 +69,11 @@ function onPageLoad() {
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
 	$("#stat-navigation").hide();
-	$("#stat-navigation input[name='date']").datepicker({
+	$("input[name='date']").datepicker({
 		dateFormat: "yy-mm-dd"
 	});
-	$("#stat-navigation input[name='date']").on("change", function() {
-		window.location = window.pathname + "?date=" + $(this).val();
+	$("input[name='date']").on("change", function() {
+		window.location = location.pathname + "?date=" + $(this).val();
 	});
 
 	function manualEntry() {
