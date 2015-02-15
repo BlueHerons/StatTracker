@@ -42,13 +42,12 @@ $validateRequest = function(Request $request, Silex\Application $app) {
 
 // Pass-though call to GitHub to retrieve everyone how has contributed to the repository
 $app->get("/api/contributors", function(Request $request) use ($app) {
-	$url = sprintf("https://api.github.com/repos/%s/%s/contributors?per_page=%d", "BlueHerons", "StatTracker", 10);
+	$url = sprintf("https://api.github.com/repos/%s/%s/contributors", "BlueHerons", "StatTracker");
 
-	$request = new Curl();
-	$request->setUserAgent(GROUP_NAME . " Stat Tracker/" . StatTracker::getConstant("VERSION", "bleeding edge"));
-	$request->get($url);
+	$curl = new Curl();
+	$curl->get($url);
 
-	$response = $request->response;
+	$response = $curl->response;
 
 	return $app->json($response);
 });
