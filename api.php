@@ -61,7 +61,7 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 	
 	$t = new stdClass;
 
-	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
+	if (StatTracker::isValidDate($when)) {
 		$ts = $agent->getUpdateTimestamp($when, true);
 
 		if ($ts == null) {
@@ -77,6 +77,9 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 		$response->date = date("c", $agent->getUpdateTimestamp());
 		$response->badges = $agent->getBadges();
 		$response->stats = $agent->getStats("latest", true);
+	}
+	else {
+		return $app->abort(404);
 	}
 
 	switch ($format) {

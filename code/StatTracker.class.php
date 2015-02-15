@@ -44,6 +44,17 @@ class StatTracker {
 	}
 
 	/**
+	 * Determines if the given string is a vlidaly formatted date
+	 *
+	 * @param string $date String containing a potential date
+	 *
+	 * @return true if the string is a valid formatted date, false otherwise
+	 */
+	public static function isValidDate($date) {
+		return preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $date);
+	}
+
+	/**
 	 * Determines if the given parameter is a valid stat
 	 *
 	 * @param mixed $stat String of stat key, or Stat object
