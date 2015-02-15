@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetRatiosForAgent` $$
 
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetRatiosForAgent`(IN `agent_name` VARCHAR(15))
+CREATE PROCEDURE `GetRatiosForAgent`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
 BEGIN
 

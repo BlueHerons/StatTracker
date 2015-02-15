@@ -1,6 +1,8 @@
 <?php
 //
 // STAT TRACKER CONFIGURATION FILE
+// 
+// Make the necessary changes for your instance of Stat Tracker, and save this file as "config.php"
 //
 
 // Database host. Example: database.thelocalresistance.com
@@ -54,6 +56,4 @@ define("ENL_GREEN", "#2BED1B");
 
 // Folder to temporarily store screenshot uploads. RW access required.
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
-define("COMMIT_HASH", "");
-define("VERSION", "");
 ?>

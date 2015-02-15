@@ -62,6 +62,26 @@ class StatTracker {
 	}
 
 	/**
+	 * Returns the value of a constant if it is defined, or null if it is not.
+	 *
+	 * @param string $name the name of the constant
+	 * @param mixed $default default value to return if the named constant is not defined.
+	 *
+	 * @return value of the named constant if it is defined, null otherwise
+	 */
+	public static function getConstant($name, $default = null) {
+		if ($name == "VERSION") {
+			$file = dirname(dirname(__FILE__)) . "/VERSION";
+			return file_exists($file) ? file($file)[0] : $default;
+		}
+		else {
+			return (!defined($name || empty(constant($name)))) ? 
+				$default :
+				constant($name);
+		}
+	}
+
+	/**
 	 *
 	 */
 	public static function handleAgentStatsPOST($agent, $postdata) {
@@ -333,6 +353,7 @@ class StatTracker {
 			$results[] = array(
 				"rank" => $row['rank'],
 				"agent" => $row['agent'],
+				"faction" => $row['faction'],
 				"value" => number_format($row['value']),
 				"age" => $row['age']
 			);

@@ -41,8 +41,8 @@ $app->get('/{page}', function ($page) use ($app) {
 		$app['session']->set("page_after_login", $page);
 		return $app['twig']->render("index.twig", array(
 			"constants" => array(
-				"ga_id" => GOOGLE_ANALYTICS_ID,
-				"version" => empty(VERSION) ? "development" : VERSION,
+				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
+				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
 			"page" => $page
 		));
@@ -95,7 +95,8 @@ $app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
 
 	return $app['twig']->render($page.".twig", array(
 		"agent" => $agent,
-		"constants" => array("email_submission" => EMAIL_SUBMISSION),
+		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
+		"stats" => StatTracker::getStats(),
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
 		"parameters" => $page_parameters,

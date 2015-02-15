@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetBadgePrediction` $$
 
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetBadgePrediction`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
+CREATE PROCEDURE `GetBadgePrediction`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
     READS SQL DATA
 BEGIN
 

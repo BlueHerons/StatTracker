@@ -148,7 +148,7 @@ class Agent {
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
-			$this->has_submitted = $result;
+			$this->has_submitted = $result > 0;
 		}
 
 		return $this->has_submitted;
