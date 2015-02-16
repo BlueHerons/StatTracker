@@ -13,7 +13,7 @@ Stat Tracker relies on agents to submit their own data. It does not pull any dat
  * A [Google Developer](http://console.developers.google.com) account (for OAuth)
  * An SMTP server (Your existing email service should provide one)
 
-For directions and more information on how to install these prerequisities see [Setting up Stat Tracker](../../wiki/SettingUpStatTracker)
+For directions and more information on how to install these prerequisities see [Setting up Stat Tracker](../../wiki/Setting-Up-Stat-Tracker)
 
 ### Set up Stat Tracker
 1. Clone this repository
@@ -22,7 +22,7 @@ For directions and more information on how to install these prerequisities see [
 3. Copy `config.php.sample` to `config.php` and set the values appropriately
 4. Execute each SQL script in [database/tables](database/tables), [database/procedures](database/procedures) and [database/functions](database/functions)
 
-For more details, please refer to [Setting up Stat Tracker](../../wiki/SettingUpStatTracker)
+For more details, please refer to [Setting up Stat Tracker](../../wiki/Setting-Up-Stat-Tracker)
 
 ## Administration
 
