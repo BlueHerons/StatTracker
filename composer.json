@@ -6,5 +6,8 @@
         "swiftmailer/swiftmailer": "~5.1.0",
         "silex/silex": "~1.2",
         "twig/twig": "~1.8"
+    },
+    "scripts": {
+        "describe-version": "git describe --always > VERSION; cat VERSION"
     }
 }
