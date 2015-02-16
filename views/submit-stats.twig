@@ -70,7 +70,12 @@ function onPageLoad() {
 	$("table#stat-entry").hide();
 	$("#stat-navigation").hide();
 	$("input[name='date']").datepicker({
-		dateFormat: "yy-mm-dd"
+		constrainInput: true,
+		dateFormat: "yy-mm-dd",
+		firstDay: 1,
+		hideIfNoPrevNext: true,
+		maxDate: 0
+		
 	});
 	$("input[name='date']").on("change", function() {
 		window.location = location.pathname + "?date=" + $(this).val();
