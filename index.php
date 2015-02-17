@@ -74,23 +74,8 @@ $app->get('/{page}', function ($page) use ($app) {
 })->assert('page', '[a-z-]+')
   ->value('page', 'dashboard');
 
-$app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
-	$page_parameters = array();
-	
+$app->get('/page/{page}', function($page) use ($app, $agent) {
 	if ($page == "submit-stats") {
-		$date = $request->get("date");
-		$date = StatTracker::isValidDate($date) ? $date : null;
-		if ($date == null || new DateTime() < new DateTime($date)) {
-			$agent->getStats("latest", true);
-			$date = date("Y-m-d");
-		}
-		else {
-			$agent->getStats($date, true);
-		}
-
-		$page_parameters['date'] = $date;
-	}
-	else {
 		$agent->getStats("latest", true);
 	}
 
@@ -100,8 +85,6 @@ $app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
 		"stats" => StatTracker::getStats(),
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
-		"parameters" => $page_parameters,
-		"stats" => StatTracker::getStats(),
 	));
 });
 

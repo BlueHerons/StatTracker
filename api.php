@@ -61,7 +61,7 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 	
 	$t = new stdClass;
 
-	if (StatTracker::isValidDate($when)) {
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
 		$ts = $agent->getUpdateTimestamp($when, true);
 
 		if ($ts == null) {
@@ -77,9 +77,6 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 		$response->date = date("c", $agent->getUpdateTimestamp());
 		$response->badges = $agent->getBadges();
 		$response->stats = $agent->getStats("latest", true);
-	}
-	else {
-		return $app->abort(404);
 	}
 
 	switch ($format) {
@@ -198,7 +195,7 @@ $app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
 	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
-	return $app->json($response);
+	return $response;
 })->before($validateRequest);
 
 $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {

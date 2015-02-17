@@ -44,17 +44,6 @@ class StatTracker {
 	}
 
 	/**
-	 * Determines if the given string is a vlidaly formatted date
-	 *
-	 * @param string $date String containing a potential date
-	 *
-	 * @return true if the string is a valid formatted date, false otherwise
-	 */
-	public static function isValidDate($date) {
-		return preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $date);
-	}
-
-	/**
 	 * Determines if the given parameter is a valid stat
 	 *
 	 * @param mixed $stat String of stat key, or Stat object
@@ -112,8 +101,8 @@ class StatTracker {
 				extract($stmt->fetch());
 
 				$ts = date("Y-m-d 00:00:00");
-				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
-				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+				$dt = date("Y-m-d");
+				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
 				foreach (self::getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
@@ -130,7 +119,7 @@ class StatTracker {
 					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
 					$value = !is_numeric($value) ? 0 : $value;
 
-					$stmt->execute(array($agent->name, $dt, $dt, $min_date, $stat_key, $value));
+					$stmt->execute(array($agent->name, $dt, $min_date, $ts, $stat_key, $value));
 
 					if ($response->error) {
 						break;
@@ -138,6 +127,11 @@ class StatTracker {
 				}
 
 				$stmt->closeCursor();
+
+				// Need to refresh stored session data
+				$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
+				$_SESSION['agent'] = serialize($agent);
+
 				$ts = strtotime($dt);
 
 				if (!$response->error) {
@@ -158,7 +152,7 @@ class StatTracker {
 
 		}
 
-		return $response;
+		return json_encode($response, JSON_NUMERIC_CHECK);
 	}
 
 	/**
