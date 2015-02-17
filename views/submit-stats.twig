@@ -26,44 +26,72 @@
 		</div>
 		{% endif %}
 	</div>
-	
-		<table id="stat-entry">
+
+	<table id="stat-entry">
+		<tr>
+			<td><label for="date">Date</label></td>
+			<td><input type="text" name="date" value="{{ attribute(parameters, "date") }}" /></td>
+		</tr>
 	{% set last_title = "" %}
 	{% for stat in stats if stat.stat != "ap" %}
 		{% set title = stat.group %}	
 
 		{% if title != last_title and title != "" %}
-			<tr>
-				<th colspan="2">{{ title }}</th>
-			</tr>
+		<tr>
+			<th colspan="2">{{ title }}</th>
+		</tr>
 			{% set last_title = title %}
 		{% endif %}
-			<tr>
-				<td>{{ stat.name }}</td>
-				<td>
-				{% if stat.stat == "innovator" %}
-				<select name="{{ stat.stat }}">
-					{% for amount_required, badge in stat.badges %}
-					<option value="{{ amount_required }}" {% if attribute(agent.stats, stat.stat) is defined and amount_required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
-					{% endfor %}
-				</select>
-				{% else %}
-				<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
-				{% endif %}
-				</td>
-			</tr>
+		<tr>
+			<td>{{ stat.name }}</td>
+			<td>
+			{% if stat.stat == "innovator" %}
+			<select name="{{ stat.stat }}">
+				{% for amount_required, badge in stat.badges %}
+				<option value="{{ amount_required }}" {% if attribute(agent.stats, stat.stat) is defined and amount_required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
+				{% endfor %}
+			</select>
+			{% else %}
+			<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
+			{% endif %}
+			</td>
+		</tr>
 	{% endfor %}
-			<tr>
-				<td colspan="2"><input type="submit" value="Submit Stats"/></td>
-			</tr>
-		</table>
-	</form>
+		<tr>
+			<td colspan="2"><input type="submit" value="Submit Stats"/></td>
+		</tr>
+	</table>
+</form>
 
 <script>
 function onPageLoad() {
 	$("#message").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
+	$("#stat-navigation").hide();
+	$("input[name='date']").datepicker({
+		constrainInput: true,
+		dateFormat: "yy-mm-dd",
+		firstDay: 1,
+		hideIfNoPrevNext: true,
+		maxDate: 0
+		
+	});
+	$("input[name='date']").on("change", function() {
+		window.location = location.pathname + "?date=" + $(this).val();
+	});
+
+	function manualEntry() {
+		$("#submit-actions").hide();
+		$("#stat-navigation").show();
+		$("#agent-info .ap .current").hide();
+		$("#agent-info .ap input").show();
+		$("table#stat-entry").show();
+	};
+
+	if (StatTracker.getQueryVar("date")) {
+		manualEntry();
+	}
 
 	$("input[name='screenshot']").on("change", function() {
 		var file = $("input[name='screenshot']").prop("files")[0];
@@ -114,12 +142,7 @@ function onPageLoad() {
 		});
 	});
 
-	$("input[name='manual-entry']").on("click", function() {
-		$("#submit-actions").hide();
-		$("#agent-info .ap .current").hide();
-		$("#agent-info .ap input").show();
-		$("table#stat-entry").show();
-	});
+	$("input[name='manual-entry']").on("click", function() { manualEntry(); });
 
 	$("form#submit-stats").submit(function() {
 		$("#message").hide().before("<div class='loading' />")
