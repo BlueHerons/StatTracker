@@ -43,23 +43,13 @@ footer {
 	text-align: center;
 }
 
-input[type="number"], input[type="text"][name="date"] {
+input[type="number"] {
 	background-color: black;
 	border: 0;
 	color: @header-color;
 	font-family: "Coda";
 	font-size: 12pt;
 	text-align: right;
-}
-
-input[type="text"][name="date"] {
-	background-image: url("./resources/images/calendar.png");
-	background-position: top right;
-	background-size: 22px;
-	background-repeat: no-repeat;
-	cursor: pointer;
-	padding-right: 25px;
-	
 }
 
 input[type="number"].increase {
@@ -452,16 +442,6 @@ table {
 	.time-remaining {
 		padding-top: ~"@{upcoming-badge-time-margin}px";
 		padding-left: 10px;
-	}
-}
-
-#stat-navigation {
-	clear: both;
-	max-width: 440px;
-	margin: 10px auto;
-
-	input[type="text"][name="date"] {
-		text-align: left;
 	}
 }
 
