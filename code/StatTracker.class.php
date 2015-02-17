@@ -138,11 +138,6 @@ class StatTracker {
 				}
 
 				$stmt->closeCursor();
-
-				// Need to refresh stored session data
-				$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
-				$_SESSION['agent'] = serialize($agent);
-
 				$ts = strtotime($dt);
 
 				if (!$response->error) {
@@ -163,7 +158,7 @@ class StatTracker {
 
 		}
 
-		return json_encode($response, JSON_NUMERIC_CHECK);
+		return $response;
 	}
 
 	/**

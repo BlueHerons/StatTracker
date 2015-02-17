@@ -162,8 +162,8 @@ class Agent {
 		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
 			global $db;
 			$stmt = null;
-			if ($date == "latest" || new DateTime() < new DateTime($when)) {
-				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(IF(date = DATE_FORMAT(MAX(updated), \"%Y-%m-%d\"), MAX(updated), MAX(date))) `updated` FROM Data WHERE agent = ?");
+			if ($date == "latest" || new DateTime() < new DateTime($date)) {
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?");
 				$stmt->execute(array($this->name));
 			}
 			else {

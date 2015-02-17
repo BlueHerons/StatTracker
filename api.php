@@ -198,7 +198,7 @@ $app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
 	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
-	return $response;
+	return $app->json($response);
 })->before($validateRequest);
 
 $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {
