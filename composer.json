@@ -1,10 +1,13 @@
 {
     "require": {
         "google/apiclient": "~1.0@beta",
-	"oyejorge/less.php": "~1.5",
+        "oyejorge/less.php": "~1.5",
+        "php-curl-class/php-curl-class": "~2.1",
         "swiftmailer/swiftmailer": "~5.1.0",
         "silex/silex": "~1.2",
-        "twig/twig": "~1.8",
-        "php-curl-class/php-curl-class": "~2.1"
+        "twig/twig": "~1.8"
+    },
+    "scripts": {
+        "describe-version": "git describe --always > VERSION; cat VERSION"
     }
 }
