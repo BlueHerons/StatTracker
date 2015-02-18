@@ -32,6 +32,16 @@ if ($app['session']->get("agent") !== null) {
 	$agent = $app['session']->get("agent");
 }
 
+$app['controllers']->before(function() {
+	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
+		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
+	}
+});
+
+$app->error(function(Exception $e, $code) {
+	// Eventually, have a custom error page
+});
+
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,
 // 404
 $app->get('/{page}', function ($page) use ($app) {
