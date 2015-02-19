@@ -44,14 +44,16 @@ $app->error(function(Exception $e, $code) {
 
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,
 // 404
-$app->get('/{page}', function ($page) use ($app) {
+$app->get('/{page}', function ($page) use ($app, $agent) {
 	if ($page == "dashboard" ||
 	    $page == "submit-stats" ||
 	    $page == "leaderboards") {
 		$app['session']->set("page_after_login", $page);
 		return $app['twig']->render("index.twig", array(
+			"agent" => $agent,
 			"constants" => array(
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
+				"group_name" => GROUP_NAME,
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
 			"page" => $page

@@ -15,14 +15,12 @@
 
 a[href] {
 	color: @text-color;
-	text-decoration: underline;
 }
 
 body {
 	background: rgba(0, 0, 0, 1);
 	color: @text-color;
 	font-family: "Coda", sans-serif;
-	font-size: 1em;
 	margin: 0;
 	padding: 0;
 
@@ -197,13 +195,13 @@ table {
 .resistance-agent { color: @resistance-color; }
 .enlightened-agent { color: @enlightened-color; }
 
-.badge {
+.badge-display {
 	p {
 		display: none;
 	}
 }
 
-.badge {
+.badge-display {
 	
 	.badge-image.progress-overlay {
 		position: relative;
@@ -211,11 +209,12 @@ table {
 		+ p {
 			display: block;
 			position: absolute;
-			top: 0px;
-			left: 10px;
+			top: 21px;
+			left: 0px;
 			color: white;
 			font-size: 24px;
 			font-weight: bold;
+			width: 100%;
 	
 			span:nth-child(2) {
 				display: none;
@@ -333,10 +332,9 @@ table {
 	.item { 
 		display: inline-block;
 		text-align: center;
-		margin: 0 2%;
 		max-width: 500px;
-		min-width: 500px;
 		vertical-align: top;
+		width: 100%;
 	}
 }
 
@@ -444,14 +442,14 @@ table {
 	padding: 5px 0;
 	height: ~"@{upcoming-badge-height}px";
 
-	.badge {
+	.badge-display {
 		float: left;
 		position: relative;
 	}
 
 	.time-remaining {
 		padding-top: ~"@{upcoming-badge-time-margin}px";
-		padding-left: 10px;
+		padding-left: 80px;
 	}
 }
 
@@ -514,6 +512,7 @@ table {
 
 #main-content {
 
+	padding-top: 50px;
 	text-align: center;
 
 	.quick-links {
