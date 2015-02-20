@@ -77,10 +77,14 @@
 					<li><a href="{{ app.request.basepath }}/submit-stats">Submit Stats</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Leaderboards<b class="caret"></b></a>
-						<ul class="dropdown-menu" role="menu">
-						{% for stat in stats if stat.hasLeaderboard() %}
+						<ul class="dropdown-menu scrollable-menu" role="menu">
+						{% for stat in stats if stat.hasWeeklyLeaderboard() %}
 							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
 						{% endfor %}
+						{% for stat in stats if stat.hasLeaderboard and not stat.hasWeeklyLeaderboard() %}
+							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
+						{% endfor %}
+
 						</ul>
 					</li>
 				</ul>
