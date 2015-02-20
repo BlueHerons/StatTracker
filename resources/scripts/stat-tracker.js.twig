@@ -1,11 +1,10 @@
 var StatTracker = new function() {
-	this.baseUrl = "{{ app.request.scheme }}://{{ app.request.httphost }}{{ app.request.basepath }}/"; <!-- must have trailing slash -->
 	this.pageToLoad = "dashboard";
 	this.message = null;
 
 	this.loadPage = function() {
 		$(".tabs li[class~='" + this.pageToLoad +"'] a").addClass("selected");
-		$.ajax({url: this.baseUrl + "page/" + this.pageToLoad,
+		$.ajax({url: "{{ app.request.basepath }}/page/" + this.pageToLoad,
 			type: "GET",
 			dataType: "html",
 			data: location.search.substring(1),
@@ -22,7 +21,7 @@ var StatTracker = new function() {
 	}
 
 	this.getContributors = function() {
-		$.ajax({url: this.baseUrl + "api/contributors",
+		$.ajax({url: "{{ app.request.basepath }}/api/contributors",
 			type: "GET",
 			dataType: "json",
 			success: function(json) {
@@ -39,7 +38,7 @@ var StatTracker = new function() {
 	}
 
 	this.authenticate = function() {
-		$.ajax({url: StatTracker.baseUrl + "authenticate?action=login",
+		$.ajax({url: "{{ app.request.basepath }}/authenticate?action=login",
 			type: 'GET',
 			contentType: 'json',
 			success: function(result) {
@@ -68,6 +67,23 @@ var StatTracker = new function() {
 
 					StatTracker.loadPage();
 				}
+			},
+			processData: false
+		});
+	}
+
+	this.logout = function() {
+		$.ajax({url: "{{ app.request.basepath }}/authenticate?action=logout",
+			type: 'GET',
+			contentType: 'json',
+			success: function(result) {
+				if (typeof result !== "object") {
+					result = JSON.parse(result);
+				}
+				if (result.status == "logged_out") {
+					window.location = "{{ app.request.basepath }}";
+				}
+				console.log(result);
 			},
 			processData: false
 		});
