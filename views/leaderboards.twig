@@ -1,11 +1,3 @@
-<div class="quick-links">
-{% for stat in stats %}
-	{% if stat.hasLeaderboard() %}
-	<a href="#{{ stat.stat }}">{{ stat.name }}</a> {% if not loop.last %} &nbsp;|&nbsp; {% endif %}
-	{% endif %}
-{% endfor %}
-</div>
-
 {% for stat in stats if stat.hasWeeklyLeaderboard() %}
 	{% include 'single_leaderboard.twig' %}
 {% endfor %}

@@ -113,6 +113,14 @@ input[type="file"].upload-screenshot::before {
 	-webkit-user-select: none;
 }
 
+nav {
+	.scrollable-menu {
+		height: auto;
+		max-height: 200px;
+		overflow-x: hidden;
+	}	
+}
+
 .tabs {
 	border-top: 5px solid fadeout(@text-color, 50%);
 	margin-top: 0px;
@@ -511,19 +519,8 @@ table {
 }
 
 #main-content {
-
 	padding-top: 50px;
 	text-align: center;
-
-	.quick-links {
-		margin: 30px 60px;
-		text-align: center;
-		color: white;
-
-		a {
-			color: @text-color;
-		}
-	}
 }
 
 #login-dialog {
