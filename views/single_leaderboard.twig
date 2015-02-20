@@ -1,7 +1,6 @@
 	<div class="leaderboard {{ stat.stat }}">
-		<a name="{{ stat.stat }}">
-			<h3>{{ stat.name }}</h3>
-		</a>
+		<a name="{{ stat.stat }}"></a>
+		<h3>{{ stat.name }}</h3>
 		<div class="leaderboard-selector">
 {% if stat.hasWeeklyLeaderboard() %}
 			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="this-week">This week</span>

@@ -56,6 +56,7 @@ $app->get('/{page}', function ($page) use ($app, $agent) {
 				"group_name" => GROUP_NAME,
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
+			"stats" => StatTracker::getStats(),
 			"page" => $page
 		));
 	}
