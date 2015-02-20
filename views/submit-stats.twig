@@ -102,7 +102,7 @@ function onPageLoad() {
 		$("#submit-actions").hide();
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
+			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
 			data: data,
 			dataType: "json",
 			cache: false,
@@ -149,7 +149,7 @@ function onPageLoad() {
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/submit",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {

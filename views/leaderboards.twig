@@ -32,7 +32,7 @@ function onPageLoad() {
 		$("span.leaderboard-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
 
 		$(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
-		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
+		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
 			dataType: "json",
 			statusCode: {
 				500: function() {
