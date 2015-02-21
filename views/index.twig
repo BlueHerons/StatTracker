@@ -78,12 +78,16 @@
 					</li>
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
+					{% if agent.auth_code is not null %}
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ agent.name }}<b class="caret"></b></a>
 						<ul class="dropdown-menu" role="menu">
 							<li><a id="logout" href="#">Logout</a></li>
 						</ul>
-					</li>
+					<li>
+					{% else %}
+					<li class="navbar-text"><a href="#">Welcome, {{ agent.name }}</a></li>
+					{% endif %}
 				</ul>
 			</div>
 		</div>
