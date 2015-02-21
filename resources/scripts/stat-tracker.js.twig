@@ -45,21 +45,23 @@ var StatTracker = new function() {
 				if (typeof result !== "object")
 					result = JSON.parse(result);
 				if (result.status == "authentication_required") {
-					modal = $("#login-dialog").dialog("isOpen");
-					if (!modal) $("#login-dialog").dialog("open");
+					$(".loading").hide();
+					$("body").css("height", "inherit");
+					$("footer").css("position", "absolute")
+					           .css("bottom", "0px");
+					$("#login-dialog").show();
 					$("#login-buttons .google a").attr("href", result.url);
 				}
 				else if (result.status == "registration_required") {
 					$("#login-buttons").hide();
-					$("#login-dialog").dialog("open");
+					$("#login-dialog").show();
 					message = "An email has been sent to<br/>";
 					message += "<strong>" + result.email + "</strong>";
 					message += "<br/>with steps to complete registration.";
 					$("#login-message").html(message);
 				}
 				else if (result.status == "okay") {
-					modal = $("#login-dialog").dialog("isOpen");
-					if (modal) $("#login-dialog").dialog("close");
+					$("#login-dialog").hide();
 					if (result.agent.numSubmissions == 0) {
 						StatTracker.message = "Stats must be submitted before this tool can be utilized";
 						StatTracker.pageToLoad = "submit-stats";

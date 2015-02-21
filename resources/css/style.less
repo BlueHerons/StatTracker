@@ -13,6 +13,10 @@
 @ratio-width: 180;
 @ratio-seperator-padding: @ratio-height / 5;
 
+html {
+	height: 100%;
+}
+
 a[href] {
 	color: @text-color;
 }
@@ -23,6 +27,7 @@ body {
 	font-family: "Coda", sans-serif;
 	margin: 0;
 	padding: 0;
+	position: relative;
 
 	#message {
 		margin-left: auto;
@@ -31,8 +36,112 @@ body {
 		padding: 10px;
 		border: 2px solid rgba(0, 216, 225, 1);
 	}
+}
 
-	form {
+footer {
+	padding: 10px;
+	width: 100%;
+
+	a[href] {
+		color: @text-color;
+		text-decoration: underline;
+	}
+}
+
+#main-content {
+	height: inherit;
+	padding-top: 51px;
+	text-align: center;
+	width: 100%;
+
+	a {
+		color: @text-color;
+		text-decoration: underline;
+	}
+
+	#agent-info {
+		color: @header-color;
+		margin: 0 auto;
+		max-width: 440px;
+		padding: 15px 0 10px 0;
+		position: relative;
+		text-align: left;
+		width: 95%;
+	
+		.avatar {
+			float: left;
+			margin-right: 12px;
+		}
+	
+		.about {
+			.name, .level {
+				font-size: 1.5em;
+			}
+	
+			.ap {
+				border-top: 5px solid @header-color;
+				font-size: 1.3em;
+	
+				input {
+					font-size: 14pt;
+					padding: 0;
+					text-align: left;
+					width: 115px;
+				}
+			}
+		}
+	}
+
+	#login-dialog {
+		border: 2px solid rgba(0, 216, 225, 1);
+		background: rgba(26, 37, 39, 1);
+		font-size: 18px;
+		margin: 0 auto;
+		margin-top: 50px;
+		max-width: 400px;
+		width: 100%;
+
+		p:nth-child(1) {
+			margin: 5px;
+			text-align: left;
+			text-transform: uppercase;
+		}
+
+		#login-buttons {
+			padding: 10px 0;
+
+			* {
+				cursor: pointer;
+			}
+
+			.google {
+				a {
+					display: block;
+					margin: 0 auto;
+					width: 160px;
+					height: 54px;
+					background: url("./resources/images/google_signin_54.png");
+					background-position: 0px 0px;
+	
+					span {
+						display: none;
+					}
+				}
+				
+				a:hover {
+					background-position: 0px 54px;
+				}
+	
+				a:active {
+					background-position: 0px 108px;
+				}
+	
+			}
+		}
+	
+		#login-message {
+			text-align: center;
+		}
 	}
 }
 
@@ -433,7 +542,6 @@ table {
 	background: url("./resources/images/ADA.gif") no-repeat;
 	background-position: center;
 	margin: 0 auto;
-	margin-top: 50px;
 }
 
  .loading.110 {
@@ -508,48 +616,7 @@ table {
 	}
 }
 
-#main-content {
-	padding-top: 50px;
-	text-align: center;
-}
 
-#login-dialog {
-
-	#login-buttons {
-
-		.google {
-			a {
-				display: block;
-				margin: 0 auto;
-				width: 160px;
-				height: 54px;
-				background: url("./resources/images/google_signin_54.png");
-				background-position: 0px 0px;
-
-				span {
-					display: none;
-				}
-			}
-			
-			a:hover {
-				background-position: 0px 54px;
-			}
-
-			a:active {
-				background-position: 0px 108px;
-			}
-
-		}
-	}
-
-	#login-message {
-		text-align: center;
-	}
-
-	a {
-		color: #00F;
-	}
-}
 
 .dashboard-container {
 
@@ -572,7 +639,6 @@ table {
 		vertical-align: top;
 		text-align: center;
 		max-width: 500px;
-		margin: 0 2%;
 	}
 
 }
@@ -676,38 +742,7 @@ table#stat-entry {
 	}
 }
 
-#agent-info {
-	color: @header-color;
-	margin: 0 auto;
-	max-width: 440px;
-	padding: 15px 0 10px 0;
-	position: relative;
-	text-align: left;
-	width: 95%;
 
-	.avatar {
-		float: left;
-		margin-right: 12px;
-	}
-
-	.about {
-		.name, .level {
-			font-size: 1.5em;
-		}
-
-		.ap {
-			border-top: 5px solid @header-color;
-			font-size: 1.3em;
-
-			input {
-				font-size: 14pt;
-				padding: 0;
-				text-align: left;
-				width: 115px;
-			}
-		}
-	}
-}
 
 .no-close .ui-dialog-titlebar-close {
   display: none;

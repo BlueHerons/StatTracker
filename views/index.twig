@@ -27,17 +27,6 @@
 	<script>
 	$(document).ready(function() {
 		$("#login-dialog").hide();
-		$("#login-dialog").dialog({
-			autoOpen: false,
-			closeOnEscape: false,
-			dialogClass: "no-close",
-	                modal: true,
-			resizable: false,
-	                width: 400,
-	                height: "auto",
-			title: "Welcome, agent"
-        	});
-
 		$("#logout").on("click", function() { StatTracker.logout(); });
 
 		StatTracker.pageToLoad = "{{ page }}";
@@ -100,24 +89,22 @@
 		</div>
 	</nav>
 				
-
-
 	<div id="main-content">
 		<div class="loading"></div>
-	</div>
-
-	<div id="login-dialog">
-		<div id="login-buttons">
-			<div class="google">
-				<a href=""><span>Sign in with Google</span></a>
+		<div id="login-dialog">
+			<p>Welcome, Agent</p>
+			<div id="login-buttons">
+				<div class="google">
+					<a href=""><span>Sign in with Google</span></a>
+				</div>
 			</div>
+	
+			<div id="login-message"></div>
+
+			<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
 		</div>
-
-		<div id="login-message"></div>
-
-		<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
 	</div>
-
+	
 	<footer>
 		<p>Stat Tracker {{ attribute(constants, "version") }}</p>
 		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker" target="_blank">GitHub</a>
