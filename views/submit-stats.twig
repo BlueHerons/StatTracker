@@ -68,6 +68,7 @@ function onPageLoad() {
 	$("#message").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
+	$("#stat-navigation").hide();
 	$("input[name='date']").datepicker({
 		constrainInput: true,
 		dateFormat: "yy-mm-dd",
@@ -82,6 +83,7 @@ function onPageLoad() {
 
 	function manualEntry() {
 		$("#submit-actions").hide();
+		$("#stat-navigation").show();
 		$("#agent-info .ap .current").hide();
 		$("#agent-info .ap input").show();
 		$("table#stat-entry").show();
