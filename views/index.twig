@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>Stat Tracker - {{ attribute(constants, "group_name") }}</title>
-	<meta name="viewport" content="width=device-width, user-scalable=no" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
 	<link rel="shortcut icon" href="favicon.ico" />
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
@@ -12,6 +12,7 @@
 
 	<style>
 		@media (max-width: 439px) { .hidden-xxs { display: none !important; } }
+		@media (max-width: 439px) { .visible-xxs { display: block !important; } }
 		@media (min-width: 768px) { .navbar-text { margin-left: 0px; } }
 		.navbar-text span { padding-right: 15px; }
 		.navbar-text a { color: #999; text-decoration: none; }
@@ -56,11 +57,11 @@
 					<span class="icon-bar"></span>
 				 </button>
 				<a class="navbar-brand" href="{{ app.request.basepath }}">{{ attribute(constants, "group_name") }}</span></a>
-				<p class="navbar-text hidden-xxs"><span>&raquo;</span><a href="{{ app.request.basepath }}">Stat Tracker</a></p>
+				<p class="navbar-text hidden-xxs hidden-sm"><span>&raquo;</span><a href="{{ app.request.basepath }}">Stat Tracker</a></p>
 			</div>
 
 			<div class="collapse navbar-collapse" id="navbar-collapsable">
-				<p class="navbar-text visible-xs">Stat Tracker</p>
+				<p class="navbar-text visible-xxs hidden-xs hidden-sm hidden-md hidden-lg"><a href="{{ app.request.basepath }}">Stat Tracker</a></p>
 				<ul class="nav navbar-nav">
 					<li><a href="{{ app.request.basepath }}/dashboard">Dashboard</a></li>
 					<li><a href="{{ app.request.basepath }}/submit-stats">Submit Stats</a></li>
@@ -86,14 +87,14 @@
 						</ul>
 					<li>
 					{% else %}
-					<li class="navbar-text"><a href="#">Welcome, {{ agent.name }}</a></li>
+					<li><a href="#">Welcome, {{ agent.name }}</a></li>
 					{% endif %}
 				</ul>
 			</div>
 		</div>
 	</nav>
 				
-	<div id="main-content">
+	<div id="main-content" class="container-fluid">
 		<div class="loading"></div>
 		<div id="login-dialog">
 			<p>Welcome, Agent</p>
