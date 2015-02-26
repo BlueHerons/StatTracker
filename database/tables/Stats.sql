@@ -27,7 +27,7 @@ INSERT INTO `Stats` (`order`, `stat`, `name`, `unit`, `group`, `ocr`, `graph`, `
 (18, 'res_deployed', 'Resonators Deployed', 'deployments', 'Building', 1, 1, 7, 1),
 (21, 'links_created', 'Links Created', 'links', 'Building', 1, 1, 7, 1),
 (24, 'fields_created', 'Control Fields Created', 'fields', 'Building', 1, 1, 7, 1),
-(27, 'mu_captured', 'Mind Units Captured', 'MUs', 'Building', 1, 1, 7, 0),
+(27, 'mu_captured', 'Mind Units Captured', 'MUs', 'Building', 1, 1, 7, 1),
 (30, 'longest_link', 'Longest Link Ever Created', 'km', 'Building', 1, 0, 1, 0),
 (33, 'largest_field', 'Largest Control Field', 'MUs', 'Building', 1, 0, 1, 0),
 (36, 'xm_recharged', 'XM Recharged', 'XM', 'Building', 1, 1, 7, 1),
