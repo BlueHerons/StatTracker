@@ -52,6 +52,7 @@ $app->get('/{page}', function ($page) use ($app) {
 		return $app['twig']->render("index.twig", array(
 			"constants" => array(
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
+				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
 			"page" => $page
