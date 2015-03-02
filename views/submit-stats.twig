@@ -98,16 +98,24 @@ function onPageLoad() {
 		var data = new FormData();
 		data.append("screenshot", file);
 		$("#agent-info").hide();
-		$("#message").show().html("Processing screenshot...").after("<div class='loading' />");
+		$("#message").show().html("Uploading screenshot...").after("<div class='loading' />");
 		$("#submit-actions").hide();
+		var last_response_len = 0;
 		$.ajax({
 			type: "POST",
 			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
 			data: data,
-			dataType: "json",
 			cache: false,
 			processData: false,
 			contentType: false,
+			xhrFields: {
+				onprogress: function(e) {
+					response = e.currentTarget.response.substring(last_response_len);
+					last_response_len = e.loaded;
+					json = JSON.parse(response);
+					$("#message").show().html(json.status);
+				}
+			},
 			success: function(response) {
 				$("#message").html("Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.");
 				$("#agent-info").show();
@@ -132,7 +140,6 @@ function onPageLoad() {
 				}
 			},
 			error: function(response) {
-				console.log(response);
 				$("#message").html("An error occured while processing your screenshot.");
 				$("form#ocr").show();
 			},
