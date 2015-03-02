@@ -1,6 +1,7 @@
 {
     "require": {
         "google/apiclient": "~1.0@beta",
+        "katzgrau/klogger": "1.0.*",
         "oyejorge/less.php": "~1.5",
         "php-curl-class/php-curl-class": "~2.1",
         "swiftmailer/swiftmailer": "~5.1.0",

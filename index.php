@@ -36,6 +36,9 @@ $app['controllers']->before(function() {
 	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
 		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
 	}
+	if (!is_dir(LOG_DIR) || !is_writeable(LOG_DIR)) {
+		throw new Exception(sprintf("LOG_DIR (%s) is not writeable", LOG_DIR));
+	}
 });
 
 $app->error(function(Exception $e, $code) {
