@@ -208,28 +208,31 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 		return $app->abort(404);
 	}
 
-	$content_type = explode(";", $request->headers->get("content_type"))[0];
-	$file = UPLOAD_DIR . OCR::getTempFileName();
+	$processImage = function() use ($request) {
+		$content_type = explode(";", $request->headers->get("content_type"))[0];
+		$file = UPLOAD_DIR . OCR::getTempFileName();
 
-	switch ($content_type) {
-		case "application/x-www-form-urlencoded":
-			// Not a file upload, but a POST of bytes
-			$hndl = fopen($file, "w+");
-			fwrite($hndl, file_get_contents("php://input"));
-			fclose($hndl);
-			break;
-		case "multipart/form-data":
-			// Typically an HTTP file upload
-			move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
-			break;
-		default:
-			return $app->abort(400, "Bad request of type " . $content_type);
-			break;
-	}
+		switch ($content_type) {
+			case "application/x-www-form-urlencoded":
+				// Not a file upload, but a POST of bytes
+				$hndl = fopen($file, "w+");
+				fwrite($hndl, file_get_contents("php://input"));
+				fclose($hndl);
+				break;
+			case "multipart/form-data":
+				// Typically an HTTP file upload
+				move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+				break;
+			default:
+				return $app->abort(400, "Bad request of type " . $content_type);
+				break;
+		}
 
-	$data = OCR::scanAgentProfile($file);
+		// This method will print the results to the output stream
+		OCR::scanAgentProfile($file);
+	};
 
-	return $app->json($data);
+	return $app->stream($processImage, 200, array ("Content-type" => "application/octet-stream"));
 
 })->before($validateRequest);
 
