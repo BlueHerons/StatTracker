@@ -1,10 +1,10 @@
 <?php
 require_once("config.php");
 require_once("code/autoload.php");
-require_once("code/OCR.class.php");
 require_once("vendor/autoload.php");
 
 use BlueHerons\StatTracker\Agent;
+use BlueHerons\StatTracker\OCR;
 use BlueHerons\StatTracker\StatTracker;
 
 use Curl\Curl;
