@@ -2,9 +2,9 @@
 require_once("config.php");
 require_once("code/autoload.php");
 require_once("code/StatTracker.class.php");
-require_once("code/Agent.class.php");
 require_once("vendor/autoload.php");
 
+use BlueHerons\StatTracker\Agent;
 use BlueHerons\StatTracker\AuthenticationProvider;
 
 use Symfony\Component\HttpFoundation\Request;

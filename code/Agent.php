@@ -1,4 +1,9 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use DateTime;
+use Exception;
+
 class Agent {
 
 	public $name;
@@ -225,7 +230,7 @@ class Agent {
 	 * @return the value for the stat
 	 */
 	public function getStat($stat, $when = "latest", $refresh = false) {
-		if (!StatTracker::isValidStat($stat)) {
+		if (!\StatTracker::isValidStat($stat)) {
 			throw new Exception(sprintf("'%s' is not a valid stat", $stat));
 		}
 		else if (is_object($stat)) {
