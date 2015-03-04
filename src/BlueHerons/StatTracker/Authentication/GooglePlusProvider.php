@@ -6,6 +6,7 @@ use Google_Client;
 use PDOException;
 use StdClass;
 
+use BlueHerons\StatTracker\Agent;
 use BlueHerons\StatTracker\AuthenticationProvider;
 
 class GooglePlusProvider implements IAuthenticationProvider {
@@ -63,7 +64,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				}
 
 				$response->email = $email_address;
-				$agent = \Agent::lookupAgentName($email_address);
+				$agent = Agent::lookupAgentName($email_address);
 	
 				if (empty($agent->name) || $agent->name == "Agent") {
 					// They need to register
@@ -92,7 +93,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			$agent = $app['session']->get("agent");
 
 			// Ensure auth_code is valid
-			if (\Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
+			if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
 				$response->status = "okay";
 				$response->agent = $agent;
 			}

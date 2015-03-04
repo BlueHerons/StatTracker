@@ -1,4 +1,12 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use Exception;
+use Imagick;
+use ImagickDraw;
+use StdClass;
+
+use Katzgrau\KLogger\Logger;
 
 class OCR {
 
@@ -11,7 +19,7 @@ class OCR {
 	 */
 	private static function logger() {
 		if (self::$logger == null) {
-			self::$logger = new Katzgrau\KLogger\Logger(dirname(__DIR__).'/logs');
+			self::$logger = new Logger(dirname(__DIR__).'/logs');
 		}
 		return self::$logger;
 	}

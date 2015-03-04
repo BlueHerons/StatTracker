@@ -1,4 +1,11 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use DateTime;
+use Exception;
+
+use BlueHerons\StatTracker\StatTracker;
+
 class Agent {
 
 	public $name;
