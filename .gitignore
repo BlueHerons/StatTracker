@@ -3,6 +3,7 @@
 **/*.swp
 
 config.php
+CONTRIBUTORS
 VERSION
 
 build/

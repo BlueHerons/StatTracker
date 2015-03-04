@@ -86,7 +86,7 @@ class StatTracker {
 			return file_exists($file) ? file($file)[0] : $default;
 		}
 		else {
-			return (!defined($name || empty(constant($name)))) ? 
+			return (!defined($name) || empty(constant($name))) ? 
 				$default :
 				constant($name);
 		}

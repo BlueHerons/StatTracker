@@ -98,32 +98,40 @@ function onPageLoad() {
 		var data = new FormData();
 		data.append("screenshot", file);
 		$("#agent-info").hide();
-		$("#message").show().html("Processing screenshot...").after("<div class='loading' />");
+		$("#message").show().html("Uploading screenshot...").after("<div class='loading' />");
 		$("#submit-actions").hide();
+		var last_response_len = 0;
+		var json = {};
 		$.ajax({
 			type: "POST",
 			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
 			data: data,
-			dataType: "json",
 			cache: false,
 			processData: false,
 			contentType: false,
+			xhrFields: {
+				onprogress: function(e) {
+					response = e.currentTarget.response.substring(last_response_len);
+					last_response_len = e.loaded;
+					json = JSON.parse(response);
+					$("#message").show().html(json.status);
+				}
+			},
 			success: function(response) {
-				$("#message").html("Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.");
 				$("#agent-info").show();
 				$("#agent-info .ap .current").hide();
 				$("#agent-info .ap input").show();
 				$("table#stat-entry").show();
 
-				for (stat in response) {
-					val = response[stat];
+				for (stat in json.stats) {
+					val = json.stats[stat];
 					$("input[type='number'][name='"+ stat +"']").val(val);
-					if (val == null || val == "") {
+					if (val == null || val === "") {
 						$("input[type='number'][name='"+ stat +"']").addClass("error");
 						$("#message").html("Some stats could not be read from your screenshot. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
 					}
 					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") > val) {
-						$("input[type='number'][name='"+ stat +"']").addClass("error");
+						$("input[type='number'][name='"+ stat +"']").addClass("warning");
 						$("#message").html("Some stats appear to have lower values than your previous entry. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
 					}
 					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") < val) {
@@ -132,7 +140,6 @@ function onPageLoad() {
 				}
 			},
 			error: function(response) {
-				console.log(response);
 				$("#message").html("An error occured while processing your screenshot.");
 				$("form#ocr").show();
 			},

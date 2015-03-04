@@ -36,6 +36,9 @@ $app['controllers']->before(function() {
 	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
 		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
 	}
+	if (!is_dir(LOG_DIR) || !is_writeable(LOG_DIR)) {
+		throw new Exception(sprintf("LOG_DIR (%s) is not writeable", LOG_DIR));
+	}
 });
 
 $app->error(function(Exception $e, $code) {
@@ -53,7 +56,7 @@ $app->get('/{page}', function ($page) use ($app, $agent) {
 			"agent" => $agent,
 			"constants" => array(
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
-				"group_name" => GROUP_NAME,
+				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
 			"stats" => StatTracker::getStats(),
