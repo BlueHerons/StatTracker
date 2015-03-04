@@ -1,4 +1,8 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use StdClass;
+
 class StatTracker {
 
 	private static $fields;
@@ -233,7 +237,7 @@ class StatTracker {
 	public static function getPrediction($agent, $stat) {
 		global $db;
 
-		$data = new stdClass();
+		$data = new StdClass();
 		if (StatTracker::isValidStat($stat)) {
 			$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
 			$stmt->execute(array($agent->name, $stat));
@@ -264,7 +268,7 @@ class StatTracker {
 		while ($row = $stmt->fetch()) {
 			if (sizeof($data) == 0) {
 				foreach (array_keys($row) as $key) {
-					$series = new stdClass();
+					$series = new StdClass();
 					$series->name = $key;
 					$series->data = array();
 					$data[] = $series;
@@ -280,7 +284,7 @@ class StatTracker {
 		}
 		$stmt->closeCursor();
 
-		$response = new stdClass();
+		$response = new StdClass();
 		$response->data = $data;
 		$response->prediction = self::getPrediction($agent, $stat); // TODO: move elsewhere
 
@@ -370,7 +374,7 @@ class StatTracker {
 	}
 
 	private function buildPredictionResponse($row) {
-		$data = new stdClass();
+		$data = new StdClass();
 
 		$data->stat = $row['stat'];
 		$data->name = $row['name'];
