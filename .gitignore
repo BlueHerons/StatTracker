@@ -1,8 +1,11 @@
 **/*.css
+**/*.diff
 **/*.swp
 
-token
-code/credentials.php
+config.php
+CONTRIBUTORS
+VERSION
 
 build/
+uploads/
 vendor/

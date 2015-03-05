@@ -1,8 +1,15 @@
 <IfModule mod_rewrite.c>
-    Options -MultiViews
+	Options -Indexes -MultiViews
 
-    RewriteEngine On
-    #RewriteBase /path/to/app
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [QSA,L]
+	RewriteEngine On
+	<IfModule mod_ssl.c>
+		# Force SSL
+		RewriteCond %{HTTPS} !on
+		RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+	</IfModule>
+
+	# Silex
+	RewriteRule ^api api.php [QSA,L]
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule ^ index.php [QSA,L]
 </IfModule>

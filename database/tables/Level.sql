@@ -1,7 +1,9 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `Level` (
+DROP TABLE IF EXISTS `Level`;
+
+CREATE TABLE `Level` (
   `level` tinyint(4) NOT NULL,
   `ap_required` int(11) NOT NULL,
   `silver_required` tinyint(4) NOT NULL,
@@ -10,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `Level` (
   `onyx_required` tinyint(4) NOT NULL,
   PRIMARY KEY (`level`),
   UNIQUE KEY `ap_required` (`ap_required`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Level` (`level`, `ap_required`, `silver_required`, `gold_required`, `platinum_required`, `onyx_required`) VALUES
 ( 1,        0, 0, 0, 0, 0),

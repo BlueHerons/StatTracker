@@ -1,57 +1,38 @@
 <div class="quick-links">
 {% for stat in stats %}
+	{% if stat.hasLeaderboard() %}
 	<a href="#{{ stat.stat }}">{{ stat.name }}</a> {% if not loop.last %} &nbsp;|&nbsp; {% endif %}
+	{% endif %}
 {% endfor %}
 </div>
 
-{% for stat in stats %}
-	<div class="leaderboard {{ stat.stat }}">
-		<a name="{{ stat.stat }}">
-			<h3>{{ stat.name }}</h3>
-		</a>
-		<div class="leaderboard-selector">
-{% if stat.hasAllTimeLeaderboard() %}
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="alltime">All-time</span>
-{% endif %}
-{% if stat.hasWeeklyLeaderboard() %}
-			&nbsp;|&nbsp;
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="weekly">This week</span>
-{% endif %}
-		</div>
-		<table class="tablesorter">
-			<thead>
-			<tr>
-				<th>Rank</th>
-				<th>Agent</th>
-				<th>Amount</th>
-				<th>Updated</th>
-			</tr>
-			</thead>
-			<tbody>
-
-			</tbody>
-		</table>
-	</div>
+{% for stat in stats if stat.hasWeeklyLeaderboard() %}
+	{% include 'single_leaderboard.twig' %}
 {% endfor %}
+{% for stat in stats if stat.hasLeaderboard() and not stat.hasWeeklyLeaderboard() %}
+	{% include 'single_leaderboard.twig' %}
+{% endfor %}
+
 </div>
 <script>
 function onPageLoad() {
 	highlightAgent = "{{ agent.name }}";
 
-	$("span.leaderboard-link[data-when='alltime']").addClass("active");
+	$("span.leaderboard-link[data-when='this-week']").addClass("active");
 	
 	$("span.leaderboard-link").click(function() {
 		stat = $(this).attr("data-stat");
-		$("span.leaderboard-link[data-stat='" + stat + "']").removeClass("active");
-		$(this).addClass("active");
 		$(".leaderboard." + stat + " table tbody").empty();
-		$(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
 		loadLeaderboard(stat, $(this).attr("data-when"));	
 	});
 
 
 	function loadLeaderboard(stat, when) {
-		$.ajax({url: StatTracker.baseUrl + "data/" + stat + "/leaderboard/" + when,
+		$("span.leaderboard-link[data-stat='" + stat + "']").removeClass("active");
+		$("span.leaderboard-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
+
+		$(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
+		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
 			dataType: "json",
 			statusCode: {
 				500: function() {
@@ -63,7 +44,7 @@ function onPageLoad() {
 				$.each(data, function() {
 					updated = (this.age == 0) ? "Today" :
 							(this.age == 1) ? "Yesterday" : this.age + " days ago";
-					row = "<tr><td>" + this.rank + "</td><td>" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
+					row = "<tr><td>" + this.rank + "</td><td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
 	
 					if ($(".leaderboard." + stat + " table tbody tr").length == 0) {
 						$(".leaderboard." + stat + " table tbody").append(row);
@@ -82,7 +63,11 @@ function onPageLoad() {
 	}
 
 {% for stat in stats %}
+	{% if stat.hasWeeklyLeaderboard() %}
+	loadLeaderboard("{{ stat.stat }}", "this-week");
+	{% else %}
 	loadLeaderboard("{{ stat.stat }}", "alltime");
+	{% endif %}
 {% endfor %}
 }
 </script>

@@ -1,0 +1,177 @@
+<div id="message" />	
+
+<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+	<div id="agent-info">
+		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
+		<div class="about">
+			<div class="name {{ faction_class }}">{{ agent.name }}</div>
+			<div class="level">LVL <span>{{ agent.level }}</span></div>
+			<div class="ap">
+				<span class="current">{{ attribute(agent.stats, 'ap')|number_format }}</span>
+				<input type="number" name="ap" value="{{ attribute(agent.stats, 'ap') is defined ? attribute(agent.stats, 'ap') : 0 }}" data-previous-value="{{ attribute(agent.stats, 'ap') is defined ? attribute(agent.stats, 'ap') : 0 }}" />
+				 AP
+			</div>
+		</div>
+	</div>
+	
+	<div id="submit-actions">
+		<input type="file" name="screenshot" class="button upload-screenshot" />
+		<div class="fakeupload">
+			<input type="button" value = "Upload a Screenshot" />
+		</div>
+		<input type="button" name="manual-entry" value="Enter Stats Manually" />
+		{% if not(attribute(constants, "email_submission") == null) %}
+		<div class="email">
+			You can also email a screenshot of your profile to<br/>{{ attribute(constants, "email_submission") }}
+		</div>
+		{% endif %}
+	</div>
+
+	<table id="stat-entry">
+		<tr>
+			<td><label for="date">Date</label></td>
+			<td><input type="text" name="date" value="{{ attribute(parameters, "date") }}" /></td>
+		</tr>
+	{% set last_title = "" %}
+	{% for stat in stats if stat.stat != "ap" %}
+		{% set title = stat.group %}	
+
+		{% if title != last_title and title != "" %}
+		<tr>
+			<th colspan="2">{{ title }}</th>
+		</tr>
+			{% set last_title = title %}
+		{% endif %}
+		<tr>
+			<td>{{ stat.name }}</td>
+			<td>
+			{% if stat.stat == "innovator" %}
+			<select name="{{ stat.stat }}">
+				{% for amount_required, badge in stat.badges %}
+				<option value="{{ amount_required }}" {% if attribute(agent.stats, stat.stat) is defined and amount_required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
+				{% endfor %}
+			</select>
+			{% else %}
+			<input type="number" name="{{ stat.stat }}" value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" data-previous-value="{% if attribute(agent.stats, stat.stat) is defined %}{{ attribute(agent.stats, stat.stat) }}{% endif %}" />
+			{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+		<tr>
+			<td colspan="2"><input type="submit" value="Submit Stats"/></td>
+		</tr>
+	</table>
+</form>
+
+<script>
+function onPageLoad() {
+	$("#message").hide();
+	$("input[name='ap']").hide();
+	$("table#stat-entry").hide();
+	$("#stat-navigation").hide();
+	$("input[name='date']").datepicker({
+		constrainInput: true,
+		dateFormat: "yy-mm-dd",
+		firstDay: 1,
+		hideIfNoPrevNext: true,
+		maxDate: 0
+		
+	});
+	$("input[name='date']").on("change", function() {
+		window.location = location.pathname + "?date=" + $(this).val();
+	});
+
+	function manualEntry() {
+		$("#submit-actions").hide();
+		$("#stat-navigation").show();
+		$("#agent-info .ap .current").hide();
+		$("#agent-info .ap input").show();
+		$("table#stat-entry").show();
+	};
+
+	if (StatTracker.getQueryVar("date")) {
+		manualEntry();
+	}
+
+	$("input[name='screenshot']").on("change", function() {
+		var file = $("input[name='screenshot']").prop("files")[0];
+		var data = new FormData();
+		data.append("screenshot", file);
+		$("#agent-info").hide();
+		$("#message").show().html("Uploading screenshot...").after("<div class='loading' />");
+		$("#submit-actions").hide();
+		var last_response_len = 0;
+		var json = {};
+		$.ajax({
+			type: "POST",
+			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
+			data: data,
+			cache: false,
+			processData: false,
+			contentType: false,
+			xhrFields: {
+				onprogress: function(e) {
+					response = e.currentTarget.response.substring(last_response_len);
+					last_response_len = e.loaded;
+					json = JSON.parse(response);
+					$("#message").show().html(json.status);
+				}
+			},
+			success: function(response) {
+				$("#agent-info").show();
+				$("#agent-info .ap .current").hide();
+				$("#agent-info .ap input").show();
+				$("table#stat-entry").show();
+
+				for (stat in json.stats) {
+					val = json.stats[stat];
+					$("input[type='number'][name='"+ stat +"']").val(val);
+					if (val == null || val === "") {
+						$("input[type='number'][name='"+ stat +"']").addClass("error");
+						$("#message").html("Some stats could not be read from your screenshot. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
+					}
+					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") > val) {
+						$("input[type='number'][name='"+ stat +"']").addClass("warning");
+						$("#message").html("Some stats appear to have lower values than your previous entry. They have been marked below for review.<p/>Click the \"Submit Stats\" button to submit.");
+					}
+					else if ($("input[type='number'][name='"+ stat +"']").data("previous-value") < val) {
+						$("input[type='number'][name='"+ stat +"']").addClass("increase");
+					}
+				}
+			},
+			error: function(response) {
+				$("#message").html("An error occured while processing your screenshot.");
+				$("form#ocr").show();
+			},
+			complete: function() {
+				$(".loading").hide();
+			}
+		});
+	});
+
+	$("input[name='manual-entry']").on("click", function() { manualEntry(); });
+
+	$("form#submit-stats").submit(function() {
+		$("#message").hide().before("<div class='loading' />")
+		window.scrollTo(0,0);
+		$.ajax({
+			type: "POST",
+			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
+			data: $("form#submit-stats").serialize(),
+			dataType: "json",
+			success: function(data) {
+				$(".loading").hide();
+				if (!data.error) {
+					$("#message").show().html(data.message).show();
+					window.scrollTo(0,0);
+				}
+				else {
+					alert(data.message);
+				}
+			}
+		});
+	
+		return false;
+	});
+}
+</script>

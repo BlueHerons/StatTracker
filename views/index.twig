@@ -1,27 +1,24 @@
+<!DOCTYPE html>
 <html>
 <head>
-	<title>Stat Tracker - Blue Herons Resistance</title>
-	<link href='http://fonts.googleapis.com/css?family=Coda:400,700' rel='stylesheet' type='text/css' />
+	<title>Stat Tracker | {{ attribute(constants, "group_name") }}</title>
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
+
 	<link rel="shortcut icon" href="favicon.ico" />
+	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Coda:400,700" />
 	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-	<link href="style.css" rel="stylesheet" />
-	<meta name="viewport" content="width=450" />
-	<script type="text/javascript" src="//www.google.com/jsapi"></script>
+	<link rel="stylesheet" href="{{ app.request.basepath }}/resources/css/style.css" />
+
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-	<script src="{{ app.request.basepath }}/scripts/jquery.tablesorter.min.js"></script>
-	<script src="{{ app.request.basepath }}/scripts/StatTracker.js"></script>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="//code.highcharts.com/4.0/highcharts.js"></script>
+	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/jquery.tablesorter.min.js"></script>
+	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/stat-tracker.js"></script>
 	<script>
-	google.load('visualization', '1.0', {'packages':['corechart']});
-
-	function onSignInCallback(authResult) {
-		StatTracker.signinCallback(authResult);
-	}
-
 	$(document).ready(function() {
 		$("#login-dialog").hide();
 		$("#login-dialog").dialog({
-	                autoOpen: false,
+			autoOpen: false,
 			closeOnEscape: false,
 			dialogClass: "no-close",
 	                modal: true,
@@ -32,9 +29,19 @@
         	});
 
 		StatTracker.pageToLoad = "{{ page }}";
+		StatTracker.getContributors();
 		StatTracker.authenticate();
 	});
 
+{% if not(attribute(constants, "ga_id") == null) %}
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	ga('create', '{{ attribute(constants, "ga_id") }}', 'auto');
+	ga('send', 'pageview');
+{% endif %}
 	</script>
 </head>
 <body>
@@ -42,8 +49,8 @@
 		<li class="dashboard">
 			<a href="./dashboard">Dashboard</a>
 		</li>
-		<li class="my-stats">
-			<a href="./my-stats">My Stats</a>
+		<li class="submit-stats">
+			<a href="./submit-stats">Submit Stats</a>
 		</li>
 		<li class="leaderboards">
 			<a href="./leaderboards">Leaderboards</a>
@@ -51,7 +58,7 @@
 	</ul>
 
 	<div id="main-content">
-		<div class="loading" />
+		<div class="loading"></div>
 	</div>
 
 	<div id="login-dialog">
@@ -65,5 +72,11 @@
 
 		<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
 	</div>
+
+	<footer>
+		<p>Stat Tracker {{ attribute(constants, "version") }}</p>
+		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker" target="_blank">GitHub</a>
+		<p id="contributors">Brought to you by <span>[loading...]</span></p>
+	</footer>
 </body>
 </html>

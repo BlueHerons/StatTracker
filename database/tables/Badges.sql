@@ -1,7 +1,6 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-DROP TABLE IF EXISTS `Badges`;
 CREATE TABLE IF NOT EXISTS `Badges` (
   `name` varchar(20) NOT NULL,
   `level` enum('None','Bronze','Silver','Gold','Platinum','Onyx','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16') NOT NULL,
@@ -9,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `Badges` (
   `amount_required` int(11) NOT NULL,
   PRIMARY KEY (`name`,`level`),
   KEY `stat` (`stat`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Builder', 'None', 'res_deployed', 0),
@@ -24,6 +23,12 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Connector', 'Gold', 'links_created', 5000),
 ('Connector', 'Platinum', 'links_created', 25000),
 ('Connector', 'Onyx', 'links_created', 100000),
+('Engineer', 'None', 'mods_deployed', 0),
+('Engineer', 'Bronze', 'mods_deployed', 150),
+('Engineer', 'Silver', 'mods_deployed', 1500),
+('Engineer', 'Gold', 'mods_deployed', 5000),
+('Engineer', 'Platinum', 'mods_deployed', 20000),
+('Engineer', 'Onyx', 'mods_deployed', 50000),
 ('Explorer', 'None', 'unique_visits', 0),
 ('Explorer', 'Bronze', 'unique_visits', 100),
 ('Explorer', 'Silver', 'unique_visits', 1000),
@@ -42,6 +47,18 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Hacker', 'Gold', 'hacks', 30000),
 ('Hacker', 'Platinum', 'hacks', 100000),
 ('Hacker', 'Onyx', 'hacks', 200000),
+('Illuminator', 'None', 'mu_captured', 0),
+('Illuminator', 'Bronze', 'mu_captured', 5000),
+('Illuminator', 'Silver', 'mu_captured', 50000),
+('Illuminator', 'Gold', 'mu_captured', 250000),
+('Illuminator', 'Platinum', 'mu_captured', 1000000),
+('Illuminator', 'Onyx', 'mu_captured', 4000000),
+('Innovator', 'None', 'innovator', 0),
+('Innovator', 'Bronze', 'innovator', 1),
+('Innovator', 'Silver', 'innovator', 2),
+('Innovator', 'Gold', 'innovator', 3),
+('Innovator', 'Platinum', 'innovator', 4),
+('Innovator', 'Onyx', 'innovator', 5),
 ('Level', '1', 'ap', 0),
 ('Level', '2', 'ap', 10000),
 ('Level', '3', 'ap', 30000),
@@ -88,12 +105,36 @@ INSERT INTO `Badges` (`name`, `level`, `stat`, `amount_required`) VALUES
 ('Recharger', 'Gold', 'xm_recharged', 3000000),
 ('Recharger', 'Platinum', 'xm_recharged', 10000000),
 ('Recharger', 'Onyx', 'xm_recharged', 25000000),
+('Recruiter', 'None', 'recruits', 0),
+('Recruiter', 'Bronze', 'recruits', 2),
+('Recruiter', 'Silver', 'recruits', 10),
+('Recruiter', 'Gold', 'recruits', 25),
+('Recruiter', 'Platinum', 'recruits', 50),
+('Recruiter', 'Onyx', 'recruits', 100),
 ('Seer', 'None', 'portals_discovered', 0),
 ('Seer', 'Bronze', 'portals_discovered', 10),
 ('Seer', 'Silver', 'portals_discovered', 50),
 ('Seer', 'Gold', 'portals_discovered', 200),
 ('Seer', 'Platinum', 'portals_discovered', 500),
-('Seer', 'Onyx', 'portals_discovered', 5000);
+('Seer', 'Onyx', 'portals_discovered', 5000),
+('SpecOps', 'None', 'unique_missions', 0),
+('SpecOps', 'Bronze', 'unique_missions', 5),
+('SpecOps', 'Silver', 'unique_missions', 25),
+('SpecOps', 'Gold', 'unique_missions', 100),
+('SpecOps', 'Platinum', 'unique_missions', 200),
+('SpecOps', 'Onyx', 'unique_missions', 500),
+('Translator', 'None', 'glyphs', 0),
+('Translator', 'Bronze', 'glyphs', 200),
+('Translator', 'Silver', 'glyphs', 2000),
+('Translator', 'Gold', 'glyphs', 6000),
+('Translator', 'Platinum', 'glyphs', 20000),
+('Translator', 'Onyx', 'glyphs', 50000),
+('Trekker', 'None', 'distance_walked', 0),
+('Trekker', 'Bronze', 'distance_walked', 10),
+('Trekker', 'Silver', 'distance_walked', 100),
+('Trekker', 'Gold', 'distance_walked', 300),
+('Trekker', 'Platinum', 'distance_walked', 1000),
+('Trekker', 'Onyx', 'distance_walked', 2500);
 
 
 ALTER TABLE `Badges`
