@@ -2,9 +2,21 @@ DELIMITER $$
 
 CREATE PROCEDURE `GetBadges`(IN `agent_name` VARCHAR(15), IN `submission_date` DATE)
     READS SQL DATA
+    SQL SECURITY INVOKER
 BEGIN
 
 DROP TABLE IF EXISTS _Badges;
+
+SELECT count(*) > 0 INTO @has_submission
+  FROM Data
+ WHERE agent = agent_name AND
+       date = submission_date;
+
+IF (~@has_submission) THEN
+  SELECT MAX(date) INTO submission_date
+    FROM Data
+   WHERE agent = agent_name;
+END IF;
 
 CREATE TEMPORARY TABLE _Badges
 SELECT q2.stat,

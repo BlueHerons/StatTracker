@@ -127,14 +127,19 @@ class Agent {
 	 *
 	 * @returns int current Agent level
 	 */
-	public function getLevel() {
+	public function getLevel($date = "latest") {
 		if (!isset($this->level)) {
 			global $db;
-			$stmt = $db->prepare("CALL GetCurrentLevel(?);");
-			$stmt->execute(array($this->name));
+
+			if ($date == "latest") {
+				$date = date("Y-m-d");
+			}
+
+			$stmt = $db->prepare("CALL GetLevel(?, ?);");
+			$stmt->execute(array($this->name, $date));
 			$stmt->closeCursor();
 
-			$stmt = $db->query("SELECT level FROM CurrentLevel;");
+			$stmt = $db->query("SELECT level FROM _Level;");
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 

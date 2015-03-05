@@ -19,7 +19,7 @@ class OCR {
 	 */
 	private static function logger() {
 		if (self::$logger == null) {
-			self::$logger = new Logger(dirname(__DIR__).'/logs');
+			self::$logger = new Logger(LOG_DIR);
 		}
 		return self::$logger;
 	}
