@@ -1,9 +1,11 @@
 <?php
 require_once("config.php");
-require_once("code/autoload.php");
-require_once("code/StatTracker.class.php");
-require_once("code/Agent.class.php");
+require_once("src/autoload.php");
 require_once("vendor/autoload.php");
+
+use BlueHerons\StatTracker\Agent;
+use BlueHerons\StatTracker\AuthenticationProvider;
+use BlueHerons\StatTracker\StatTracker;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +32,19 @@ if ($app['session']->get("agent") !== null) {
 	$agent = $app['session']->get("agent");
 }
 
+$app['controllers']->before(function() {
+	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
+		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
+	}
+	if (!is_dir(LOG_DIR) || !is_writeable(LOG_DIR)) {
+		throw new Exception(sprintf("LOG_DIR (%s) is not writeable", LOG_DIR));
+	}
+});
+
+$app->error(function(Exception $e, $code) {
+	// Eventually, have a custom error page
+});
+
 // Default handler. Will match any alphnumeric string. If the page doesn't exist,
 // 404
 $app->get('/{page}', function ($page) use ($app) {
@@ -39,8 +54,9 @@ $app->get('/{page}', function ($page) use ($app) {
 		$app['session']->set("page_after_login", $page);
 		return $app['twig']->render("index.twig", array(
 			"constants" => array(
-				"ga_id" => GOOGLE_ANALYTICS_ID,
-				"version" => empty(VERSION) ? "development" : VERSION,
+				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
+				"group_name" => StatTracker::getConstant("GROUP_NAME"),
+				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
 			"page" => $page
 		));
@@ -51,17 +67,13 @@ $app->get('/{page}', function ($page) use ($app) {
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
-				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->login());
+				return $app->json(AuthenticationProvider::getInstance()->login());
 				break;
 			case "callback":
-				if (\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->callback()) {
-					$page = $app['session']->get("page_after_login");
-					$page = empty($page) ? "dashboard" : $page;
-					return $app->redirect("./{$page}");
-				}
-				else {
-					$app->abort(500, "An error occured during authentication");
-				}
+				AuthenticationProvider::getInstance()->callback();
+				$page = $app['session']->get("page_after_login");
+				$page = empty($page) ? "dashboard" : $page;
+				return $app->redirect("./{$page}");
 				break;
 			case "logout":
 				return $app->json(\BlueHerons\StatTracker\AuthenticationProvider::getInstance()->logout());
@@ -76,17 +88,34 @@ $app->get('/{page}', function ($page) use ($app) {
 })->assert('page', '[a-z-]+')
   ->value('page', 'dashboard');
 
-$app->get('/page/{page}', function($page) use ($app, $agent) {
+$app->get('/page/{page}', function(Request $request, $page) use ($app, $agent) {
+	$page_parameters = array();
+	
 	if ($page == "submit-stats") {
-		$agent->getLatestStats(true);
+		$date = $request->get("date");
+		$date = StatTracker::isValidDate($date) ? $date : null;
+		if ($date == null || new DateTime() < new DateTime($date)) {
+			$agent->getStats("latest", true);
+			$date = date("Y-m-d");
+		}
+		else {
+			$agent->getStats($date, true);
+		}
+
+		$page_parameters['date'] = $date;
+	}
+	else {
+		$agent->getStats("latest", true);
 	}
 
 	return $app['twig']->render($page.".twig", array(
 		"agent" => $agent,
-		"constants" => array("email_submission" => EMAIL_SUBMISSION),
+		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
 		"stats" => StatTracker::getStats(),
 		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
+		"parameters" => $page_parameters,
+		"stats" => StatTracker::getStats(),
 	));
 });
 

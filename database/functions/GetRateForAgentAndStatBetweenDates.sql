@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS `GetRateForAgentAndStatBetweenDates` $$
 
-CREATE DEFINER=`admin`@`localhost` FUNCTION `GetRateForAgentAndStatBetweenDates`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20), `start_date` DATE, `end_date` DATE) RETURNS int(10)
+CREATE FUNCTION `GetRateForAgentAndStatBetweenDates`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20), `start_date` DATE, `end_date` DATE) RETURNS int(10)
     READS SQL DATA
 BEGIN
 

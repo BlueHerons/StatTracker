@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS `GetInterceptForAgentAndStatBetweenDates` $$
 
-CREATE DEFINER=`admin`@`localhost` FUNCTION `GetInterceptForAgentAndStatBetweenDates`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20), `start_date` DATE, `end_date` DATE) RETURNS int(10)
+CREATE FUNCTION `GetInterceptForAgentAndStatBetweenDates`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20), `start_date` DATE, `end_date` DATE) RETURNS int(10)
     NO SQL
 BEGIN
 

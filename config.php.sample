@@ -1,6 +1,8 @@
 <?php
 //
 // STAT TRACKER CONFIGURATION FILE
+// 
+// Make the necessary changes for your instance of Stat Tracker, and save this file as "config.php"
 //
 
 // Database host. Example: database.thelocalresistance.com
@@ -32,6 +34,8 @@ define("GROUP_NAME",  "The Local Resistance");
 define("GROUP_EMAIL", "stats@localresistance.com");
 // This name of the agent who should recieve activation codes from agents trying to register.
 define("ADMIN_AGENT", "YourIngressAgentName");
+// Path to the `ocrad` executable
+define("OCRAD", "/usr/bin/ocrad");
 // The address that agents should email screenshots of their profile to for Email submissions. This is an optional
 // feature that requires additional set up steps. More information is available on the Stat Tracker wiki.
 //define("EMAIL_SUBMISSION", "stats@thelocalresistance.com");
@@ -54,6 +58,6 @@ define("ENL_GREEN", "#2BED1B");
 
 // Folder to temporarily store screenshot uploads. RW access required.
 define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
-define("COMMIT_HASH", "");
-define("VERSION", "");
+define("LOG_DIR", realpath("logs") . "/"); // MUST have trailing slash
+
 ?>

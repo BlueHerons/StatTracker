@@ -43,13 +43,23 @@ footer {
 	text-align: center;
 }
 
-input[type="number"] {
+input[type="number"], input[type="text"][name="date"] {
 	background-color: black;
 	border: 0;
 	color: @header-color;
 	font-family: "Coda";
 	font-size: 12pt;
 	text-align: right;
+}
+
+input[type="text"][name="date"] {
+	background-image: url("./resources/images/calendar.png");
+	background-position: top right;
+	background-size: 22px;
+	background-repeat: no-repeat;
+	cursor: pointer;
+	padding-right: 25px;
+	
 }
 
 input[type="number"].increase {
@@ -225,6 +235,10 @@ table {
 	background-position: -375px -150px;
 }
 
+.badge-icon-75.none {
+	background-image: url("./resources/images/locked_badge_75.png");
+}
+
 .badge-icon-75.builder.bronze   { background-position: 0px 0px; }
 .badge-icon-75.builder.silver   { background-position: 0px -75px; }
 .badge-icon-75.builder.gold     { background-position: 0px -150px; }
@@ -303,11 +317,23 @@ table {
 .badge-icon-75.specops.platinum { background-position: -900px -225px; }
 .badge-icon-75.specops.onyx     { background-position: -900px -300px; }
 
+.badge-icon-75.translator.bronze   { background-position: -1125px 0px; }
+.badge-icon-75.translator.silver   { background-position: -1125px -75px; }
+.badge-icon-75.translator.gold     { background-position: -1125px -150px; }
+.badge-icon-75.translator.platinum { background-position: -1125px -225px; }
+.badge-icon-75.translator.onyx     { background-position: -1125px -300px; }
+
 .badge-icon-75.trekker.bronze   { background-position: -825px 0px; }
 .badge-icon-75.trekker.silver   { background-position: -825px -75px; }
 .badge-icon-75.trekker.gold     { background-position: -825px -150px; }
 .badge-icon-75.trekker.platinum { background-position: -825px -225px; }
 .badge-icon-75.trekker.onyx     { background-position: -825px -300px; }
+
+.badge-icon-75.illuminator.bronze   { background-position: -1200px 0px; }
+.badge-icon-75.illuminator.silver   { background-position: -1200px -75px; }
+.badge-icon-75.illuminator.gold     { background-position: -1200px -150px; }
+.badge-icon-75.illuminator.platinum { background-position: -1200px -225px; }
+.badge-icon-75.illuminator.onyx     { background-position: -1200px -300px; }
 
 .container {
 	.item { 
@@ -331,22 +357,39 @@ table {
 	background-position: 0px 0px;
 }
 
-.level-icon-75.l1 { background-position: 0px 0px; }
-.level-icon-75.l2 { background-position: -75px 0px; }
-.level-icon-75.l3 { background-position: -150px 0px; }
-.level-icon-75.l4 { background-position: -225px 0px; }
-.level-icon-75.l5 { background-position: -300px 0px; }
-.level-icon-75.l6 { background-position: -375px 0px; }
-.level-icon-75.l7 { background-position: -450px 0px; }
-.level-icon-75.l8 { background-position: -525px 0px; }
-.level-icon-75.l9 { background-position: -600px 0px; }
-.level-icon-75.l10 { background-position: -675px 0px; }
-.level-icon-75.l11 { background-position: -750px 0px; }
-.level-icon-75.l12 { background-position: -825px 0px; }
-.level-icon-75.l13 { background-position: -900px 0px; }
-.level-icon-75.l14 { background-position: -975px 0px; }
-.level-icon-75.l15 { background-position: -1050px 0px; }
-.level-icon-75.l16 { background-position: -1125px 0px; }
+.level-icon-75.resistance-agent.l1 { background-position: 0px 0px; }
+.level-icon-75.resistance-agent.l2 { background-position: -75px 0px; }
+.level-icon-75.resistance-agent.l3 { background-position: -150px 0px; }
+.level-icon-75.resistance-agent.l4 { background-position: -225px 0px; }
+.level-icon-75.resistance-agent.l5 { background-position: -300px 0px; }
+.level-icon-75.resistance-agent.l6 { background-position: -375px 0px; }
+.level-icon-75.resistance-agent.l7 { background-position: -450px 0px; }
+.level-icon-75.resistance-agent.l8 { background-position: -525px 0px; }
+.level-icon-75.resistance-agent.l9 { background-position: -600px 0px; }
+.level-icon-75.resistance-agent.l10 { background-position: -675px 0px; }
+.level-icon-75.resistance-agent.l11 { background-position: -750px 0px; }
+.level-icon-75.resistance-agent.l12 { background-position: -825px 0px; }
+.level-icon-75.resistance-agent.l13 { background-position: -900px 0px; }
+.level-icon-75.resistance-agent.l14 { background-position: -975px 0px; }
+.level-icon-75.resistance-agent.l15 { background-position: -1050px 0px; }
+.level-icon-75.resistance-agent.l16 { background-position: -1125px 0px; }
+
+.level-icon-75.enlightened-agent.l1 { background-position: 0px 75px; }
+.level-icon-75.enlightened-agent.l2 { background-position: -75px 75px; }
+.level-icon-75.enlightened-agent.l3 { background-position: -150px 75px; }
+.level-icon-75.enlightened-agent.l4 { background-position: -225px 75px; }
+.level-icon-75.enlightened-agent.l5 { background-position: -300px 75px; }
+.level-icon-75.enlightened-agent.l6 { background-position: -375px 75px; }
+.level-icon-75.enlightened-agent.l7 { background-position: -450px 75px; }
+.level-icon-75.enlightened-agent.l8 { background-position: -525px 75px; }
+.level-icon-75.enlightened-agent.l9 { background-position: -600px 75px; }
+.level-icon-75.enlightened-agent.l10 { background-position: -675px 75px; }
+.level-icon-75.enlightened-agent.l11 { background-position: -750px 75px; }
+.level-icon-75.enlightened-agent.l12 { background-position: -825px 75px; }
+.level-icon-75.enlightened-agent.l13 { background-position: -900px 75px; }
+.level-icon-75.enlightened-agent.l14 { background-position: -975px 75px; }
+.level-icon-75.enlightened-agent.l15 { background-position: -1050px 75px; }
+.level-icon-75.enlightened-agent.l16 { background-position: -1125px 75px; }
 
 .level-icon-110 {
 	height: 110px;
@@ -415,6 +458,16 @@ table {
 	.time-remaining {
 		padding-top: ~"@{upcoming-badge-time-margin}px";
 		padding-left: 10px;
+	}
+}
+
+#stat-navigation {
+	clear: both;
+	max-width: 440px;
+	margin: 10px auto;
+
+	input[type="text"][name="date"] {
+		text-align: left;
 	}
 }
 

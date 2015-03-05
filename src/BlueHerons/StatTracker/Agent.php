@@ -1,4 +1,11 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use DateTime;
+use Exception;
+
+use BlueHerons\StatTracker\StatTracker;
+
 class Agent {
 
 	public $name;
@@ -80,8 +87,8 @@ class Agent {
 		if ($this->isValid()) {
 			$this->getLevel();
 			$this->hasSubmitted();
-			$this->getLatestStat('ap');
-			$this->getLatestUpdate();
+			$this->getStat('ap');
+			$this->getUpdateTimestamp();
 		}
 	}
 
@@ -120,14 +127,19 @@ class Agent {
 	 *
 	 * @returns int current Agent level
 	 */
-	public function getLevel() {
+	public function getLevel($date = "latest") {
 		if (!isset($this->level)) {
 			global $db;
-			$stmt = $db->prepare("CALL GetCurrentLevel(?);");
-			$stmt->execute(array($this->name));
+
+			if ($date == "latest") {
+				$date = date("Y-m-d");
+			}
+
+			$stmt = $db->prepare("CALL GetLevel(?, ?);");
+			$stmt->execute(array($this->name, $date));
 			$stmt->closeCursor();
 
-			$stmt = $db->query("SELECT level FROM CurrentLevel;");
+			$stmt = $db->query("SELECT level FROM _Level;");
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
@@ -148,54 +160,101 @@ class Agent {
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
-			$this->has_submitted = $result;
+			$this->has_submitted = $result > 0;
 		}
 
 		return $this->has_submitted;
 	}
 
 	/**
-	 * Gets the last timestamp for then this agent's data was updated
+	 * Gets the timestamp for which the last update was made for the agent. If $data is provided, the timestamp will 
+	 * be the update for that day
 	 */
-	public function getLatestUpdate($refresh = false) {
-		if (!isset($this->latest_update) || $refresh) {
+	public function getUpdateTimestamp($date = "latest", $refresh = false) {
+		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
 			global $db;
-			$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?;");
-			$stmt->execute(array($this->name));
+			$stmt = null;
+			if ($date == "latest" || new DateTime() < new DateTime($date)) {
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?");
+				$stmt->execute(array($this->name));
+			}
+			else {
+				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? AND date = ?;");
+				$stmt->execute(array($this->name, $date));
+			}
+
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
-			$this->latest_update = $updated;
+			$this->update_time = $updated;
 		}
 
-		return $this->latest_update;		
+		return $this->update_time;
 	}
 
 	/**
-	 * Gets the latest value of the specified stat.
+	 * Gets the values of all stats.
+	 *
+	 * @param string|date $when "latest" to get the latest stats submitted by the agent, or a date in "yyyy-mm-dd"
+	 *                    format to retrieve  stats on that date
+	 * @param boolean $refresh whether or not to refresh the cached values
+	 *
+	 * @return array values for stats
+	 */
+	public function getStats($when = "latest", $refresh = true) {
+		if (!is_array($this->stats) || $refresh) {
+			global $db;
+
+			if ($when == "latest" || new DateTime() < new DateTime($when)) {
+				$when = date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh));
+			}
+
+			$stmt = $db->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
+			$stmt->execute(array($this->name, $when));
+
+			if (!is_array($this->stats) || $refresh) {
+				$this->stats = array();
+				$this->stats['ap'] = 0;
+			}
+
+			while ($row = $stmt->fetch()) {
+				extract($row);
+				$this->stats[$stat] = $value;
+			}
+
+			$stmt->closeCursor();
+		}
+
+		return $this->stats;
+	}
+
+	/**
+	 * Gets the value of the specified stat.
 	 *
 	 * @param string|object If string, the stat's database key. If object, a Stat object for the class
 	 * #param boolean $refresh whether or not to refresh the cached value
 	 *
 	 * @return the value for the stat
 	 */
-	public function getLatestStat($stat, $refresh = false) {
+	public function getStat($stat, $when = "latest", $refresh = false) {
 		if (!StatTracker::isValidStat($stat)) {
 			throw new Exception(sprintf("'%s' is not a valid stat", $stat));
 		}
-
-		if (is_object($stat)) {
+		else if (is_object($stat)) {
 			$stat = $stat->stat;
 		}
 	
-		if (!is_array($this->stats) || !isset($this->stats[$stat]) || $refresh) {
+		if (!isset($this->stats[$stat]) || $refresh) {
 			global $db;
-			$stmt = $db->prepare("SELECT value, date FROM Data WHERE stat = ? AND agent = ? ORDER BY date DESC LIMIT 1;");
-			$stmt->execute(array($stat, $this->name));
+
+			if ($when == "latest" || new DateTime() < new DateTime($when)) {
+				$when = date("Y-m-d", $this->getUpdateTimestamp($when, $refresh));
+			}
+
+			$stmt = $db->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
+			$stmt->execute(array($stat, $this->name, $when));
 			extract($stmt->fetch());
 			$stmt->closeCursor();
-
-			$this->latest_entry = $date;
 
 			if (!is_array($this->stats)) {
 				$this->stats = array();
@@ -208,23 +267,6 @@ class Agent {
 	}
 
 	/**
-	 * Gets the latest entry for all stats for this agent
-	 *
-	 * @param boolean $refresh whether or not to refresh the cached value
-	 *
-	 * @return array with stat database key as the index
-	 */
-	public function getLatestStats($refresh = false) {
-		if (!is_array($this->stats) || $refresh) {
-			foreach (StatTracker::getStats() as $stat) {
-				$this->getLatestStat($stat->stat, $refresh);
-			}
-		}
-
-		return $this->stats;
-	}
-
-	/**
 	 * Gets an array of badges for the current player. array index is the badge name, and the array value 
 	 * is the level of the current badge
 	 *
@@ -232,14 +274,25 @@ class Agent {
 	 *
 	 * @return array the array of current badges the Agent has earned
 	 */
-	public function getBadges($refresh = false) {
+	public function getBadges($date = "today", $refresh = false) {
 		if (!is_array($this->badges) || $refresh) {
 			global $db;
-			$stmt = $db->prepare("CALL GetCurrentBadges(?);");
-			$stmt->execute(array($this->name));
+
+			$stmt = $db->prepare("CALL GetBadges(?, ?);");
+
+			if ($date == "today") {
+				$today = true;
+				$date = date("Y-m-d");
+			}
+
+			$stmt->execute(array($this->name, $date));
 			$stmt->closeCursor();
 
-			$stmt = $db->query("SELECT * FROM CurrentBadges;");
+			$stmt = $db->query("SELECT * FROM _Badges;");
+
+			if ($today && $stmt->rowCount() == 0) {
+				$this->getBadges(date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh)), true);
+			}
 
 			if (!is_array($this->badges)) {
 				$this->badges = array();

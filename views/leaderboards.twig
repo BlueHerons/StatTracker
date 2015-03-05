@@ -6,38 +6,13 @@
 {% endfor %}
 </div>
 
-{% for stat in stats if stat.hasLeaderboard() %}
-	<div class="leaderboard {{ stat.stat }}">
-		<a name="{{ stat.stat }}">
-			<h3>{{ stat.name }}</h3>
-		</a>
-		<div class="leaderboard-selector">
-{% if stat.hasWeeklyLeaderboard() %}
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="this-week">This week</span>
-			&nbsp;|&nbsp;
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="last-week">Last week</span>
-			&nbsp;|&nbsp;
-{% endif %}
-{% if stat.hasAllTimeLeaderboard() %}
-			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="alltime">All-time</span>
-{% endif %}
-
-		</div>
-		<table class="tablesorter">
-			<thead>
-			<tr>
-				<th>Rank</th>
-				<th>Agent</th>
-				<th>Amount</th>
-				<th>Updated</th>
-			</tr>
-			</thead>
-			<tbody>
-
-			</tbody>
-		</table>
-	</div>
+{% for stat in stats if stat.hasWeeklyLeaderboard() %}
+	{% include 'single_leaderboard.twig' %}
 {% endfor %}
+{% for stat in stats if stat.hasLeaderboard() and not stat.hasWeeklyLeaderboard() %}
+	{% include 'single_leaderboard.twig' %}
+{% endfor %}
+
 </div>
 <script>
 function onPageLoad() {
@@ -69,7 +44,7 @@ function onPageLoad() {
 				$.each(data, function() {
 					updated = (this.age == 0) ? "Today" :
 							(this.age == 1) ? "Yesterday" : this.age + " days ago";
-					row = "<tr><td>" + this.rank + "</td><td>" + this.agent + "</td><td>" + numeral(this.value).format("0,0") + "</td><td>" + updated + "</td></tr>";
+					row = "<tr><td>" + this.rank + "</td><td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td><td>" + numeral(this.value).format("0,0") + "</td><td>" + updated + "</td></tr>";
 	
 					if ($(".leaderboard." + stat + " table tbody tr").length == 0) {
 						$(".leaderboard." + stat + " table tbody").append(row);

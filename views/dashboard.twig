@@ -78,7 +78,7 @@ function onPageLoad() {
 	});
 
 	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/badges/upcoming",
-		data: { ts: '{{ agent.latest_update }}' },
+		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -106,7 +106,7 @@ function onPageLoad() {
 	});
 
 	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ratios",
-		data: { ts: '{{ agent.latest_update }}' },
+		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -143,7 +143,7 @@ function onPageLoad() {
 	});
 
 	$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ap/breakdown",
-		data: { ts: '{{ agent.latest_update }}' },
+		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
 			500: function() {
@@ -192,7 +192,7 @@ function onPageLoad() {
 
 	function loadStatPrediction(stat, name) {
 		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat +"/graph",
-			data: { ts: '{{ agent.latest_update }}' },
+			data: { ts: '{{ agent.update_time }}' },
 			dataType: "json",
 			statusCode: {
 				500: function() {
@@ -261,7 +261,7 @@ function onPageLoad() {
 		
 	function loadStatGraph(stat, name, what, when) {
 		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
-			data: { ts: '{{ agent.latest_update }}' },
+			data: { ts: '{{ agent.update_time }}' },
 			dataType: "json",
 			statusCode: {
 				500: function() {

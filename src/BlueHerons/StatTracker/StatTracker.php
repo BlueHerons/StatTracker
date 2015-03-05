@@ -1,4 +1,8 @@
 <?php
+namespace BlueHerons\StatTracker;
+
+use StdClass;
+
 class StatTracker {
 
 	private static $fields;
@@ -44,6 +48,17 @@ class StatTracker {
 	}
 
 	/**
+	 * Determines if the given string is a vlidaly formatted date
+	 *
+	 * @param string $date String containing a potential date
+	 *
+	 * @return true if the string is a valid formatted date, false otherwise
+	 */
+	public static function isValidDate($date) {
+		return preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $date);
+	}
+
+	/**
 	 * Determines if the given parameter is a valid stat
 	 *
 	 * @param mixed $stat String of stat key, or Stat object
@@ -59,6 +74,26 @@ class StatTracker {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Returns the value of a constant if it is defined, or null if it is not.
+	 *
+	 * @param string $name the name of the constant
+	 * @param mixed $default default value to return if the named constant is not defined.
+	 *
+	 * @return value of the named constant if it is defined, null otherwise
+	 */
+	public static function getConstant($name, $default = null) {
+		if ($name == "VERSION") {
+			$file = dirname(dirname(__FILE__)) . "/VERSION";
+			return file_exists($file) ? file($file)[0] : $default;
+		}
+		else {
+			return (!defined($name) || empty(constant($name))) ? 
+				$default :
+				constant($name);
+		}
 	}
 
 	/**
@@ -81,13 +116,13 @@ class StatTracker {
 				extract($stmt->fetch());
 
 				$ts = date("Y-m-d 00:00:00");
-				$dt = date("Y-m-d");
-				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, timestamp, stat, value) VALUES (?, ?, DATEDIFF(NOW(), ?) + 1, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
+				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
 				foreach (self::getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
 						if ($stat->stat == "innovator") {
-							$agent->getLatestStats(true);
+							$agent->getStats("latest", true);
 							$postdata[$stat->stat] = $agent->stats[$stat->stat];
 						}
 						else {
@@ -99,7 +134,7 @@ class StatTracker {
 					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
 					$value = !is_numeric($value) ? 0 : $value;
 
-					$stmt->execute(array($agent->name, $dt, $min_date, $ts, $stat_key, $value));
+					$stmt->execute(array($agent->name, $dt, $dt, $min_date, $stat_key, $value));
 
 					if ($response->error) {
 						break;
@@ -107,11 +142,6 @@ class StatTracker {
 				}
 
 				$stmt->closeCursor();
-
-				// Need to refresh stored session data
-				$agent = Agent::lookupAgentByAuthCode($agent->auth_code);
-				$_SESSION['agent'] = serialize($agent);
-
 				$ts = strtotime($dt);
 
 				if (!$response->error) {
@@ -132,7 +162,7 @@ class StatTracker {
 
 		}
 
-		return json_encode($response, JSON_NUMERIC_CHECK);
+		return $response;
 	}
 
 	/**
@@ -207,7 +237,7 @@ class StatTracker {
 	public static function getPrediction($agent, $stat) {
 		global $db;
 
-		$data = new stdClass();
+		$data = new StdClass();
 		if (StatTracker::isValidStat($stat)) {
 			$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
 			$stmt->execute(array($agent->name, $stat));
@@ -238,7 +268,7 @@ class StatTracker {
 		while ($row = $stmt->fetch()) {
 			if (sizeof($data) == 0) {
 				foreach (array_keys($row) as $key) {
-					$series = new stdClass();
+					$series = new StdClass();
 					$series->name = $key;
 					$series->data = array();
 					$data[] = $series;
@@ -254,7 +284,7 @@ class StatTracker {
 		}
 		$stmt->closeCursor();
 
-		$response = new stdClass();
+		$response = new StdClass();
 		$response->data = $data;
 		$response->prediction = self::getPrediction($agent, $stat); // TODO: move elsewhere
 
@@ -334,6 +364,7 @@ class StatTracker {
 				"rank" => $row['rank'],
 				"agent" => $row['agent'],
 				"value" => $row['value'],
+				"faction" => $row['faction'],
 				"age" => $row['age']
 			);
 		}
@@ -343,7 +374,7 @@ class StatTracker {
 	}
 
 	private function buildPredictionResponse($row) {
-		$data = new stdClass();
+		$data = new StdClass();
 
 		$data->stat = $row['stat'];
 		$data->name = $row['name'];
