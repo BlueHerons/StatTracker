@@ -1,19 +1,24 @@
 DELIMITER $$
 
-DROP PROCEDURE IF EXISTS `GetCurrentBadges` $$
-
-CREATE DEFINER=`admin`@`localhost` PROCEDURE `GetCurrentBadges`(IN `agent_name` VARCHAR(15))
+CREATE PROCEDURE `GetBadges`(IN `agent_name` VARCHAR(15), IN `submission_date` DATE)
     READS SQL DATA
+    SQL SECURITY INVOKER
 BEGIN
 
-DROP TABLE IF EXISTS CurrentBadges;
+DROP TABLE IF EXISTS _Badges;
 
-SELECT MAX(date) INTO @latest_submission
+SELECT count(*) > 0 INTO @has_submission
   FROM Data
- WHERE agent = agent_name
- LIMIT 1;
+ WHERE agent = agent_name AND
+       date = submission_date;
 
-CREATE TEMPORARY TABLE CurrentBadges
+IF (~@has_submission) THEN
+  SELECT MAX(date) INTO submission_date
+    FROM Data
+   WHERE agent = agent_name;
+END IF;
+
+CREATE TEMPORARY TABLE _Badges
 SELECT q2.stat,
        b.name `badge`,
 	   b.level 
@@ -22,7 +27,7 @@ SELECT q2.stat,
           FROM (SELECT stat, 
                        value
                   FROM Data 
-                 WHERE date = @latest_submission AND
+                 WHERE date = submission_date AND
                        agent = agent_name) q1 
             INNER JOIN Badges b ON 
                        b.stat = q1.stat AND 
@@ -34,4 +39,5 @@ LEFT JOIN Badges b ON
 ORDER BY `badge`;
 
 END $$
+
 DELIMITER ;

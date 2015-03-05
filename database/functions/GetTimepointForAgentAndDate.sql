@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS `GetTimepointForAgentAndDate` $$
 
-CREATE DEFINER=`admin`@`localhost` FUNCTION `GetTimepointForAgentAndDate`(`agent_name` VARCHAR(20), `start_date` DATE) RETURNS int(4)
+CREATE FUNCTION `GetTimepointForAgentAndDate`(`agent_name` VARCHAR(20), `start_date` DATE) RETURNS int(4)
     READS SQL DATA
 BEGIN
 

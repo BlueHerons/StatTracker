@@ -1,19 +1,24 @@
 <?php
 require_once("config.php");
-require_once("code/StatTracker.class.php");
-require_once("code/Agent.class.php");
-require_once("code/Authentication.class.php");
-require_once("code/OCR.class.php");
+require_once("src/autoload.php");
 require_once("vendor/autoload.php");
+
+use BlueHerons\StatTracker\Agent;
+use BlueHerons\StatTracker\OCR;
+use BlueHerons\StatTracker\StatTracker;
+
+use Curl\Curl;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-$mysql = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-if ($mysql->connect_errno) {
-	die(sprintf("%s: %s", $mysql->connect_errno, $mysql->connect_error));
-}
+$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
+	PDO::ATTR_EMULATE_PREPARES   => false,
+	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+));
 
 $app = new Silex\Application();
 $app->register(new Silex\Provider\SessionServiceProvider());
@@ -36,35 +41,56 @@ $validateRequest = function(Request $request, Silex\Application $app) {
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $app->abort(400); }
 };
 
-$app->get("/api/{auth_code}/my-data/{when}.{format}", function($auth_code, $when, $format) use ($app) {
+// Pass-though call to GitHub to retrieve everyone how has contributed to the repository
+$app->get("/api/contributors", function(Request $request) use ($app) {
+	$url = sprintf("https://api.github.com/repos/%s/%s/contributors", "BlueHerons", "StatTracker");
+
+	$curl = new Curl();
+	$curl->get($url);
+
+	$response = $curl->response;
+
+	return $app->json($response);
+});
+
+$app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($app) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
-	$data = new stdClass;
+	$response = new stdClass;
 
-	$data->agent = $agent->name;
-	$data->data = array();
+	$response->agent = $agent->name;
 	
 	$t = new stdClass;
 
-	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $when)) {
-		die("date");
+	if (StatTracker::isValidDate($when)) {
+		$ts = $agent->getUpdateTimestamp($when, true);
+
+		if ($ts == null) {
+			return $app->abort(404);
+		}
+		else {
+			$response->date = date("c", $ts);
+			$response->badges = $agent->getBadges($when, true);
+			$response->stats = $agent->getStats($when, true);
+		}
 	}
 	else if ($when == "latest") {
-		$t->timestamp = $agent->getLatestUpdate();
-		$t->badges = $agent->getBadges();
-		$t->stats = $agent->getLatestStats(true);
+		$response->date = date("c", $agent->getUpdateTimestamp());
+		$response->badges = $agent->getBadges();
+		$response->stats = $agent->getStats("latest", true);
+	}
+	else {
+		return $app->abort(404);
 	}
 
-	$data->data[] = $t;
-	
 	switch ($format) {
 		case "json":
-			return $app->json($data);
+			return $app->json($response);
 			break;
 	}
 })->before($validateRequest)
   ->assert("format", "json")
-  ->assert("when",   "latest")
+  ->assert("when",   "latest|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
   ->value ("format", "json")
   ->value ("when",   "latest");
 
@@ -89,19 +115,20 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
 
-	switch ($what) {
-		case "current":
-			$data = $agent->getBadges();
-			break;
-		case "upcoming":
-			$data = $agent->getUpcomingBadges($limit);
-			break;
+	if (preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $what)) {
+		$data = $agent->getBadges($what);
+	}
+	else if ($what == "upcoming") {
+		$data = $agent->getUpcomingBadges($limit);
+	}
+	else {
+		$data = $agent->getBadges();
 	}
 
 	return $app->json($data);
 })->before($validateRequest)
-  ->assert("what", "current|upcoming")
-  ->value("what", "current");
+  ->assert("what", "today|upcoming|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
+  ->value("what", "today");
 
 // Retrieve ratio information for the agent
 $app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
@@ -141,7 +168,7 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 			$data = StatTracker::getGraphData($stat, $agent);
 			break;
 		case "raw":
-			$agent->getLatestStat($stat);
+			$agent->getStat($stat);
 			$data = new stdClass();
 			$data->value = $agent->stats[$stat];
 			$data->timestamp = $agent->latest_entry;
@@ -172,7 +199,7 @@ $app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
 	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
 	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
-	return $response;
+	return $app->json($response);
 })->before($validateRequest);
 
 $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {
@@ -182,28 +209,31 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 		return $app->abort(404);
 	}
 
-	$content_type = explode(";", $request->headers->get("content_type"))[0];
-	$file = UPLOAD_DIR . OCR::getTempFileName();
+	$processImage = function() use ($request) {
+		$content_type = explode(";", $request->headers->get("content_type"))[0];
+		$file = UPLOAD_DIR . OCR::getTempFileName();
 
-	switch ($content_type) {
-		case "application/x-www-form-urlencoded":
-			// Not a file upload, but a POST of bytes
-			$hndl = fopen($file, "w+");
-			fwrite($hndl, file_get_contents("php://input"));
-			fclose($hndl);
-			break;
-		case "multipart/form-data":
-			// Typically an HTTP file upload
-			move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
-			break;
-		default:
-			return $app->abort(400, "Bad request of type " . $content_type);
-			break;
-	}
+		switch ($content_type) {
+			case "application/x-www-form-urlencoded":
+				// Not a file upload, but a POST of bytes
+				$hndl = fopen($file, "w+");
+				fwrite($hndl, file_get_contents("php://input"));
+				fclose($hndl);
+				break;
+			case "multipart/form-data":
+				// Typically an HTTP file upload
+				move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+				break;
+			default:
+				return $app->abort(400, "Bad request of type " . $content_type);
+				break;
+		}
 
-	$data = OCR::scanAgentProfile($file);
+		// This method will print the results to the output stream
+		OCR::scanAgentProfile($file);
+	};
 
-	return $app->json($data);
+	return $app->stream($processImage, 200, array ("Content-type" => "application/octet-stream"));
 
 })->before($validateRequest);
 
