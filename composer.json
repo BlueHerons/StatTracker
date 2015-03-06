@@ -1,4 +1,19 @@
 {
+    "name": "BlueHerons/StatTracker",
+    "type": "project",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "John Luetke",
+            "email": "john@johnluetke.net",
+            "homepage": "http://github.com/johnluetke",
+            "role": "Lead Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/BlueHerons/StatTracker/issues",
+        "wiki": "https://github.com/BlueHerons/StatTracker/wiki"
+    },
     "require": {
         "google/apiclient": "~1.0@beta",
         "katzgrau/klogger": "1.0.*",
@@ -8,9 +23,13 @@
         "silex/silex": "~1.2",
         "twig/twig": "~1.8"
     },
+    "require-dev": {
+        "phpunit/phpunit": "4.5.*"
+    },
     "scripts": {
         "describe": "composer describe-version; composer describe-contributors",
         "describe-contributors": "curl https://api.github.com/repos/BlueHerons/StatTracker/contributors | jsawk -a 'return this.join(\"\\n\")' 'return this.login' > CONTRIBUTORS; cat CONTRIBUTORS",
-        "describe-version": "git describe --always > VERSION; cat VERSION"
+        "describe-version": "git describe --always > VERSION; cat VERSION",
+	"test": "vendor/bin/phpunit --bootstrap tests/bootstrap.php tests/"
     }
 }
