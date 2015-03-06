@@ -343,7 +343,7 @@ class OCR {
 					array_push($elements, $values[1]);
 				} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
-				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
 				} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
 					$warning = sprintf($lang['maybe because'], $values[1]);
