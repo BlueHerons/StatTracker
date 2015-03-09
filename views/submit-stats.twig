@@ -159,7 +159,12 @@ function onPageLoad() {
 					response = e.currentTarget.response.substring(last_response_len);
 					last_response_len = e.loaded;
 					json = JSON.parse(response);
-					$("#message").show().html(json.status);
+					if (json.hasOwnProperty("error")) {
+						$("#message").show().html("An error occured while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+					}
+					else {
+						$("#message").show().html(json.status);
+					}
 				}
 			},
 			success: function(response) {
