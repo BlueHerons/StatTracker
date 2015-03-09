@@ -86,7 +86,7 @@ class StatTracker {
 	 */
 	public static function getConstant($name, $default = null) {
 		if ($name == "VERSION") {
-			$file = dirname(dirname(__FILE__)) . "/VERSION";
+			$file = dirname(dirname(dirname(__DIR__))) . "/VERSION";
 			return file_exists($file) ? file($file)[0] : $default;
 		}
 		else {
