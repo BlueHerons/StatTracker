@@ -34,7 +34,7 @@ class OCR {
 		$resp = new StdClass();
 		if (is_object($thing)) {
 			if ($thing instanceof Exception) {
-				$resp->error = $thing;
+				$resp->error = $thing->getMessage();
 			}
 			else {
 				$resp = (object) array_merge((array)$resp, (array)$thing);
@@ -57,20 +57,27 @@ class OCR {
 	 * @return array array of stat key's and values from the screenshot
 	 */
 	public static function scanAgentProfile($imagePath) {
-		//try {
+		try {
 			$response = new StdClass();
 			$response->status = array();
 			self::logger()->debug(sprintf("Beginning scan of %s", $imagePath));
-			$imagePath = self::convertToPBM($imagePath, $response);
+			$imagePath = self::convertToPBM($imagePath);
 			$lines = self::executeOCR($imagePath);
 			$data = self::processAgentData($lines);
 			self::logger()->debug("Parsed Stats:", $data);
 			$response->status = "Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.";
 			$response->stats = $data;
-			echo json_encode($response);
+			self::sendMessage($response);
+		}
+		catch (Exception $e) {
+			self::logger()->error(sprintf("%s: %s\n%s", get_class($e), $e->getMessage(), $e->getTraceAsString()));
+			self::sendMessage($e);
+			die();
+		}
+		finally {
 			ob_flush();
 			flush();
-		//}
+		}
 	}
 
 	/**
@@ -248,9 +255,9 @@ class OCR {
 			return $newFile;
 		}
 		catch (Exception $e) {
+			copy($imagePath, $imagePath . "_errored");
 			unlink($newFile);
-			self::sendMessage($e);
-			die();
+			throw $e;
 		}
 		finally {
 			unlink($imagePath);
@@ -268,16 +275,14 @@ class OCR {
 		try {
 			$cmd = sprintf("%s -i %s", OCRAD, $imagePath);
 			self::logger()->debug(sprintf("Executing %s", $cmd));
-			self::logger()->info("Scanning screenshot...");
 			self::sendMessage("Scanning screenshot...");
 			exec($cmd, $lines);
 			self::logger()->debug("OCR results:", $lines);
 			return $lines;
 		}
 		catch (Exception $e) {
-			self::sendMessage($e);
 			copy($imagePath, $imagePath . "_errored");
-			die();
+			throw $e;
 		}
 		finally {
 			unlink($imagePath);
@@ -343,7 +348,7 @@ class OCR {
 					array_push($elements, $values[1]);
 				} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
-				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
 				} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
 					$warning = sprintf($lang['maybe because'], $values[1]);
@@ -375,8 +380,7 @@ class OCR {
 			return $data;
 		}
 		catch (Exception $e) {
-			self::sendMessage($e);
-			die();
+			throw $e;
 		}
 	}
 }

@@ -46,4 +46,5 @@ INSERT INTO `Stats` (`order`, `stat`, `name`, `unit`, `group`, `ocr`, `graph`, `
 (75, 'unique_missions', 'Unique Missions Completed', 'missions', 'Missions', 1, 1, 7, 1),
 (78, 'hacks', 'Hacks', 'hacks', 'Resource Gathering', 1, 1, 7, 1),
 (81, 'glyphs', 'Glyph Hack Points', 'points', 'Resource Gathering', 1, 1, 7, 1),
-(84, 'recruits', 'Agents Successfully Recruited', 'agents', 'Mentoring', 1, 0, 7, 0);
+(84, 'hack_streak', 'Consecutive Days Hacking', 'days', 'Resource Gathering', 1, 1, 1, 1),
+(87, 'recruits', 'Agents Successfully Recruited', 'agents', 'Mentoring', 1, 0, 7, 0);
