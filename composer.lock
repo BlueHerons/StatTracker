@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "35f93d2fbd1e26837dcc171e44a177d4",
+    "hash": "4b657a0177ff686809ac0c3add26be7b",
     "packages": [
         {
             "name": "google/apiclient",
@@ -803,6 +803,11 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "php": ">=5.5",
+        "ext-imagick": "~3.1",
+        "ext-pdo_mysql": "*",
+        "lib-curl": "*"
+    },
     "platform-dev": []
 }
