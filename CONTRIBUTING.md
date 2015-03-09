@@ -11,7 +11,7 @@ General points are:
 - No hard limit on line length, but 120 characters is a good target. Aim for readability.
 - Use two slashes for comments : `// this is a comment`. These can be multiple lines for long comments.
 - Please remove all non-necessary whitespace
-  - `grep -nE "[[:space:]]+$" <filename>
+  - `grep -nE "[[:space:]]+$" <filename>`
 
 Exceptions to the PSR Standards:
 - (PHP) Put opening brace for classes and functions on the same line
