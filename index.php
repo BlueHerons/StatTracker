@@ -86,25 +86,25 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 		$date = $request->get("date");
 		$date = StatTracker::isValidDate($date) ? $date : null;
 		if ($date == null || new DateTime() < new DateTime($date)) {
-			$StatTracker->agent->getStats("latest", true);
+			$StatTracker->getAgent()->getStats("latest", true);
 			$date = date("Y-m-d");
 		}
 		else {
-			$StatTracker->agent->getStats($date, true);
+			$StatTracker->getAgent()->getStats($date, true);
 		}
 
 		$page_parameters['date'] = $date;
 	}
 	else {
-		$StatTracker->agent->getStats("latest", true);
+		$StatTracker->getAgent()->getStats("latest", true);
 	}
 
 	return $StatTracker['twig']->render($page.".twig", array(
-		"agent" => $StatTracker->agent,
+		"agent" => $StatTracker->getAgent(),
 		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
 		"stats" => StatTracker::getStats(),
-		"faction_class" => $StatTracker->agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
-		"faction_color" => $StatTracker->agent->faction == "R" ? RES_BLUE : ENL_GREEN,
+		"faction_class" => $StatTracker->getAgent()->faction == "R" ? "resistance-agent" : "enlightened-agent",
+		"faction_color" => $StatTracker->getAgent()->faction == "R" ? RES_BLUE : ENL_GREEN,
 		"parameters" => $page_parameters,
 		"stats" => StatTracker::getStats(),
 	));

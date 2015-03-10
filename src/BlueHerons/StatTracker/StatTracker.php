@@ -29,18 +29,8 @@ class StatTracker extends Application {
             ));
         }
 
-        public function __get($name) {
-            if (in_array($name, array("agent"))) {
-                if ($name == "agent") {
-                    return $this['session']->get($name) === null ? new Agent : $this['session']->get($name);
-                }
-                else {
-                    return $this['session']->get($name);
-                }
-            }
-            else {
-                throw new Exception("Undefined property $name");
-            }
+        public function getAgent() {
+            return $this['session']->get("agent") === null ? new Agent() : $this['session']->get("agent");
         }
 	
         /**
