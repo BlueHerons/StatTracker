@@ -17,8 +17,6 @@ $db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME),
 
 $StatTracker = new StatTracker();
 
-$agent = $StatTracker->agent;
-
 $StatTracker['controllers']->before(function() {
 	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
 		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
@@ -81,32 +79,32 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 })->assert('page', '[a-z-]+')
   ->value('page', 'dashboard');
 
-$StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTracker, $agent) {
+$StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTracker) {
 	$page_parameters = array();
 	
 	if ($page == "submit-stats") {
 		$date = $request->get("date");
 		$date = StatTracker::isValidDate($date) ? $date : null;
 		if ($date == null || new DateTime() < new DateTime($date)) {
-			$agent->getStats("latest", true);
+			$StatTracker->agent->getStats("latest", true);
 			$date = date("Y-m-d");
 		}
 		else {
-			$agent->getStats($date, true);
+			$StatTracker->agent->getStats($date, true);
 		}
 
 		$page_parameters['date'] = $date;
 	}
 	else {
-		$agent->getStats("latest", true);
+		$StatTracker->agent->getStats("latest", true);
 	}
 
 	return $StatTracker['twig']->render($page.".twig", array(
-		"agent" => $agent,
+		"agent" => $StatTracker->agent,
 		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
 		"stats" => StatTracker::getStats(),
-		"faction_class" => $agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
-		"faction_color" => $agent->faction == "R" ? RES_BLUE : ENL_GREEN,
+		"faction_class" => $StatTracker->agent->faction == "R" ? "resistance-agent" : "enlightened-agent",
+		"faction_color" => $StatTracker->agent->faction == "R" ? RES_BLUE : ENL_GREEN,
 		"parameters" => $page_parameters,
 		"stats" => StatTracker::getStats(),
 	));
