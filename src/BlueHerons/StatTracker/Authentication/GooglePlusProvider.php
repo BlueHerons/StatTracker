@@ -28,18 +28,18 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$this->plus = new \Google_Service_Plus($this->client);
 	}
 
-	public function login(StatTracker $app) {
+	public function login(StatTracker $StatTracker) {
 		$response = new StdClass();
 		$response->error = false;
 
 		// Kick off the OAuth process
-		if (empty($app['session']->get("token"))) {
+		if (empty($StatTracker['session']->get("token"))) {
 			$response->status = "authentication_required";
 			$response->url = $this->client->createAuthUrl();
 			return $response;
 		}
 
-		$this->client->setAccessToken($app['session']->get("token"));
+		$this->client->setAccessToken($StatTracker['session']->get("token"));
 
 		if ($this->client->isAccessTokenExpired()) {
 			$response->status = "authentication_required";
@@ -47,7 +47,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			return $response;
 		}
 
-		if ($app['session']->get("agent") == null) {
+		if ($StatTracker['session']->get("agent") === null) {
 			try {
 				$me = $this->plus->people->get('me');
 				$email_address = "";
@@ -77,7 +77,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 					self::generateAuthCode($email_address, true);
 					self::updateUserMeta($email_address, $me->id);
 					$agent->getAuthCode(true);
-					$app['session']->set("agent", $agent);
+					$StatTracker['session']->set("agent", $agent);
 					$response->status = "okay";
 					$response->agent = $agent;
 				}
@@ -89,7 +89,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			}
 		}
 		else {
-			$agent = $app['session']->get("agent");
+			$agent = $StatTracker['session']->get("agent");
 
 			// Ensure auth_code is valid
 			if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
@@ -104,7 +104,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		return $response;
 	}
 
-	public function logout(StatTracker $app) {
+	public function logout(StatTracker $StatTracker) {
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
 			$parts = explode('=', $cookie);
@@ -112,14 +112,14 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			setcookie($name, '', time()-1000);
 			setcookie($name, '', time()-1000, '/');
 		}
-		$this->client->revokeToken($app['session']->get("token"));
+		$this->client->revokeToken($StatTracker['session']->get("token"));
 		session_destroy();
 		$response = new stdClass();
 		$response->status = "logged_out";
 		return $response;
 	}
 
-	public function callback(StatTracker $app) {
+	public function callback(StatTracker $StatTracker) {
 		$code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
 
 		try {
@@ -128,7 +128,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			}
 
 			$this->client->authenticate($code);
-			$app['session']->set("token", $this->client->getAccessToken());
+			$StatTracker['session']->set("token", $this->client->getAccessToken());
 		}
 		catch (Exception $e) {
 			error_log("Google authentication callback failure");
