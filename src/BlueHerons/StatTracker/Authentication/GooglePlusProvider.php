@@ -1,6 +1,8 @@
 <?php
 namespace BlueHerons\StatTracker\Authentication;
 
+use BlueHerons\StatTracker\StatTracker;
+
 use Exception;
 use Google_Client;
 use PDOException;
@@ -26,9 +28,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$this->plus = new \Google_Service_Plus($this->client);
 	}
 
-	public function login() {
-		global $app;
-
+	public function login(StatTracker $app) {
 		$response = new StdClass();
 		$response->error = false;
 
@@ -66,11 +66,10 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				$response->email = $email_address;
 				$agent = Agent::lookupAgentName($email_address);
 	
-				if (empty($agent->name) || $agent->name == "Agent") {
+				if (!$agent->isValid()) {
 					// They need to register
 					self::generateAuthCode($email_address);
 					self::updateUserMeta($email_address, $me->id);
-					AuthenticationProvider::sendRegistrationEmail($email_address);
 					$response->status = "registration_required";
 				}
 				else {
@@ -105,9 +104,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		return $response;
 	}
 
-	public function logout() {
-		global $app;
-
+	public function logout(StatTracker $app) {
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
 			$parts = explode('=', $cookie);
@@ -122,9 +119,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		return $response;
 	}
 
-	public function callback() {
-		global $app;
-
+	public function callback(StatTracker $app) {
 		$code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
 
 		try {
