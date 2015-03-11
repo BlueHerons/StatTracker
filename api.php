@@ -147,6 +147,9 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 	if (!$agent->isValid()) {
 		return $StatTracker->abort(404);
 	}
+        else if (!$StatTracker->isValidStat($stat)) {
+                return $StatTracker->abort(404);
+        }
 
 	$data = "";
 	switch ($view) {

@@ -9,7 +9,7 @@ use StdClass;
 
 class StatTracker extends Application {
 
-	private static $fields;
+	private static $stats;
         
         private $basedir;
         private $authProvider;
@@ -132,8 +132,8 @@ class StatTracker extends Application {
 	 *
 	 * @return array of Stat objects - one for each possible stat
 	 */
-	public static function getStats() {
-		if (!is_array(self::$fields)) {
+	public function getStats() {
+		if (!is_array(self::$stats)) {
 			global $db;
 			$stmt = $db->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
 			$rows = $stmt->fetchAll();
@@ -159,12 +159,12 @@ class StatTracker extends Application {
 				}
 				$stmt->closeCursor();
 
-				self::$fields[$key] = $stat;
+				self::$stats[$key] = $stat;
 			}
 			$stmt->closeCursor();
 		}
 
-		return self::$fields;
+		return self::$stats;
 	}
 
 	/**
@@ -185,12 +185,12 @@ class StatTracker extends Application {
 	 *
 	 * @return true if valid stat, false otherwise
 	 */
-	public static function isValidStat($stat) {
+	public function isValidStat($stat) {
 		if (is_object($stat)) {
-			return in_array($stat->stat, array_keys(StatTracker::getStats()));
+			return in_array($stat->stat, array_keys($this->getStats()));
 		}
 		else if (is_string($stat)) {
-			return in_array($stat, array_keys(StatTracker::getStats()));
+			return in_array($stat, array_keys($this->getStats()));
 		}
 
 		return false;
@@ -239,7 +239,7 @@ class StatTracker extends Application {
 				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
 				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
-				foreach (self::getStats() as $stat) {
+				foreach ($this->getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
 						if ($stat->stat == "innovator") {
 							$agent->getStats("latest", true);

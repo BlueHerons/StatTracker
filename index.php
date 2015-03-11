@@ -102,11 +102,10 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 	return $StatTracker['twig']->render($page.".twig", array(
 		"agent" => $StatTracker->getAgent(),
 		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
-		"stats" => StatTracker::getStats(),
+		"stats" => $StatTracker->getStats(),
 		"faction_class" => $StatTracker->getAgent()->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $StatTracker->getAgent()->faction == "R" ? RES_BLUE : ENL_GREEN,
-		"parameters" => $page_parameters,
-		"stats" => StatTracker::getStats(),
+		"parameters" => $page_parameters
 	));
 });
 
