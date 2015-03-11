@@ -1,6 +1,7 @@
 <?php
 namespace BlueHerons\StatTracker;
 
+use StdClass;
 use DateTime;
 use Exception;
 
@@ -237,10 +238,7 @@ class Agent {
 	 * @return the value for the stat
 	 */
 	public function getStat($stat, $when = "latest", $refresh = false) {
-		if (!StatTracker::isValidStat($stat)) {
-			throw new Exception(sprintf("'%s' is not a valid stat", $stat));
-		}
-		else if (is_object($stat)) {
+		if (is_object($stat)) {
 			$stat = $stat->stat;
 		}
 	
@@ -310,6 +308,48 @@ class Agent {
 		}
 
 		return $this->badges;
+	}
+	
+        /**
+	 * Gets the prediction for a stat. If the stat has a badge associated with it, this will also
+	 * retrieve the badge name, current level, next level, and percentage complete to attain the next
+	 * badge level.
+	 *
+	 * @param string $stat Stat to retrieve prediction for
+	 *
+	 * @return Object prediciton object
+	 */
+	public function getPrediction($stat) {
+		global $db;
+
+		$prediction = new StdClass();
+		$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
+		$stmt->execute(array($this->name, $stat));
+
+		$stmt = $db->query("SELECT * FROM BadgePrediction");
+                $row = $stmt->fetch();
+
+		$prediction->stat = $row['stat'];
+		$prediction->name = $row['name'];
+		$prediction->unit = $row['unit'];
+		$prediction->badge = $row['badge'];
+		$prediction->current = $row['current'];
+		$prediction->next = $row['next'];
+                $prediction->rate = $row['rate'];
+		$prediction->progress = $row['progress'];
+                $prediction->days_remaining = $row['days'];
+
+                if ($stat !== "level") {
+                    $prediction->amount_remaining = $row['remaining'];
+                }
+                else {
+		    $prediction->silver_remaining = $row['silver_remaining'];
+		    $prediction->gold_remaining = $row['gold_remaining'];
+		    $prediction->platinum_remaining = $row['platinum_remaining'];
+		    $prediction->onyx_remaining = $row['onyx_remaining'];
+                }
+
+		return $prediction;
 	}
 
 	/**

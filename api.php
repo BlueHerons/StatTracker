@@ -157,7 +157,7 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 			$data = StatTracker::getLeaderboard($stat, $when);
 			break;
 		case "prediction":
-			$data = StatTracker::getPrediction($agent, $stat);
+			$data = $agent->getPrediction($stat);
 			break;
 		case "trend":
 			$data = StatTracker::getTrend($agent, $stat, $when);

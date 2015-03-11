@@ -345,31 +345,6 @@ class StatTracker extends Application {
 	}
 
 	/**
-	 * Gets the prediction line for a stat. If the stat has a badge associated with it, this will also
-	 * retrieve the badge name, current level, next level, and percentage complete to attain the next
-	 * badge level.
-	 *
-	 * @param Agent $agent Agent to retrieve prediction for
-	 * @param string $stat Stat to retrieve prediction for
-	 *
-	 * @return Object prediciton object
-	 */
-	public static function getPrediction($agent, $stat) {
-		global $db;
-
-		$data = new StdClass();
-		if (StatTracker::isValidStat($stat)) {
-			$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
-			$stmt->execute(array($agent->name, $stat));
-
-			$stmt = $db->query("SELECT * FROM BadgePrediction");
-			$data = self::buildPredictionResponse($stmt->fetch());
-		}
-
-		return $data;
-	}
-
-	/**
 	 * Generates JSON formatted data for use in a line graph.
 	 *
 	 * @param string $stat the stat to generate the data for
@@ -406,7 +381,7 @@ class StatTracker extends Application {
 
 		$response = new StdClass();
 		$response->data = $data;
-		$response->prediction = self::getPrediction($agent, $stat); // TODO: move elsewhere
+		$response->prediction = $agent->getPrediction($stat); // TODO: move elsewhere
 
 		return $response;
 	}
