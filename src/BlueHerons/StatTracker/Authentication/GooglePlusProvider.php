@@ -97,7 +97,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				$response->agent = $agent;
 			}
 			else {
-				return $this->logout();
+				return $this->logout($StatTracker);
 			}
 		}
 
