@@ -314,7 +314,7 @@ class StatTracker extends Application {
 	 *
 	 * @return string JSON string
 	 */
-	public static function getLeaderboard($stat, $when) {
+	public function getLeaderboard($stat, $when) {
 		global $db;
 		$monday = strtotime('last monday', strtotime('tomorrow'));
 		$stmt = null;
