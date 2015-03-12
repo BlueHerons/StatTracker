@@ -40,7 +40,6 @@ class StatTracker extends Application {
 	 *
 	 * @return IAuthenticationProvider
 	 */
-
         public function getAuthenticationProvider() {
             if ($this->authProvider === null) {
                 // Load all auth classes
@@ -168,13 +167,13 @@ class StatTracker extends Application {
 	}
 
 	/**
-	 * Determines if the given string is a vlidaly formatted date
+	 * Determines if the given string is a validly formatted date
 	 *
 	 * @param string $date String containing a potential date
 	 *
 	 * @return true if the string is a valid formatted date, false otherwise
 	 */
-	public static function isValidDate($date) {
+	public function isValidDate($date) {
 		return preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $date);
 	}
 
@@ -352,27 +351,6 @@ class StatTracker extends Application {
 		$stmt->closeCursor();
 
 		return $results;
-	}
-
-	private function buildPredictionResponse($row) {
-		$data = new StdClass();
-
-		$data->stat = $row['stat'];
-		$data->name = $row['name'];
-		$data->unit = $row['unit'];
-		$data->badge = $row['badge'];
-		$data->current = $row['current'];
-		$data->next = $row['next'];
-		$data->progress = $row['progress'];
-		$data->amount_remaining = $row['remaining'];
-		$data->silver_remaining = $row['silver_remaining'];
-		$data->gold_remaining = $row['gold_remaining'];
-		$data->platinum_remaining = $row['platinum_remaining'];
-		$data->onyx_remaining = $row['onyx_remaining'];
-		$data->days_remaining = $row['days'];
-		$data->rate = $row['rate'];
-
-		return $data;
 	}
 }
 

@@ -60,7 +60,7 @@ $StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_cod
 	
 	$t = new stdClass;
 
-	if (StatTracker::isValidDate($when)) {
+	if ($StatTracker->isValidDate($when)) {
 		$ts = $agent->getUpdateTimestamp($when, true);
 
 		if ($ts == null) {

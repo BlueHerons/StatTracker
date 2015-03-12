@@ -84,7 +84,7 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 	
 	if ($page == "submit-stats") {
 		$date = $request->get("date");
-		$date = StatTracker::isValidDate($date) ? $date : null;
+		$date = $StatTracker->isValidDate($date) ? $date : null;
 		if ($date == null || new DateTime() < new DateTime($date)) {
 			$StatTracker->getAgent()->getStats("latest", true);
 			$date = date("Y-m-d");
