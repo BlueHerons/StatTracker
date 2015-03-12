@@ -307,42 +307,6 @@ class StatTracker extends Application {
 		}
 	}
 
-	/**
-	 * Generates JSON formatted data for use in a Google Visualization API pie chart.
-	 *
-	 * @param Agent agent the agent whose data should be used
-	 *
-	 * @return string Object AP Breakdown object
-	 */
-	public function getAPBreakdown($agent) {
-		global $db;
-
-		$stmt = $db->prepare("CALL GetAPBreakdown(?);");
-		$stmt->execute(array($agent->name));
-		$stmt->closeCursor();
-
-		$stmt = $db->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
-
-		$data = array();
-		$colors = array();
-
-		while ($row = $stmt->fetch()) {
-			$data[] = array($row['name'], $row['ap_gained']);
-			if ($row['grouping'] == 1) {
-				$color =$agent->faction == "R" ? ENL_GREEN : RES_BLUE;
-			}
-			else if ($row['grouping'] == 3) {
-				$color = $agent->faction == "R" ? RES_BLUE : ENL_GREEN;
-			}
-			else {
-				$color = "#999";
-			}
-			$colors[] = $color;
-		}
-		$stmt->closeCursor();
-
-	 	return array("data" => $data, "slice_colors" => $colors);
-	}
 
 	/**
 	 * Generates JSON formatted data for use in a line graph.

@@ -154,7 +154,7 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 	$data = "";
 	switch ($view) {
 		case "breakdown":
-			$data = StatTracker::getAPBreakdown($agent);
+			$data = $agent->getAPBreakdown();
 			break;
 		case "leaderboard":
 			$data = StatTracker::getLeaderboard($stat, $when);
