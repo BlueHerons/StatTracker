@@ -56,14 +56,14 @@ class OCR {
 	 *
 	 * @return array array of stat key's and values from the screenshot
 	 */
-	public static function scanAgentProfile($imagePath) {
+	public static function scanAgentProfile($imagePath, $stats) {
 		try {
 			$response = new StdClass();
 			$response->status = array();
 			self::logger()->debug(sprintf("Beginning scan of %s", $imagePath));
 			$imagePath = self::convertToPBM($imagePath);
 			$lines = self::executeOCR($imagePath);
-			$data = self::processAgentData($lines);
+			$data = self::processAgentData($lines, $stats);
 			self::logger()->debug("Parsed Stats:", $data);
 			$response->status = "Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.";
 			$response->stats = $data;
@@ -299,7 +299,7 @@ class OCR {
 	 *
 	 * @return path to new PBM image
 	 */
-	public static function processAgentData($lines) {
+	public static function processAgentData($lines, $stats) {
 		try {
 			self::sendMessage("Processing scanned results...");
 			$step = 'start';
@@ -364,7 +364,6 @@ class OCR {
 			$elements = preg_replace('/g/', '9', $elements);
 
 			$data = array();
-			$stats = StatTracker::getStats();
 
 			foreach ($stats as $stat) {
 				if ($stat->ocr) {

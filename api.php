@@ -231,7 +231,7 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
 		}
 
 		// This method will print the results to the output stream
-		OCR::scanAgentProfile($file);
+                $StatTracker->scanAgentProfile($file);
 	};
 
 	return $StatTracker->stream($processImage, 200, array ("Content-type" => "StatTrackerlication/octet-stream"));

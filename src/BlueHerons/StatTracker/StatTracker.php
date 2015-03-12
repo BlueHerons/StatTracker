@@ -70,6 +70,11 @@ class StatTracker extends Application {
             return $this->authProvider;
         }
 
+        public function scanAgentProfile($filename) {
+            // TODO: Rewrite this implementation. This is just a hack to get around code restructuing
+            OCR::scanAgentProfile($filename, $this->getStats());
+        }
+
 	/**
 	 * Sends the autorization code for the given email address to that address. The email includes
 	 * instructions on how to complete the registration process as well.
