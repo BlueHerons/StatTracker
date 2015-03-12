@@ -229,6 +229,41 @@ class Agent {
 		return $this->level;
 	}
 
+	public function getTrend($stat, $when) {
+		global $db;
+		$start = "";
+		$end = "";
+
+		switch ($when) {
+			case "last-week":
+				$start = date("Y-m-d", strtotime("last monday", strtotime("6 days ago")));
+				$end = date("Y-m-d", strtotime("next sunday", strtotime("8 days ago")));
+				break;
+			case "this-week":
+			case "weekly":
+			default:
+				$start = date("Y-m-d", strtotime("last monday", strtotime("tomorrow")));
+				$end = date("Y-m-d", strtotime("next sunday", strtotime("yesterday")));
+				break;
+		}
+
+		$stmt = $db->prepare("CALL GetDailyTrend(?, ?, ?, ?);");
+		$stmt->execute(array($this->name, $stat, $start, $end));
+		$stmt->closeCursor();
+
+		$stmt = $db->query("SELECT * FROM DailyTrend");
+
+		$data = array();
+		while ($row = $stmt->fetch()) {
+			$data["dates"][] = $row["date"];
+			$data["target"][] = $row["target"];
+			$data["value"][] = $row["value"];
+		}
+		$stmt->closeCursor();
+
+		return $data;
+	}
+
 	/**
 	 * Determines if the Agent has submitted to Stat Tracker
 	 */

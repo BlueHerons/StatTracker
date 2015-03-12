@@ -163,7 +163,7 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 			$data = $agent->getPrediction($stat);
 			break;
 		case "trend":
-			$data = StatTracker::getTrend($agent, $stat, $when);
+			$data = $agent->getTrend($stat, $when);
 			break;
 		case "graph":
 			$data = $agent->getGraphData($stat);
