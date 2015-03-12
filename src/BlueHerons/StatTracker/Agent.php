@@ -162,6 +162,47 @@ class Agent {
 	}
 
 	/**
+	 * Generates JSON formatted data for use in a line graph.
+	 *
+	 * @param string $stat the stat to generate the data for
+	 *
+	 * @return string Object Graph Data object
+	 */
+	public function getGraphData($stat) {
+		global $db;
+		$stmt = $db->prepare("CALL GetGraphForStat(?, ?);");
+		$stmt->execute(array($this->name, $stat));
+	
+		$stmt = $db->query("SELECT * FROM GraphDataForStat;");
+		
+		$data = array();
+		while ($row = $stmt->fetch()) {
+			if (sizeof($data) == 0) {
+				foreach (array_keys($row) as $key) {
+					$series = new StdClass();
+					$series->name = $key;
+					$series->data = array();
+					$data[] = $series;
+				}
+			}
+
+			$i = 0;
+			foreach (array_values($row) as $value) {
+				$data[$i]->data[] = $value;
+
+				$i++;
+			}
+		}
+		$stmt->closeCursor();
+
+		$response = new StdClass();
+		$response->data = $data;
+		$response->prediction = $this->getPrediction($stat); // TODO: move elsewhere
+
+		return $response;
+	}
+
+	/**
 	 * Gets the current level for the Agent. Considers AP and badges.
 	 *
 	 * @returns int current Agent level

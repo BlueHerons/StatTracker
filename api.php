@@ -166,7 +166,7 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 			$data = StatTracker::getTrend($agent, $stat, $when);
 			break;
 		case "graph":
-			$data = StatTracker::getGraphData($stat, $agent);
+			$data = $agent->getGraphData($stat);
 			break;
 		case "raw":
 			$agent->getStat($stat);

@@ -307,49 +307,6 @@ class StatTracker extends Application {
 		}
 	}
 
-
-	/**
-	 * Generates JSON formatted data for use in a line graph.
-	 *
-	 * @param string $stat the stat to generate the data for
-	 * @param Agent agent the agent whose data should be used
-	 *
-	 * @return string Object Graph Data object
-	 */
-	public static function getGraphData($stat, $agent) {
-		global $db;
-		$stmt = $db->prepare("CALL GetGraphForStat(?, ?);");
-		$stmt->execute(array($agent->name, $stat));
-	
-		$stmt = $db->query("SELECT * FROM GraphDataForStat;");
-		
-		$data = array();
-		while ($row = $stmt->fetch()) {
-			if (sizeof($data) == 0) {
-				foreach (array_keys($row) as $key) {
-					$series = new StdClass();
-					$series->name = $key;
-					$series->data = array();
-					$data[] = $series;
-				}
-			}
-
-			$i = 0;
-			foreach (array_values($row) as $value) {
-				$data[$i]->data[] = $value;
-
-				$i++;
-			}
-		}
-		$stmt->closeCursor();
-
-		$response = new StdClass();
-		$response->data = $data;
-		$response->prediction = $agent->getPrediction($stat); // TODO: move elsewhere
-
-		return $response;
-	}
-
 	public static function getTrend($agent, $stat, $when) {
 		global $db;
 		$start = "";
