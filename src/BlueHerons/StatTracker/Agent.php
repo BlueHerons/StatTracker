@@ -24,9 +24,7 @@ class Agent {
 	 * @return string Agent object
 	 */
 	public static function lookupAgentName($email_address) {
-		global $db;
-
-		$stmt = $db->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
+		$stmt = StatTracker::db()->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
 		$stmt->execute(array($email_address));
 		extract($stmt->fetch());
 		$stmt->closeCursor();
@@ -50,8 +48,7 @@ class Agent {
 	 * @return object Agent object
 	 */
 	public static function lookupAgentByAuthCode($auth_code) {
-		global $db;
-		$stmt = $db->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
+		$stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
 		$stmt->execute(array($auth_code));
 		extract($stmt->fetch());
 		$stmt->closeCursor();
@@ -110,13 +107,11 @@ class Agent {
 	 * @return string Object AP Breakdown object
 	 */
 	public function getAPBreakdown() {
-		global $db;
-
-		$stmt = $db->prepare("CALL GetAPBreakdown(?);");
+		$stmt = StatTracker::db()->prepare("CALL GetAPBreakdown(?);");
 		$stmt->execute(array($this->name));
 		$stmt->closeCursor();
 
-		$stmt = $db->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
+		$stmt = StatTracker::db()->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
 
 		$data = array();
 		$colors = array();
@@ -149,8 +144,7 @@ class Agent {
 	 */
 	public function getAuthCode($refresh = false) {
 		if (!isset($this->auth_code) || $refresh) {
-			global $db;
-			$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
+			$stmt = StatTracker::db()->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
 			$stmt->execute(array($this->name));
 			extract($stmt->fetch());
 			$stmt->closeCursor();
@@ -169,11 +163,10 @@ class Agent {
 	 * @return string Object Graph Data object
 	 */
 	public function getGraphData($stat) {
-		global $db;
-		$stmt = $db->prepare("CALL GetGraphForStat(?, ?);");
+		$stmt = StatTracker::db()->prepare("CALL GetGraphForStat(?, ?);");
 		$stmt->execute(array($this->name, $stat));
 	
-		$stmt = $db->query("SELECT * FROM GraphDataForStat;");
+		$stmt = StatTracker::db()->query("SELECT * FROM GraphDataForStat;");
 		
 		$data = array();
 		while ($row = $stmt->fetch()) {
@@ -209,17 +202,16 @@ class Agent {
 	 */
 	public function getLevel($date = "latest") {
 		if (!isset($this->level)) {
-			global $db;
 
 			if ($date == "latest") {
 				$date = date("Y-m-d");
 			}
 
-			$stmt = $db->prepare("CALL GetLevel(?, ?);");
+			$stmt = StatTracker::db()->prepare("CALL GetLevel(?, ?);");
 			$stmt->execute(array($this->name, $date));
 			$stmt->closeCursor();
 
-			$stmt = $db->query("SELECT level FROM _Level;");
+			$stmt = StatTracker::db()->query("SELECT level FROM _Level;");
 			extract($stmt->fetch());
 			$stmt->closeCursor();
 
@@ -230,7 +222,6 @@ class Agent {
 	}
 
 	public function getTrend($stat, $when) {
-		global $db;
 		$start = "";
 		$end = "";
 
@@ -247,11 +238,11 @@ class Agent {
 				break;
 		}
 
-		$stmt = $db->prepare("CALL GetDailyTrend(?, ?, ?, ?);");
+		$stmt = StatTracker::db()->prepare("CALL GetDailyTrend(?, ?, ?, ?);");
 		$stmt->execute(array($this->name, $stat, $start, $end));
 		$stmt->closeCursor();
 
-		$stmt = $db->query("SELECT * FROM DailyTrend");
+		$stmt = StatTracker::db()->query("SELECT * FROM DailyTrend");
 
 		$data = array();
 		while ($row = $stmt->fetch()) {
@@ -269,8 +260,7 @@ class Agent {
 	 */
 	public function hasSubmitted($refresh = false) {
 		if (!isset($this->has_submitted) || $refresh) {
-			global $db;
-			$stmt = $db->prepare("SELECT count(stat) > 0 AS result FROM Data WHERE stat = 'ap' AND agent = ?;");
+			$stmt = StatTracker::db()->prepare("SELECT count(stat) > 0 AS result FROM Data WHERE stat = 'ap' AND agent = ?;");
 			$stmt->execute(array($this->name));
 			extract($stmt->fetch());
 			$stmt->closeCursor();
@@ -287,14 +277,13 @@ class Agent {
 	 */
 	public function getUpdateTimestamp($date = "latest", $refresh = false) {
 		if (!isset($this->update_time) || $this->update_time == null || $refresh) {
-			global $db;
 			$stmt = null;
 			if ($date == "latest" || new DateTime() < new DateTime($date)) {
-				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?");
+				$stmt = StatTracker::db()->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ?");
 				$stmt->execute(array($this->name));
 			}
 			else {
-				$stmt = $db->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? AND date = ?;");
+				$stmt = StatTracker::db()->prepare("SELECT UNIX_TIMESTAMP(MAX(updated)) `updated` FROM Data WHERE agent = ? AND date = ?;");
 				$stmt->execute(array($this->name, $date));
 			}
 
@@ -318,13 +307,12 @@ class Agent {
 	 */
 	public function getStats($when = "latest", $refresh = true) {
 		if (!is_array($this->stats) || $refresh) {
-			global $db;
 
 			if ($when == "latest" || new DateTime() < new DateTime($when)) {
 				$when = date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh));
 			}
 
-			$stmt = $db->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
+			$stmt = StatTracker::db()->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
 			$stmt->execute(array($this->name, $when));
 
 			if (!is_array($this->stats) || $refresh) {
@@ -357,13 +345,11 @@ class Agent {
 		}
 	
 		if (!isset($this->stats[$stat]) || $refresh) {
-			global $db;
-
 			if ($when == "latest" || new DateTime() < new DateTime($when)) {
 				$when = date("Y-m-d", $this->getUpdateTimestamp($when, $refresh));
 			}
 
-			$stmt = $db->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
+			$stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
 			$stmt->execute(array($stat, $this->name, $when));
 			extract($stmt->fetch());
 			$stmt->closeCursor();
@@ -388,9 +374,7 @@ class Agent {
 	 */
 	public function getBadges($date = "today", $refresh = false) {
 		if (!is_array($this->badges) || $refresh) {
-			global $db;
-
-			$stmt = $db->prepare("CALL GetBadges(?, ?);");
+			$stmt = StatTracker::db()->prepare("CALL GetBadges(?, ?);");
 
 			if ($date == "today") {
 				$today = true;
@@ -400,7 +384,7 @@ class Agent {
 			$stmt->execute(array($this->name, $date));
 			$stmt->closeCursor();
 
-			$stmt = $db->query("SELECT * FROM _Badges;");
+			$stmt = StatTracker::db()->query("SELECT * FROM _Badges;");
 
 			if ($today && $stmt->rowCount() == 0) {
 				$this->getBadges(date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh)), true);
@@ -434,13 +418,11 @@ class Agent {
 	 * @return Object prediciton object
 	 */
 	public function getPrediction($stat) {
-		global $db;
-
 		$prediction = new StdClass();
-		$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
+		$stmt = StatTracker::db()->prepare("CALL GetBadgePrediction(?, ?);");
 		$stmt->execute(array($this->name, $stat));
 
-		$stmt = $db->query("SELECT * FROM BadgePrediction");
+		$stmt = StatTracker::db()->query("SELECT * FROM BadgePrediction");
                 $row = $stmt->fetch();
 
 		$prediction->stat = $row['stat'];
@@ -473,12 +455,11 @@ class Agent {
 	 */
 	public function getRatios() {
 		if (!is_array($this->ratios)) {
-			global $db;
-			$stmt = $db->prepare("CALL GetRatiosForAgent(?);");
+			$stmt = StatTracker::db()->prepare("CALL GetRatiosForAgent(?);");
 			$stmt->execute(array($this->name));
 			$stmt->closeCursor();
 	
-			$stmt = $db->query("SELECT * FROM RatiosForAgent WHERE badge_1 IS NOT NULL AND badge_2 IS NOT NULL;");
+			$stmt = StatTracker::db()->query("SELECT * FROM RatiosForAgent WHERE badge_1 IS NOT NULL AND badge_2 IS NOT NULL;");
 
 			$this->ratios = array();
 			
@@ -518,13 +499,12 @@ class Agent {
 	 */
 	public function getUpcomingBadges($limit = 4) {
 		if (!is_array($this->upcoming_badges)) {
-			global $db;
-			$stmt = $db->prepare("CALL GetUpcomingBadges(?);");
+			$stmt = StatTracker::db()->prepare("CALL GetUpcomingBadges(?);");
 			$stmt->execute(array($this->name));
 			$stmt->closeCursor();
 
 			// sprintf still used intentionally
-			$stmt = $db->query(sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %d;", $limit));
+			$stmt = StatTracker::db()->query(sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %d;", $limit));
 
 			if (!is_array($this->upcoming_badges)) {
 				$this->upcoming_badges = array();

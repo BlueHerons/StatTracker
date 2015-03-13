@@ -9,12 +9,6 @@ use BlueHerons\StatTracker\StatTracker;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
-	PDO::ATTR_EMULATE_PREPARES   => false,
-	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-));
-
 $StatTracker = new StatTracker();
 
 $StatTracker['controllers']->before(function() {

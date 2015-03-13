@@ -147,7 +147,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	 * @return void
 	 */
 	private function generateAuthCode($email_address, $newIfExists = false) {
-		global $db;
 		$length = 6;
 
 		$code = md5($email_address);
@@ -157,7 +156,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$num_rows = 0;
 
 		if (!$newIfExists) {
-			$stmt = $db->prepare("SELECT agent FROM Agent WHERE email = ?;");
+			$stmt = StatTracker::db()->prepare("SELECT agent FROM Agent WHERE email = ?;");
 			$stmt->execute(array($email_address));
 			$num_rows = $stmt->rowCount();
 			$stmt->closeCursor();
@@ -165,7 +164,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
 		if ($num_rows != 1 || $newIfExists) {
 			try {
-				$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
+				$stmt = StatTracker::db()->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
 				$stmt->execute(array($email_address, $code));
 				$stmt->closeCursor();
 			}
@@ -184,9 +183,8 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	 * @param string $profile_id    the G+ id of the user
 	 */
 	public static function updateUserMeta($email_address, $profile_id) {
-		global $db;
 		try {
-			$stmt = $db->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
+			$stmt = StatTracker::db()->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
 			$stmt->execute(array($profile_id, $email_address));
 			$stmt->closeCursor();
 		}

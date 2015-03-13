@@ -5,14 +5,28 @@ use BlueHerons\StatTracker\Agent;
 use Silex\Application;
 
 use Exception;
+use PDO;
 use StdClass;
 
 class StatTracker extends Application {
 
+        private static $db;
 	private static $stats;
         
         private $basedir;
         private $authProvider;
+
+        public static function db() {
+            if (!(self::$db instanceof PDO)) {
+                self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ));
+            }
+
+            return self::$db;
+        }
 
         public function __construct() {
             $this->basedir = dirname(dirname(dirname(__DIR__)));
@@ -88,9 +102,7 @@ class StatTracker extends Application {
 	 * @return void
 	 */
 	public function sendRegistrationEmail($email_address) {
-		global $db;
-
-		$stmt = $db->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt = $this->db()->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
 		$stmt->execute(array($email_address));
 		$msg = "";
 
@@ -138,8 +150,7 @@ class StatTracker extends Application {
 	 */
 	public function getStats() {
 		if (!is_array(self::$stats)) {
-			global $db;
-			$stmt = $db->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+			$stmt = $this->db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
 			$rows = $stmt->fetchAll();
 
 			foreach($rows as $row) {
@@ -154,7 +165,7 @@ class StatTracker extends Application {
 				$stat->leaderboard = $leaderboard;
 				$stat->badges = array();
 
-				$stmt = $db->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
+				$stmt = $this->db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
 				$stmt->execute(array($stat->stat));
 
 				while ($row2 = $stmt->fetch()) {
@@ -224,7 +235,6 @@ class StatTracker extends Application {
 	 *
 	 */
 	public static function handleAgentStatsPOST($agent, $postdata) {
-		global $db;
 		$response = new StdClass();
 		$response->error = false;
 
@@ -233,7 +243,7 @@ class StatTracker extends Application {
 			$response->message = sprintf("Invalid agent: %s", $agent->name);
 		}
 		else {
-			$stmt = $db->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
+			$stmt = $this->db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
 
 			try {
 				$stmt->execute(array($agent->name));
@@ -241,7 +251,7 @@ class StatTracker extends Application {
 
 				$ts = date("Y-m-d 00:00:00");
 				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
-				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+				$stmt = $this->db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
 				foreach ($this->getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
@@ -278,7 +288,7 @@ class StatTracker extends Application {
 			}
 			catch (Exception $e) {
 				$response->error = true;
-				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $db->errorCode(), $db->errorInfo());
+				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $this->db()->errorCode(), $this->db()->errorInfo());
 			}
 			finally {
 				$stmt->closeCursor();
@@ -320,29 +330,28 @@ class StatTracker extends Application {
 	 * @return string JSON string
 	 */
 	public function getLeaderboard($stat, $when) {
-		global $db;
 		$monday = strtotime('last monday', strtotime('tomorrow'));
 		$stmt = null;
 		switch ($when) {
 			case "this-week":
 				$thisweek = date("Y-m-d", $monday);
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $thisweek));
 				break;
 			case "last-week":
 				$lastweek = date("Y-m-d", strtotime('7 days ago', $monday));
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $lastweek));
 				break;
 			case "alltime":
 			default:
-				$stmt = $db->prepare("CALL GetLeaderboardForStat(?);");
+				$stmt = $this->db()->prepare("CALL GetLeaderboardForStat(?);");
 				$stmt->execute(array($stat));
 				break;
 		}
 		$stmt->closeCursor();
 
-		$stmt = $db->query("SELECT * FROM LeaderboardForStat;");
+		$stmt = $this->db()->query("SELECT * FROM LeaderboardForStat;");
 
 		while($row = $stmt->fetch()) {
 			$results[] = array(
