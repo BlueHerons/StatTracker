@@ -13,18 +13,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
-	PDO::ATTR_EMULATE_PREPARES   => false,
-	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-));
 
-$app = new Silex\Application();
-$app->register(new Silex\Provider\SessionServiceProvider());
-$app['debug'] = true;
+$StatTracker = new StatTracker();
 
 // Assert that auth_code and stat parameters, if present, match expected format
-$validateRequest = function(Request $request, Silex\Application $app) {
+$validateRequest = function(Request $request, Silex\Application $StatTracker) {
 	function validateParameter($param, $regex) {
 		if (strlen($param) > 0) {
 			return preg_match($regex, $param) === 1;
@@ -35,13 +28,13 @@ $validateRequest = function(Request $request, Silex\Application $app) {
 	}
 
 	// Ensure {auth_code} is 6 hexidecimal digits
-	if (!validateParameter($request->get("auth_code"), "/^[a-f0-9]{6}$/")) { return $app->abort(400); }
+	if (!validateParameter($request->get("auth_code"), "/^[a-f0-9]{6}$/")) { return $StatTracker->abort(400); }
 	// Ensure {stat} is alpha characters and an underscore
-	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $app->abort(400); }
+	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
 
 // Pass-though call to GitHub to retrieve everyone how has contributed to the repository
-$app->get("/api/contributors", function(Request $request) use ($app) {
+$StatTracker->get("/api/contributors", function(Request $request) use ($StatTracker) {
 	$url = sprintf("https://api.github.com/repos/%s/%s/contributors", "BlueHerons", "StatTracker");
 
 	$curl = new Curl();
@@ -49,10 +42,10 @@ $app->get("/api/contributors", function(Request $request) use ($app) {
 
 	$response = $curl->response;
 
-	return $app->json($response);
+	return $StatTracker->json($response);
 });
 
-$app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($app) {
+$StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	$response = new stdClass;
@@ -61,11 +54,11 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 	
 	$t = new stdClass;
 
-	if (StatTracker::isValidDate($when)) {
+	if ($StatTracker->isValidDate($when)) {
 		$ts = $agent->getUpdateTimestamp($when, true);
 
 		if ($ts == null) {
-			return $app->abort(404);
+			return $StatTracker->abort(404);
 		}
 		else {
 			$response->date = date("c", $ts);
@@ -79,12 +72,12 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
 		$response->stats = $agent->getStats("latest", true);
 	}
 	else {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
 	switch ($format) {
 		case "json":
-			return $app->json($response);
+			return $StatTracker->json($response);
 			break;
 	}
 })->before($validateRequest)
@@ -94,22 +87,22 @@ $app->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when
   ->value ("when",   "latest");
 
 // Retrieve basic information about the agent
-$app->get("/api/{auth_code}", function($auth_code) use ($app) {
+$StatTracker->get("/api/{auth_code}", function($auth_code) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
-	return $app->json($agent);
+	return $StatTracker->json($agent);
 })->before($validateRequest);
 
 // Retrieve badge information for the agent
-$app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($app) {
+$StatTracker->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 	
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
@@ -124,47 +117,50 @@ $app->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_cod
 		$data = $agent->getBadges();
 	}
 
-	return $app->json($data);
+	return $StatTracker->json($data);
 })->before($validateRequest)
   ->assert("what", "today|upcoming|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
   ->value("what", "today");
 
 // Retrieve ratio information for the agent
-$app->get("/api/{auth_code}/ratios", function($auth_code) use ($app) {
+$StatTracker->get("/api/{auth_code}/ratios", function($auth_code) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
 	$data = $agent->getRatios();
-	return $app->json($data);
+	return $StatTracker->json($data);
 })->before($validateRequest);
 
 // Retrieve raw or compiled data for a single stat for the agent
-$app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code, $stat, $view, $when, $format) use ($app) {
+$StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code, $stat, $view, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
+        else if (!$StatTracker->isValidStat($stat)) {
+                return $StatTracker->abort(404);
+        }
 
 	$data = "";
 	switch ($view) {
 		case "breakdown":
-			$data = StatTracker::getAPBreakdown($agent);
+			$data = $agent->getAPBreakdown();
 			break;
 		case "leaderboard":
-			$data = StatTracker::getLeaderboard($stat, $when);
+			$data = $StatTracker->getLeaderboard($stat, $when);
 			break;
 		case "prediction":
-			$data = StatTracker::getPrediction($agent, $stat);
+			$data = $agent->getPrediction($stat);
 			break;
 		case "trend":
-			$data = StatTracker::getTrend($agent, $stat, $when);
+			$data = $agent->getTrend($stat, $when);
 			break;
 		case "graph":
-			$data = StatTracker::getGraphData($stat, $agent);
+			$data = $agent->getGraphData($stat);
 			break;
 		case "raw":
 			$agent->getStat($stat);
@@ -188,24 +184,24 @@ $app->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code,
 
 
 // Allow agents to submit stats
-$app->post("/api/{auth_code}/submit", function($auth_code) use ($app) {
+$StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
 	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
-	$app['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
+	$StatTracker['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
 
-	return $app->json($response);
+	return $StatTracker->json($response);
 })->before($validateRequest);
 
-$app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($app) {
+$StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 
 	if (!$agent->isValid()) {
-		return $app->abort(404);
+		return $StatTracker->abort(404);
 	}
 
 	$processImage = function() use ($request) {
@@ -213,7 +209,7 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 		$file = UPLOAD_DIR . OCR::getTempFileName();
 
 		switch ($content_type) {
-			case "application/x-www-form-urlencoded":
+			case "StatTrackerlication/x-www-form-urlencoded":
 				// Not a file upload, but a POST of bytes
 				$hndl = fopen($file, "w+");
 				fwrite($hndl, file_get_contents("php://input"));
@@ -224,22 +220,22 @@ $app->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($
 				move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
 				break;
 			default:
-				return $app->abort(400, "Bad request of type " . $content_type);
+				return $StatTracker->abort(400, "Bad request of type " . $content_type);
 				break;
 		}
 
 		// This method will print the results to the output stream
-		OCR::scanAgentProfile($file);
+                $StatTracker->scanAgentProfile($file);
 	};
 
-	return $app->stream($processImage, 200, array ("Content-type" => "application/octet-stream"));
+	return $StatTracker->stream($processImage, 200, array ("Content-type" => "StatTrackerlication/octet-stream"));
 
 })->before($validateRequest);
 
-$app->after(function (Request $request, Response $response) {
+$StatTracker->after(function (Request $request, Response $response) {
 	$response->headers->set("Cache-control", "max-age=". (60 * 60 * 6) .", private");
 	$response->headers->set("Expires", date("D, d M Y H:i:s e", time() + 60 * 60 * 6));
 });
 
-$app->run();
+$StatTracker->run();
 ?>
