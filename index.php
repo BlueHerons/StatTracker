@@ -130,7 +130,7 @@ $StatTracker->get("/resources/{resource_dir}/{resource}", function(Request $requ
 			}
 			else {
 				$content = $StatTracker['twig']->render("stat-tracker.js.twig");
-				$js->headers->set("Content-Type", "StatTrackerlication/javascript");
+				$js->headers->set("Content-Type", "application/javascript");
 				$js->setContent($content);
 			}
 
