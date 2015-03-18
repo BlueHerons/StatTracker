@@ -205,7 +205,7 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
 		return $StatTracker->abort(404);
 	}
 
-	$processImage = function() use ($request) {
+	$processImage = function() use ($request, $StatTracker) {
 		$content_type = explode(";", $request->headers->get("content_type"))[0];
 		$file = UPLOAD_DIR . OCR::getTempFileName();
 
