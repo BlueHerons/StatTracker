@@ -44,7 +44,9 @@ class OCR {
 			$resp->status = $thing;
 		}
 
-		echo json_encode($resp);
+                $json = json_encode($resp);
+                self::logger()->debug(sprintf("Sending payload: %s", $json));
+                echo $json;
 		ob_flush();
 		flush();
 	}
@@ -256,7 +258,7 @@ class OCR {
 		}
 		catch (Exception $e) {
 			copy($imagePath, $imagePath . "_errored");
-			unlink($newFile);
+			if (file_exists($newFile)) unlink($newFile);
 			throw $e;
 		}
 		finally {
