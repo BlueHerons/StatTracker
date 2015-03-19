@@ -210,7 +210,7 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
 		$file = UPLOAD_DIR . OCR::getTempFileName();
 
 		switch ($content_type) {
-			case "StatTrackerlication/x-www-form-urlencoded":
+			case "application/x-www-form-urlencoded":
 				// Not a file upload, but a POST of bytes
 				$hndl = fopen($file, "w+");
 				fwrite($hndl, file_get_contents("php://input"));
@@ -229,7 +229,7 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
                 $StatTracker->scanAgentProfile($file);
 	};
 
-	return $StatTracker->stream($processImage, 200, array ("Content-type" => "StatTrackerlication/octet-stream"));
+	return $StatTracker->stream($processImage, 200, array ("Content-type" => "application/octet-stream"));
 
 })->before($validateRequest);
 
