@@ -38,6 +38,12 @@ body {
 	}
 }
 
+/* Pre-load certain images */
+body:after {
+    display: none;
+    content: url("./resources/images/badges_75.png") url("./resources/images/levels_75.png") url("./resources/images/rank_arrows.png");
+}
+
 footer {
 	font-size: small;
 	text-align: center;
@@ -666,6 +672,29 @@ table#stat-entry {
 	min-width: 400px;
 	max-width: 400px;
 	
+    .rank-diff {
+        color: @header-color;
+        cursor: help;
+        display: inline-block;
+
+        .arrow {
+            background-image: url("./resources/images/rank_arrows.png");
+            background-repeat: no-repeat;
+            display: inline-block;
+            height: 12px;
+            padding-right: 5px;
+            width: 15px;
+        }
+
+        .up {
+            background-position: 0px 0px;
+        }
+
+        .down {
+            background-position: 0px -12px;
+        }
+    }
+
 	table {
 		border-spacing: 0px;
 		text-align: left;

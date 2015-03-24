@@ -343,6 +343,11 @@ class StatTracker extends Application {
 				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $lastweek));
 				break;
+			case "two-weeks-ago":
+				$twoweeksago = date("Y-m-d", strtotime('14 days ago', $monday));
+				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt->execute(array($stat, $twoweeksago));
+				break;
 			case "alltime":
 			default:
 				$stmt = $this->db()->prepare("CALL GetLeaderboardForStat(?);");
@@ -363,6 +368,17 @@ class StatTracker extends Application {
 			);
 		}
 		$stmt->closeCursor();
+
+                if ($when == "this-week" || $when == "last-week") {
+                    $prior = ($when == "this-week") ? self::getLeaderboard($stat, "last-week") : self::getLeaderboard($stat, "two-weeks-ago");
+                    for ($i = 0; $i < sizeof($results); $i++) {
+                        for ($j = 0; $j < sizeof($prior); $j++) {
+                            if ($results[$i]['agent'] == $prior[$j]['agent']) {
+                                $results[$i]['change'] = $prior[$j]['rank'] -  $results[$i]['rank'];
+                            }
+                        }
+                    }
+                }
 
 		return $results;
 	}
