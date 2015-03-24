@@ -1,4 +1,4 @@
-	<div class="leaderboard {{ stat.stat }}">
+	<div class="leaderboard {{ stat.stat }}" data-has-weekly="{{ stat.hasWeeklyLeaderboard() == 1 }}">
 		<a name="{{ stat.stat }}">
 			<h3>{{ stat.name }}</h3>
 		</a>
@@ -17,7 +17,7 @@
 		<table class="tablesorter">
 			<thead>
 			<tr>
-				<th>Rank</th>
+				<th colspan="2">Rank</th>
 				<th>Agent</th>
 				<th>Amount</th>
 				<th>Updated</th>
