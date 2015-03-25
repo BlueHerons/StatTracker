@@ -7,5 +7,5 @@ before_script:
     - composer self-update
     - composer update
 
-install:
+script:
     - composer test
