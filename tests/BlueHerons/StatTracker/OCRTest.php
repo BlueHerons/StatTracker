@@ -34,7 +34,7 @@ class OCRTest extends PHPUnit_Framework_TestCase {
             $lines = OCR::executeOCR($file);
             
             $this->assertArrayHasKey(28, $lines);
-            //file_put_contents(__DIR__ . "/" . pathinfo($screenshot, PATHINFO_FILENAME) . ".txt", implode(PHP_EOL, $lines));
+            //file_put_contents(FIXTURE_DIR . "/" . pathinfo($screenshot, PATHINFO_FILENAME) . ".txt", implode(PHP_EOL, $lines));
         }
     }
 
@@ -47,7 +47,7 @@ class OCRTest extends PHPUnit_Framework_TestCase {
             
             $stats = unserialize(file_get_contents(FIXTURE_DIR . "/stats.serialized"));
             $data = json_encode(OCR::processAgentData($lines, $stats));
-            //file_put_contents(__DIR__ . "/" . pathinfo($file, PATHINFO_FILENAME) . ".json", json_encode($data));
+            //file_put_contents(FIXTURE_DIR . "/" . pathinfo($file, PATHINFO_FILENAME) . ".json", json_encode($data));
             $fixture = FIXTURE_DIR . "/" . pathinfo($file, PATHINFO_FILENAME) . ".json";
             $this->assertJsonStringEqualsJsonFile($fixture, $data, $fixture);
         }
