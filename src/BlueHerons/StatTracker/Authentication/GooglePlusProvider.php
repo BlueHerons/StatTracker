@@ -1,6 +1,8 @@
 <?php
 namespace BlueHerons\StatTracker\Authentication;
 
+use BlueHerons\StatTracker\StatTracker;
+
 use Exception;
 use Google_Client;
 use PDOException;
@@ -26,20 +28,18 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$this->plus = new \Google_Service_Plus($this->client);
 	}
 
-	public function login() {
-		global $app;
-
+	public function login(StatTracker $StatTracker) {
 		$response = new StdClass();
 		$response->error = false;
 
 		// Kick off the OAuth process
-		if (empty($app['session']->get("token"))) {
+		if (empty($StatTracker['session']->get("token"))) {
 			$response->status = "authentication_required";
 			$response->url = $this->client->createAuthUrl();
 			return $response;
 		}
 
-		$this->client->setAccessToken($app['session']->get("token"));
+		$this->client->setAccessToken($StatTracker['session']->get("token"));
 
 		if ($this->client->isAccessTokenExpired()) {
 			$response->status = "authentication_required";
@@ -47,7 +47,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			return $response;
 		}
 
-		if ($app['session']->get("agent") == null) {
+		if ($StatTracker['session']->get("agent") === null) {
 			try {
 				$me = $this->plus->people->get('me');
 				$email_address = "";
@@ -66,11 +66,10 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				$response->email = $email_address;
 				$agent = Agent::lookupAgentName($email_address);
 	
-				if (empty($agent->name) || $agent->name == "Agent") {
+				if (!$agent->isValid()) {
 					// They need to register
 					self::generateAuthCode($email_address);
 					self::updateUserMeta($email_address, $me->id);
-					AuthenticationProvider::sendRegistrationEmail($email_address);
 					$response->status = "registration_required";
 				}
 				else {
@@ -78,7 +77,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 					self::generateAuthCode($email_address, true);
 					self::updateUserMeta($email_address, $me->id);
 					$agent->getAuthCode(true);
-					$app['session']->set("agent", $agent);
+					$StatTracker['session']->set("agent", $agent);
 					$response->status = "okay";
 					$response->agent = $agent;
 				}
@@ -90,7 +89,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			}
 		}
 		else {
-			$agent = $app['session']->get("agent");
+			$agent = $StatTracker['session']->get("agent");
 
 			// Ensure auth_code is valid
 			if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
@@ -98,16 +97,14 @@ class GooglePlusProvider implements IAuthenticationProvider {
 				$response->agent = $agent;
 			}
 			else {
-				return $this->logout();
+				return $this->logout($StatTracker);
 			}
 		}
 
 		return $response;
 	}
 
-	public function logout() {
-		global $app;
-
+	public function logout(StatTracker $StatTracker) {
 		$cookies = explode(';', $_SERVER['HTTP_COOKIE']);
 		foreach($cookies as $cookie) {
 			$parts = explode('=', $cookie);
@@ -115,16 +112,14 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			setcookie($name, '', time()-1000);
 			setcookie($name, '', time()-1000, '/');
 		}
-		$this->client->revokeToken($app['session']->get("token"));
+		$this->client->revokeToken($StatTracker['session']->get("token"));
 		session_destroy();
 		$response = new stdClass();
 		$response->status = "logged_out";
 		return $response;
 	}
 
-	public function callback() {
-		global $app;
-
+	public function callback(StatTracker $StatTracker) {
 		$code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
 
 		try {
@@ -133,7 +128,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 			}
 
 			$this->client->authenticate($code);
-			$app['session']->set("token", $this->client->getAccessToken());
+			$StatTracker['session']->set("token", $this->client->getAccessToken());
 		}
 		catch (Exception $e) {
 			error_log("Google authentication callback failure");
@@ -152,7 +147,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	 * @return void
 	 */
 	private function generateAuthCode($email_address, $newIfExists = false) {
-		global $db;
 		$length = 6;
 
 		$code = md5($email_address);
@@ -162,7 +156,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 		$num_rows = 0;
 
 		if (!$newIfExists) {
-			$stmt = $db->prepare("SELECT agent FROM Agent WHERE email = ?;");
+			$stmt = StatTracker::db()->prepare("SELECT agent FROM Agent WHERE email = ?;");
 			$stmt->execute(array($email_address));
 			$num_rows = $stmt->rowCount();
 			$stmt->closeCursor();
@@ -170,7 +164,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
 		if ($num_rows != 1 || $newIfExists) {
 			try {
-				$stmt = $db->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
+				$stmt = StatTracker::db()->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
 				$stmt->execute(array($email_address, $code));
 				$stmt->closeCursor();
 			}
@@ -189,9 +183,8 @@ class GooglePlusProvider implements IAuthenticationProvider {
 	 * @param string $profile_id    the G+ id of the user
 	 */
 	public static function updateUserMeta($email_address, $profile_id) {
-		global $db;
 		try {
-			$stmt = $db->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
+			$stmt = StatTracker::db()->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
 			$stmt->execute(array($profile_id, $email_address));
 			$stmt->closeCursor();
 		}

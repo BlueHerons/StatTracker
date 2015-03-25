@@ -34,7 +34,7 @@ class OCR {
 		$resp = new StdClass();
 		if (is_object($thing)) {
 			if ($thing instanceof Exception) {
-				$resp->error = $thing;
+				$resp->error = $thing->getMessage();
 			}
 			else {
 				$resp = (object) array_merge((array)$resp, (array)$thing);
@@ -44,7 +44,9 @@ class OCR {
 			$resp->status = $thing;
 		}
 
-		echo json_encode($resp);
+                $json = json_encode($resp);
+                self::logger()->debug(sprintf("Sending payload: %s", $json));
+                echo $json;
 		ob_flush();
 		flush();
 	}
@@ -56,21 +58,28 @@ class OCR {
 	 *
 	 * @return array array of stat key's and values from the screenshot
 	 */
-	public static function scanAgentProfile($imagePath) {
-		//try {
+	public static function scanAgentProfile($imagePath, $stats) {
+		try {
 			$response = new StdClass();
 			$response->status = array();
 			self::logger()->debug(sprintf("Beginning scan of %s", $imagePath));
-			$imagePath = self::convertToPBM($imagePath, $response);
+			$imagePath = self::convertToPBM($imagePath);
 			$lines = self::executeOCR($imagePath);
-			$data = self::processAgentData($lines);
+			$data = self::processAgentData($lines, $stats);
 			self::logger()->debug("Parsed Stats:", $data);
 			$response->status = "Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.";
 			$response->stats = $data;
-			echo json_encode($response);
+			self::sendMessage($response);
+		}
+		catch (Exception $e) {
+			self::logger()->error(sprintf("%s: %s\n%s", get_class($e), $e->getMessage(), $e->getTraceAsString()));
+			self::sendMessage($e);
+			die();
+		}
+		finally {
 			ob_flush();
 			flush();
-		//}
+		}
 	}
 
 	/**
@@ -248,9 +257,9 @@ class OCR {
 			return $newFile;
 		}
 		catch (Exception $e) {
-			unlink($newFile);
-			self::sendMessage($e);
-			die();
+			copy($imagePath, $imagePath . "_errored");
+			if (file_exists($newFile)) unlink($newFile);
+			throw $e;
 		}
 		finally {
 			unlink($imagePath);
@@ -268,16 +277,14 @@ class OCR {
 		try {
 			$cmd = sprintf("%s -i %s", OCRAD, $imagePath);
 			self::logger()->debug(sprintf("Executing %s", $cmd));
-			self::logger()->info("Scanning screenshot...");
 			self::sendMessage("Scanning screenshot...");
 			exec($cmd, $lines);
 			self::logger()->debug("OCR results:", $lines);
 			return $lines;
 		}
 		catch (Exception $e) {
-			self::sendMessage($e);
 			copy($imagePath, $imagePath . "_errored");
-			die();
+			throw $e;
 		}
 		finally {
 			unlink($imagePath);
@@ -294,7 +301,7 @@ class OCR {
 	 *
 	 * @return path to new PBM image
 	 */
-	public static function processAgentData($lines) {
+	public static function processAgentData($lines, $stats) {
 		try {
 			self::sendMessage("Processing scanned results...");
 			$step = 'start';
@@ -306,7 +313,14 @@ class OCR {
 				} elseif ($step == 'ap' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
 					$step = 'discovery';
 					$count = 0;
-				} elseif ($step == 'discovery' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
+                                }
+                                // Some screenshots arent producing AP in the OCR results, which throws this off.
+                                else if ($step == 'start' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
+                                        $step = 'discovery';
+                                        $count = 0;
+                                        array_push($elements, 0);
+                                }
+				elseif ($step == 'discovery' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
 					// inject a 0 if only 2 stats, which means that the agent has 0 portals discovered
 					if ($count == 2) {
 						$temp = array_pop($elements);
@@ -343,7 +357,7 @@ class OCR {
 					array_push($elements, $values[1]);
 				} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
-				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
 				} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
 					$warning = sprintf($lang['maybe because'], $values[1]);
@@ -359,7 +373,6 @@ class OCR {
 			$elements = preg_replace('/g/', '9', $elements);
 
 			$data = array();
-			$stats = StatTracker::getStats();
 
 			foreach ($stats as $stat) {
 				if ($stat->ocr) {
@@ -375,8 +388,7 @@ class OCR {
 			return $data;
 		}
 		catch (Exception $e) {
-			self::sendMessage($e);
-			die();
+			throw $e;
 		}
 	}
 }

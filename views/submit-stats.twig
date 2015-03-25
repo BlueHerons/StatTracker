@@ -1,6 +1,7 @@
 <div id="message" />	
 
 <form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+	<div id="loading" class="loading"/>
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
 		<div class="about">
@@ -66,9 +67,9 @@
 <script>
 function onPageLoad() {
 	$("#message").hide();
+	$("#loading").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
-	$("#stat-navigation").hide();
 	$("input[name='date']").datepicker({
 		constrainInput: true,
 		dateFormat: "yy-mm-dd",
@@ -77,28 +78,72 @@ function onPageLoad() {
 		maxDate: 0
 		
 	});
+
+	window.onpopstate = function(event) {
+		console.log(event);
+		$("#message").hide();
+		if (event.state.show == "actions") {
+			showActions();
+		}
+		else if (event.state.show == "manual") {
+			showStats();
+		}
+		else if (event.state.show == "upload") {
+			showStats();
+		}
+	}
+
+	history.pushState({ show: "actions" }, "", "#actions");
+
 	$("input[name='date']").on("change", function() {
-		window.location = location.pathname + "?date=" + $(this).val();
+		if (window.location.hash === "#manual") {
+			$("#loading").show();
+			$("table#stat-entry").hide();
+			$("#agent-info").hide();
+			
+			$.get("{{ app.request.basepath }}/api/{{ agent.auth_code }}/profile/" + $(this).val())
+			 .done(function(data, status, jqXHR) {
+				console.log(data);
+				for (stat in data.stats) {
+					val = data.stats[stat];
+					$("input[type='number'][name='"+ stat +"']").val(val);
+				}
+			 })
+			 .error(function() {
+				$("input[type='number']").val(0);
+			 })
+			 .always(function() {
+				$("input[type='number']").removeClass("warning error increase");
+				$("#loading").hide();
+				$("table#stat-entry").show();
+				$("#agent-info").show();
+				$("#agent-info .ap .current").hide();
+				$("#agent-info .ap input").show();
+			 });
+		}
 	});
 
-	function manualEntry() {
+	function showActions() {
+		$("table#stat-entry").hide();
+		$("#agent-info .ap input").hide();
+		$("#agent-info .ap .current").show();
+		$("#submit-actions").show();
+	}
+
+	function showStats() {
 		$("#submit-actions").hide();
-		$("#stat-navigation").show();
 		$("#agent-info .ap .current").hide();
 		$("#agent-info .ap input").show();
 		$("table#stat-entry").show();
 	};
-
-	if (StatTracker.getQueryVar("date")) {
-		manualEntry();
-	}
 
 	$("input[name='screenshot']").on("change", function() {
 		var file = $("input[name='screenshot']").prop("files")[0];
 		var data = new FormData();
 		data.append("screenshot", file);
 		$("#agent-info").hide();
-		$("#message").show().html("Uploading screenshot...").after("<div class='loading' />");
+		$("#loading").show();
+		$("#message").show().html("Uploading screenshot...");
 		$("#submit-actions").hide();
 		var last_response_len = 0;
 		var json = {};
@@ -114,14 +159,17 @@ function onPageLoad() {
 					response = e.currentTarget.response.substring(last_response_len);
 					last_response_len = e.loaded;
 					json = JSON.parse(response);
-					$("#message").show().html(json.status);
+					if (json.hasOwnProperty("error")) {
+						$("#message").show().html("An error occured while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+					}
+					else {
+						$("#message").show().html(json.status);
+					}
 				}
 			},
 			success: function(response) {
-				$("#agent-info").show();
-				$("#agent-info .ap .current").hide();
-				$("#agent-info .ap input").show();
-				$("table#stat-entry").show();
+				history.pushState({ show: "upload" }, "", "#upload");
+				showStats();
 
 				for (stat in json.stats) {
 					val = json.stats[stat];
@@ -141,15 +189,19 @@ function onPageLoad() {
 			},
 			error: function(response) {
 				$("#message").html("An error occured while processing your screenshot.");
-				$("form#ocr").show();
+				showActions();
 			},
 			complete: function() {
+				$("#agent-info").show();
 				$(".loading").hide();
 			}
 		});
 	});
 
-	$("input[name='manual-entry']").on("click", function() { manualEntry(); });
+	$("input[name='manual-entry']").on("click", function() { 
+		history.pushState({show: "manual"}, "", "#manual");
+		showStats(); 
+	});
 
 	$("form#submit-stats").submit(function() {
 		$("#message").hide().before("<div class='loading' />")

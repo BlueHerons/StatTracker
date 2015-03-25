@@ -1,21 +1,156 @@
 <?php
 namespace BlueHerons\StatTracker;
 
+use BlueHerons\StatTracker\Agent;
+use Silex\Application;
+
+use Exception;
+use PDO;
 use StdClass;
 
-class StatTracker {
+class StatTracker extends Application {
 
-	private static $fields;
+        private static $db;
+	private static $stats;
+        
+        private $basedir;
+        private $authProvider;
+
+        public static function db() {
+            if (!(self::$db instanceof PDO)) {
+                self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=utf8", DB_HOST, DB_NAME), DB_USER, DB_PASS, array(
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ));
+            }
+
+            return self::$db;
+        }
+
+        public function __construct() {
+            $this->basedir = dirname(dirname(dirname(__DIR__)));
+
+            parent::__construct();
+            $this['debug'] = true;
+            $this->register(new \Silex\Provider\SessionServiceProvider());
+            $this->register(new \Silex\Provider\TwigServiceProvider(), array(
+                'twig.path' => array(
+                    $this->basedir . "/views",
+                    $this->basedir . "/resources",
+                    $this->basedir . "/resources/scripts",
+                )
+            ));
+        }
+
+        public function getAgent() {
+            return $this['session']->get("agent") === null ? new Agent() : $this['session']->get("agent");
+        }
+	
+        /**
+	 * Gets the registered Authentication provider.
+	 *
+	 * @see 
+	 *
+	 * @return IAuthenticationProvider
+	 */
+        public function getAuthenticationProvider() {
+            if ($this->authProvider === null) {
+                // Load all auth classes
+		foreach (glob(__DIR__ ."/Authentication/*Provider.php") as $filename) {
+			require_once($filename);
+		}
+
+		$allClasses = get_declared_classes();
+		$authClasses = array();
+
+		foreach ($allClasses as $class) {
+		    $reflector = new \ReflectionClass($class);
+	            if ($reflector->implementsInterface("\BlueHerons\StatTracker\Authentication\IAuthenticationProvider")) {
+		        $authClasses[] = $class;
+		    }
+		}
+
+		if (sizeof($authClasses) == 0) {
+		    die("No Authentication providers found");
+		    return null;
+		}
+
+		// Instantiate the first one found
+		$class = $authClasses[0];
+                $this->authProvider = new $class;
+            }
+
+            return $this->authProvider;
+        }
+
+        public function scanAgentProfile($filename) {
+            // TODO: Rewrite this implementation. This is just a hack to get around code restructuing
+            OCR::scanAgentProfile($filename, $this->getStats());
+        }
+
+	/**
+	 * Sends the autorization code for the given email address to that address. The email includes
+	 * instructions on how to complete the registration process as well.
+	 *
+	 * Most providers should generate an auth_code and use that as a challenge during the registration process. If
+	 * that is not possible given a provider, then a rather generic email will be sent to the user, instructing
+	 * to contact the specified ADMIN_AGENT.
+	 *
+	 * @param string $email_address The address to send the registration email to.
+	 *
+	 * @return void
+	 */
+	public function sendRegistrationEmail($email_address) {
+		$stmt = $this->db()->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt->execute(array($email_address));
+		$msg = "";
+
+		// If no auth code is found, instruct user to contact the admin agent.
+		if ($stmt->rowCount() == 0) {
+			$stmt->closeCursor();
+			$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
+			       "registration, please contact <strong>" . ADMIN_AGENT . "</strong> through your secure chat ".
+			       "and ask them to enable access for you.";
+		}
+		else {
+			extract($stmt->fetch());
+			$stmt->closeCursor();
+
+			$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
+			       "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
+			       "faction comms:".
+			       "<p/>%s<p/>" .
+			       "You will recieve a reply message once you have been activated. This may take up to " .
+			       "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
+			       "<p/>".
+			       $_SERVER['HTTP_REFERER'];
+
+			$msg = sprintf($msg, $auth_code);
+		}
+
+		$transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
+				->setUsername(SMTP_USER)
+				->setPassword(SMTP_PASS);
+
+		$mailer = \Swift_Mailer::newInstance($transport);
+
+		$message = \Swift_Message::newInstance('Stat Tracker Registration')
+				->setFrom(array(GROUP_EMAIL => GROUP_NAME))
+				->setTo(array($email_address))
+				->setBody($msg, 'text/html', 'iso-8859-2');
+
+		$mailer->send($message);
+	}
 
 	/**
 	 * Gets the list of all possible stats as Stat objects
 	 *
 	 * @return array of Stat objects - one for each possible stat
 	 */
-	public static function getStats() {
-		if (!is_array(self::$fields)) {
-			global $db;
-			$stmt = $db->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+	public function getStats() {
+		if (!is_array(self::$stats)) {
+			$stmt = $this->db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
 			$rows = $stmt->fetchAll();
 
 			foreach($rows as $row) {
@@ -30,7 +165,7 @@ class StatTracker {
 				$stat->leaderboard = $leaderboard;
 				$stat->badges = array();
 
-				$stmt = $db->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
+				$stmt = $this->db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
 				$stmt->execute(array($stat->stat));
 
 				while ($row2 = $stmt->fetch()) {
@@ -39,22 +174,22 @@ class StatTracker {
 				}
 				$stmt->closeCursor();
 
-				self::$fields[$key] = $stat;
+				self::$stats[$key] = $stat;
 			}
 			$stmt->closeCursor();
 		}
 
-		return self::$fields;
+		return self::$stats;
 	}
 
 	/**
-	 * Determines if the given string is a vlidaly formatted date
+	 * Determines if the given string is a validly formatted date
 	 *
 	 * @param string $date String containing a potential date
 	 *
 	 * @return true if the string is a valid formatted date, false otherwise
 	 */
-	public static function isValidDate($date) {
+	public function isValidDate($date) {
 		return preg_match("/[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}/", $date);
 	}
 
@@ -65,12 +200,12 @@ class StatTracker {
 	 *
 	 * @return true if valid stat, false otherwise
 	 */
-	public static function isValidStat($stat) {
+	public function isValidStat($stat) {
 		if (is_object($stat)) {
-			return in_array($stat->stat, array_keys(StatTracker::getStats()));
+			return in_array($stat->stat, array_keys($this->getStats()));
 		}
 		else if (is_string($stat)) {
-			return in_array($stat, array_keys(StatTracker::getStats()));
+			return in_array($stat, array_keys($this->getStats()));
 		}
 
 		return false;
@@ -86,7 +221,7 @@ class StatTracker {
 	 */
 	public static function getConstant($name, $default = null) {
 		if ($name == "VERSION") {
-			$file = dirname(dirname(__FILE__)) . "/VERSION";
+			$file = dirname(dirname(dirname(__DIR__))) . "/VERSION";
 			return file_exists($file) ? file($file)[0] : $default;
 		}
 		else {
@@ -100,7 +235,6 @@ class StatTracker {
 	 *
 	 */
 	public static function handleAgentStatsPOST($agent, $postdata) {
-		global $db;
 		$response = new StdClass();
 		$response->error = false;
 
@@ -109,7 +243,7 @@ class StatTracker {
 			$response->message = sprintf("Invalid agent: %s", $agent->name);
 		}
 		else {
-			$stmt = $db->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
+			$stmt = $this->db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
 
 			try {
 				$stmt->execute(array($agent->name));
@@ -117,9 +251,9 @@ class StatTracker {
 
 				$ts = date("Y-m-d 00:00:00");
 				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
-				$stmt = $db->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+				$stmt = $this->db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
 
-				foreach (self::getStats() as $stat) {
+				foreach ($this->getStats() as $stat) {
 					if (!isset($postdata[$stat->stat])) {
 						if ($stat->stat == "innovator") {
 							$agent->getStats("latest", true);
@@ -154,7 +288,7 @@ class StatTracker {
 			}
 			catch (Exception $e) {
 				$response->error = true;
-				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $db->errorCode(), $db->errorInfo());
+				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $this->db()->errorCode(), $this->db()->errorInfo());
 			}
 			finally {
 				$stmt->closeCursor();
@@ -188,145 +322,6 @@ class StatTracker {
 	}
 
 	/**
-	 * Generates JSON formatted data for use in a Google Visualization API pie chart.
-	 *
-	 * @param Agent agent the agent whose data should be used
-	 *
-	 * @return string Object AP Breakdown object
-	 */
-	public function getAPBreakdown($agent) {
-		global $db;
-
-		$stmt = $db->prepare("CALL GetAPBreakdown(?);");
-		$stmt->execute(array($agent->name));
-		$stmt->closeCursor();
-
-		$stmt = $db->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
-
-		$data = array();
-		$colors = array();
-
-		while ($row = $stmt->fetch()) {
-			$data[] = array($row['name'], $row['ap_gained']);
-			if ($row['grouping'] == 1) {
-				$color =$agent->faction == "R" ? ENL_GREEN : RES_BLUE;
-			}
-			else if ($row['grouping'] == 3) {
-				$color = $agent->faction == "R" ? RES_BLUE : ENL_GREEN;
-			}
-			else {
-				$color = "#999";
-			}
-			$colors[] = $color;
-		}
-		$stmt->closeCursor();
-
-	 	return array("data" => $data, "slice_colors" => $colors);
-	}
-
-	/**
-	 * Gets the prediction line for a stat. If the stat has a badge associated with it, this will also
-	 * retrieve the badge name, current level, next level, and percentage complete to attain the next
-	 * badge level.
-	 *
-	 * @param Agent $agent Agent to retrieve prediction for
-	 * @param string $stat Stat to retrieve prediction for
-	 *
-	 * @return Object prediciton object
-	 */
-	public static function getPrediction($agent, $stat) {
-		global $db;
-
-		$data = new StdClass();
-		if (StatTracker::isValidStat($stat)) {
-			$stmt = $db->prepare("CALL GetBadgePrediction(?, ?);");
-			$stmt->execute(array($agent->name, $stat));
-
-			$stmt = $db->query("SELECT * FROM BadgePrediction");
-			$data = self::buildPredictionResponse($stmt->fetch());
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Generates JSON formatted data for use in a line graph.
-	 *
-	 * @param string $stat the stat to generate the data for
-	 * @param Agent agent the agent whose data should be used
-	 *
-	 * @return string Object Graph Data object
-	 */
-	public static function getGraphData($stat, $agent) {
-		global $db;
-		$stmt = $db->prepare("CALL GetGraphForStat(?, ?);");
-		$stmt->execute(array($agent->name, $stat));
-	
-		$stmt = $db->query("SELECT * FROM GraphDataForStat;");
-		
-		$data = array();
-		while ($row = $stmt->fetch()) {
-			if (sizeof($data) == 0) {
-				foreach (array_keys($row) as $key) {
-					$series = new StdClass();
-					$series->name = $key;
-					$series->data = array();
-					$data[] = $series;
-				}
-			}
-
-			$i = 0;
-			foreach (array_values($row) as $value) {
-				$data[$i]->data[] = $value;
-
-				$i++;
-			}
-		}
-		$stmt->closeCursor();
-
-		$response = new StdClass();
-		$response->data = $data;
-		$response->prediction = self::getPrediction($agent, $stat); // TODO: move elsewhere
-
-		return $response;
-	}
-
-	public static function getTrend($agent, $stat, $when) {
-		global $db;
-		$start = "";
-		$end = "";
-
-		switch ($when) {
-			case "last-week":
-				$start = date("Y-m-d", strtotime("last monday", strtotime("6 days ago")));
-				$end = date("Y-m-d", strtotime("next sunday", strtotime("8 days ago")));
-				break;
-			case "this-week":
-			case "weekly":
-			default:
-				$start = date("Y-m-d", strtotime("last monday", strtotime("tomorrow")));
-				$end = date("Y-m-d", strtotime("next sunday", strtotime("yesterday")));
-				break;
-		}
-
-		$stmt = $db->prepare("CALL GetDailyTrend(?, ?, ?, ?);");
-		$stmt->execute(array($agent->name, $stat, $start, $end));
-		$stmt->closeCursor();
-
-		$stmt = $db->query("SELECT * FROM DailyTrend");
-		
-		$data = array();
-		while ($row = $stmt->fetch()) {
-			$data["dates"][] = $row["date"];
-			$data["target"][] = $row["target"];
-			$data["value"][] = $row["value"];
-		}
-		$stmt->closeCursor();
-
-		return $data;
-	}
-
-	/**
 	 * Generates JSON formatted data for a leaderboard
 	 *
 	 * @param string $stat the stat to generate the leaderboard for
@@ -334,30 +329,34 @@ class StatTracker {
 	 *
 	 * @return string JSON string
 	 */
-	public static function getLeaderboard($stat, $when) {
-		global $db;
+	public function getLeaderboard($stat, $when) {
 		$monday = strtotime('last monday', strtotime('tomorrow'));
 		$stmt = null;
 		switch ($when) {
 			case "this-week":
 				$thisweek = date("Y-m-d", $monday);
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $thisweek));
 				break;
 			case "last-week":
 				$lastweek = date("Y-m-d", strtotime('7 days ago', $monday));
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $lastweek));
+				break;
+			case "two-weeks-ago":
+				$twoweeksago = date("Y-m-d", strtotime('14 days ago', $monday));
+				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt->execute(array($stat, $twoweeksago));
 				break;
 			case "alltime":
 			default:
-				$stmt = $db->prepare("CALL GetLeaderboardForStat(?);");
+				$stmt = $this->db()->prepare("CALL GetLeaderboardForStat(?);");
 				$stmt->execute(array($stat));
 				break;
 		}
 		$stmt->closeCursor();
 
-		$stmt = $db->query("SELECT * FROM LeaderboardForStat;");
+		$stmt = $this->db()->query("SELECT * FROM LeaderboardForStat;");
 
 		while($row = $stmt->fetch()) {
 			$results[] = array(
@@ -370,28 +369,18 @@ class StatTracker {
 		}
 		$stmt->closeCursor();
 
+                if ($when == "this-week" || $when == "last-week") {
+                    $prior = ($when == "this-week") ? self::getLeaderboard($stat, "last-week") : self::getLeaderboard($stat, "two-weeks-ago");
+                    for ($i = 0; $i < sizeof($results); $i++) {
+                        for ($j = 0; $j < sizeof($prior); $j++) {
+                            if ($results[$i]['agent'] == $prior[$j]['agent']) {
+                                $results[$i]['change'] = $prior[$j]['rank'] -  $results[$i]['rank'];
+                            }
+                        }
+                    }
+                }
+
 		return $results;
-	}
-
-	private function buildPredictionResponse($row) {
-		$data = new StdClass();
-
-		$data->stat = $row['stat'];
-		$data->name = $row['name'];
-		$data->unit = $row['unit'];
-		$data->badge = $row['badge'];
-		$data->current = $row['current'];
-		$data->next = $row['next'];
-		$data->progress = $row['progress'];
-		$data->amount_remaining = $row['remaining'];
-		$data->silver_remaining = $row['silver_remaining'];
-		$data->gold_remaining = $row['gold_remaining'];
-		$data->platinum_remaining = $row['platinum_remaining'];
-		$data->onyx_remaining = $row['onyx_remaining'];
-		$data->days_remaining = $row['days'];
-		$data->rate = $row['rate'];
-
-		return $data;
 	}
 }
 
