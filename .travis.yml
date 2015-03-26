@@ -8,6 +8,7 @@ before_script:
     - yes '' | pecl install -f imagick-3.1.2
     - pecl install pdo_mysql
     - composer update
+    - cp config.php.sample config.php
 
 script:
     - composer test
