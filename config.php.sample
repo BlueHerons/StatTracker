@@ -57,7 +57,6 @@ define("RES_BLUE",  "#00BFFF");
 define("ENL_GREEN", "#2BED1B");
 
 // Folder to temporarily store screenshot uploads. RW access required.
-define("UPLOAD_DIR", realpath("uploads") . "/"); // MUST have trailing slash
-define("LOG_DIR", realpath("logs") . "/"); // MUST have trailing slash
-
+define("UPLOAD_DIR", __DIR__ . "/uploads/"); // MUST have trailing slash
+define("LOG_DIR", __DIR__ . "/logs/"); // MUST have trailing slash
 ?>
