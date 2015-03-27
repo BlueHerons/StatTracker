@@ -327,6 +327,7 @@ class OCR {
 						array_push($elements, '0');
 						array_push($elements, $temp);
 					}
+                                        $count = 0;
 					$step = 'health';
 				} elseif ($step == 'health' && preg_match('/^\s*Building\s*$/sxmi', $line)) {
 					$step = 'building';
@@ -343,7 +344,13 @@ class OCR {
 				} elseif ($step == 'missions' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
 					$step = 'resources';
 				} elseif ($step == 'resources' && preg_match('/^\s*Mentoring\s*$/sxmi', $line)) {
-					$step = 'mentoring';
+                                    // Inject a 0 for "Glyph hack points"
+                                    if ($count == 2) {
+                                        $temp = array_pop($elements);
+					array_push($elements, '0');
+					array_push($elements, $temp);
+                                    }
+				    $step = 'mentoring';
 				} elseif ($step == 'discovery' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:XM)?\s*$/sxmi', $line, $values)) {
 					$count++;
 					array_push($elements, $values[1]);
@@ -358,11 +365,19 @@ class OCR {
 				} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
 					array_push($elements, $values[1]);
 				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
+                                        $count++;
 					array_push($elements, $values[1]);
 				} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
 					$warning = sprintf($lang['maybe because'], $values[1]);
 				}
 			}
+
+                        // final check on count
+                        if ($step == 'resources' && $count == 2) {
+                            $temp = array_pop($elements);
+                            array_push($elements, '0');
+                            array_push($elements, $temp);
+                        }
 
 			$elements = preg_replace('/[.]|,|\s/', '', $elements);
 			$elements = preg_replace('/o/i', '0', $elements);
