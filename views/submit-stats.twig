@@ -168,6 +168,12 @@ function onPageLoad() {
 				}
 			},
 			success: function(response) {
+                                if (!json.hasOwnProperty("stats")) {
+                                    $("#message").html("Your screenshot was not processed. Please try again later.");
+                                    showActions();
+                                    return;
+                                }
+
 				history.pushState({ show: "upload" }, "", "#upload");
 				showStats();
 
