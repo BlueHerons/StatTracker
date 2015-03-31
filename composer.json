@@ -1,4 +1,19 @@
 {
+    "name": "BlueHerons/StatTracker",
+    "type": "project",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "John Luetke",
+            "email": "john@johnluetke.net",
+            "homepage": "http://github.com/johnluetke",
+            "role": "Lead Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/BlueHerons/StatTracker/issues",
+        "wiki": "https://github.com/BlueHerons/StatTracker/wiki"
+    },
     "require": {
         "php": ">=5.5",
         "ext-imagick": "~3.1",
