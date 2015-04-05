@@ -6,6 +6,9 @@ use Silex\Application;
 
 use Exception;
 use PDO;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 use StdClass;
 
 class StatTracker extends Application {
@@ -29,7 +32,7 @@ class StatTracker extends Application {
         }
 
         public function __construct() {
-            $this->basedir = dirname(dirname(dirname(__DIR__)));
+            $this->basedir = dirname($_SERVER['SCRIPT_FILENAME']);
 
             parent::__construct();
             $this['debug'] = true;
@@ -57,9 +60,19 @@ class StatTracker extends Application {
         public function getAuthenticationProvider() {
             if ($this->authProvider === null) {
                 // Load all auth classes
-		foreach (glob(__DIR__ ."/Authentication/*Provider.php") as $filename) {
-			require_once($filename);
-		}
+                $dir = new RecursiveDirectoryIterator(dirname($_SERVER['SCRIPT_FILENAME']) . "/src/");
+                $itr = new RecursiveIteratorIterator($dir);
+                $files = new RegexIterator($itr, "/.*Provider.php$/", RegexIterator::GET_MATCH);
+                foreach ($files as $filename) {
+                        require_once($filename[0]);
+                }
+
+                $dir = new RecursiveDirectoryIterator(dirname(__DIR__));
+                $itr = new RecursiveIteratorIterator($dir);
+                $files = new RegexIterator($itr, "/.*Provider.php$/", RegexIterator::GET_MATCH);
+                foreach ($files as $filename) {
+                        require_once($filename[0]);
+                }
 
 		$allClasses = get_declared_classes();
 		$authClasses = array();
