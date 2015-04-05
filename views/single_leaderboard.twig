@@ -1,6 +1,7 @@
-	<div class="leaderboard {{ stat.stat }}">
-		<a name="{{ stat.stat }}"></a>
-		<h3>{{ stat.name }}</h3>
+	<div class="leaderboard {{ stat.stat }}" data-has-weekly="{{ stat.hasWeeklyLeaderboard() == 1 }}">
+		<a name="{{ stat.stat }}">
+			<h3>{{ stat.name }}</h3>
+		</a>
 		<div class="leaderboard-selector">
 {% if stat.hasWeeklyLeaderboard() %}
 			<span class="leaderboard-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-when="this-week">This week</span>
@@ -16,7 +17,7 @@
 		<table class="tablesorter">
 			<thead>
 			<tr>
-				<th>Rank</th>
+				<th colspan="2">Rank</th>
 				<th>Agent</th>
 				<th>Amount</th>
 				<th>Updated</th>

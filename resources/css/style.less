@@ -147,6 +147,12 @@ footer {
 	}
 }
 
+/* Pre-load certain images */
+body:after {
+    display: none;
+    content: url("./resources/images/badges_75.png") url("./resources/images/levels_75.png") url("./resources/images/rank_arrows.png");
+}
+
 footer {
 	font-size: small;
 	text-align: center;
@@ -453,6 +459,12 @@ table {
 .badge-icon-75.illuminator.platinum { background-position: -1200px -225px; }
 .badge-icon-75.illuminator.onyx     { background-position: -1200px -300px; }
 
+.badge-icon-75.sojourner.bronze   { background-position: -1275px 0px; }
+.badge-icon-75.sojourner.silver   { background-position: -1275px -75px; }
+.badge-icon-75.sojourner.gold     { background-position: -1275px -150px; }
+.badge-icon-75.sojourner.platinum { background-position: -1275px -225px; }
+.badge-icon-75.sojourner.onyx     { background-position: -1275px -300px; }
+
 .container {
 	.item { 
 		display: inline-block;
@@ -721,6 +733,29 @@ table#stat-entry {
 		visibility: hidden;
 	}
 	
+    .rank-diff {
+        color: @header-color;
+        cursor: help;
+        display: inline-block;
+
+        .arrow {
+            background-image: url("./resources/images/rank_arrows.png");
+            background-repeat: no-repeat;
+            display: inline-block;
+            height: 12px;
+            padding-right: 5px;
+            width: 15px;
+        }
+
+        .up {
+            background-position: 0px 0px;
+        }
+
+        .down {
+            background-position: 0px -12px;
+        }
+    }
+
 	table {
 		border-spacing: 0px;
 		text-align: left;

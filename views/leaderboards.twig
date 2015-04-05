@@ -36,7 +36,16 @@ function onPageLoad() {
 				$.each(data, function() {
 					updated = (this.age == 0) ? "Today" :
 							(this.age == 1) ? "Yesterday" : this.age + " days ago";
-					row = "<tr><td>" + this.rank + "</td><td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td><td>" + this.value + "</td><td>" + updated + "</td></tr>";
+					row =  "<tr><td>" + this.rank + "</td>";
+                                        if ($(".leaderboard." + stat).data("has-weekly") == 1 && this.hasOwnProperty("change") && this.change != 0)   {
+                                            row += "<td><div title=\"Was ranked #" + (this.rank + this.change) + " last week\" class=\"rank-diff\"><div class=\"arrow " + ((this.change > 0) ? "up" : "down") + "\" />" + Math.abs(this.change) + "</div></td>";
+                                        }
+                                        else {
+                                            row += "<td/>";
+                                        }
+                                        row += "<td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td>";
+                                        row += "<td>" + this.value + "</td>";
+                                        row += "<td>" + updated + "</td></tr>";
 	
 					if ($(".leaderboard." + stat + " table tbody tr").length == 0) {
 						$(".leaderboard." + stat + " table tbody").append(row);

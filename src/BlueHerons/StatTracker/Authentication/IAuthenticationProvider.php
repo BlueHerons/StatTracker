@@ -1,6 +1,8 @@
 <?php
 namespace BlueHerons\StatTracker\Authentication;
 
+use BlueHerons\StatTracker\StatTracker;
+
 interface IAuthenticationProvider {
 	
 	/**
@@ -35,7 +37,7 @@ interface IAuthenticationProvider {
 	 * - Successful authentication
 	 * {"error": false, "status": "okay", "agent": { ... }}
 	 */
-	public function login();
+	public function login(StatTracker $app);
 
 	/**
 	 * Process a logout request for Stat Tracker. The user session MUST be destroyed inside this method.
@@ -56,12 +58,12 @@ interface IAuthenticationProvider {
 	 * - Error during the logot process
 	 *	{"error": true, "message": "Google didn't respond to the logout request"}
 	 */
-	public function logout();
+	public function logout(StatTracker $app);
 
 	/**
 	 * This method processes the callback from the Authentication provider. It should be passthrough, as the user
 	 * will be redirected to a page that calls this method (/authenticate?action=callback). Ideally, save session
 	 * info from the provider here, and process it via the login() method, which will be called automatically.
 	 */
-	public function callback();
+	public function callback(StatTracker $app);
 }
