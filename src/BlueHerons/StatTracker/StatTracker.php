@@ -41,6 +41,13 @@ class StatTracker extends Application {
                     $this->basedir . "/resources/scripts",
                 )
             ));
+
+            $this['twig']->addFilter(new \Twig_SimpleFilter('name_sort', function($array) {
+                usort($array, function($a, $b) {
+                    return strcmp($a->name, $b->name);
+                });
+                return $array;
+            }));
         }
 
         public function getAgent() {
@@ -345,7 +352,7 @@ class StatTracker extends Application {
 				break;
 			case "two-weeks-ago":
 				$twoweeksago = date("Y-m-d", strtotime('14 days ago', $monday));
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $twoweeksago));
 				break;
 			case "alltime":
