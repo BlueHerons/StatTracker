@@ -531,8 +531,9 @@ table#stat-entry {
 
 .leaderboard {
     display: inline-block;
-    vertical-align: top;
+    font-size: 1.1em;
     max-width: 425px;
+    vertical-align: top;
     width: 100%;
 
     a[name] {
@@ -540,6 +541,12 @@ table#stat-entry {
         position: relative;
         top: -100px;
         visibility: hidden;
+
+        h3 {
+            top: 100px;
+            position: relative;
+            visibilty: visible;
+        }
     }
     
     .rank-diff {
@@ -552,7 +559,7 @@ table#stat-entry {
             background-repeat: no-repeat;
             display: inline-block;
             height: 12px;
-            padding-right: 5px;
+            padding-right: 20px;
             width: 15px;
         }
 
