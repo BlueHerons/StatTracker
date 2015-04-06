@@ -71,25 +71,21 @@
 						{% for stat in stats if stat.hasWeeklyLeaderboard() %}
 							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
 						{% endfor %}
-						{% for stat in stats if stat.hasLeaderboard and not stat.hasWeeklyLeaderboard() %}
+						{% for stat in stats|sort %}
 							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
 						{% endfor %}
 
 						</ul>
 					</li>
 				</ul>
-				<ul class="nav navbar-nav navbar-right">
-					{% if agent.auth_code is not null %}
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ agent.name }}<b class="caret"></b></a>
-						<ul class="dropdown-menu" role="menu">
-							<li><a id="logout" href="#">Logout</a></li>
-						</ul>
-					<li>
-					{% else %}
-					<li><a href="#">Welcome, {{ agent.name }}</a></li>
-					{% endif %}
-				</ul>
+                                <ul class="nav navbar-nav navbar-right">
+				    {% if agent is defined and agent.auth_code is not null %}
+                                    <li class="navbar-link"><a href="#">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span></a></li>
+                                    <li class="navbar-link"><a href="#" id="logout">Logout</a></li>
+                                    {% else %}
+				    <li class="navbar-link"><a href="#">Welcome, agent</a></li>
+                                    {% endif %}
+                                </ul>
 			</div>
 		</div>
 	</nav>

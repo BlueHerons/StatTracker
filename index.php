@@ -32,12 +32,13 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 	    $page == "leaderboards") {
 		$StatTracker['session']->set("page_after_login", $page);
 		return $StatTracker['twig']->render("index.twig", array(
+                        "agent" => $StatTracker->getAgent(),
 			"constants" => array(
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
 				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
-			"stats" => StatTracker::getStats(),
+			"stats" => $StatTracker->getStats(),
 			"page" => $page
 		));
 	}
