@@ -168,9 +168,9 @@ class StatTracker extends Application {
 	 *
 	 * @return array of Stat objects - one for each possible stat
 	 */
-	public function getStats() {
+	public static function getStats() {
 		if (!is_array(self::$stats)) {
-			$stmt = $this->db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+			$stmt = self::db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
 			$rows = $stmt->fetchAll();
 
 			foreach($rows as $row) {
@@ -185,7 +185,7 @@ class StatTracker extends Application {
 				$stat->leaderboard = $leaderboard;
 				$stat->badges = array();
 
-				$stmt = $this->db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
+				$stmt = self::db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
 				$stmt->execute(array($stat->stat));
 
 				while ($row2 = $stmt->fetch()) {
@@ -249,74 +249,6 @@ class StatTracker extends Application {
 				$default :
 				constant($name);
 		}
-	}
-
-	/**
-	 *
-	 */
-	public static function handleAgentStatsPOST($agent, $postdata) {
-		$response = new StdClass();
-		$response->error = false;
-
-		if (!$agent->isValid()) {
-			$response->error = true;
-			$response->message = sprintf("Invalid agent: %s", $agent->name);
-		}
-		else {
-			$stmt = $this->db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
-
-			try {
-				$stmt->execute(array($agent->name));
-				extract($stmt->fetch());
-
-				$ts = date("Y-m-d 00:00:00");
-				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
-				$stmt = $this->db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
-
-				foreach ($this->getStats() as $stat) {
-					if (!isset($postdata[$stat->stat])) {
-						if ($stat->stat == "innovator") {
-							$agent->getStats("latest", true);
-							$postdata[$stat->stat] = $agent->stats[$stat->stat];
-						}
-						else {
-							continue;
-						}
-					}
-
-					$stat_key = $stat->stat;
-					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
-					$value = !is_numeric($value) ? 0 : $value;
-
-					$stmt->execute(array($agent->name, $dt, $dt, $min_date, $stat_key, $value));
-
-					if ($response->error) {
-						break;
-					}
-				}
-
-				$stmt->closeCursor();
-				$ts = strtotime($dt);
-
-				if (!$response->error) {
-					$response->message = sprintf("Your stats for %s have been received.", date("l, F j", $ts));
-
-					if (!$agent->hasSubmitted()) {
-						$response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
-					}
-				}
-			}
-			catch (Exception $e) {
-				$response->error = true;
-				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $this->db()->errorCode(), $this->db()->errorInfo());
-			}
-			finally {
-				$stmt->closeCursor();
-			}
-
-		}
-
-		return $response;
 	}
 
 	/**

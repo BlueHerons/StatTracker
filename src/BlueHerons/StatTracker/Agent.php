@@ -526,5 +526,38 @@ class Agent {
 
 		return $this->upcoming_badges;
 	}
+
+    /**
+     * Updates the agent's stats. 
+     *
+     * @param array $data associative array where key is stat and value is the value for the stat.
+     */
+    public function updateStats($data) {
+        // Get lowest submission date
+        $stmt = StatTracker::db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
+
+        try {
+            $stmt->execute(array($this->name));
+            extract($stmt->fetch());
+
+            $ts = date("Y-m-d 00:00:00");
+            $dt = $data['date'] == null ? date("Y-m-d") : $data['date'];
+            $stmt = StatTracker::db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+
+            foreach ($data as $stat => $value) {
+                if ($stat == "date") continue;
+                $value = filter_var($data[$stat], FILTER_SANITIZE_NUMBER_INT);
+                $value = !is_numeric($value) ? 0 : $value;
+
+                $stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+            }
+        }
+        catch (Exception $e) {
+            throw $e;
+        }
+        finally {
+            $stmt->closeCursor();
+        }
+    }
 }
 ?>
