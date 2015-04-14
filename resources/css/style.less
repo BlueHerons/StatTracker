@@ -27,6 +27,7 @@ body {
     background: rgba(0, 0, 0, 1);
     color: @text-color;
     font-family: "Coda", sans-serif;
+    font-size: 16px;
     margin: 0;
     padding: 0;
     position: relative;
@@ -34,7 +35,8 @@ body {
     #message {
         margin-left: auto;
         margin-right: auto;
-        width: 360px;
+        margin-top: 15px;
+        width: 100%;
         padding: 10px;
         border: 2px solid rgba(0, 216, 225, 1);
     }
@@ -53,8 +55,11 @@ div.fakeupload {
     z-index: 1;
 }
 
+footer, .small-text {
+    font-size: 75%;
+}
+
 footer {
-    font-size: 0.9em;
     padding: 10px;
     text-align: center;
     width: 100%;
@@ -73,7 +78,7 @@ form#ocr {
 
 h2, h3 {
     color: @title-color;
-    font-size: 1.5em;
+    font-size: 125%;
     font-weight: bold;
     text-align: center;
 }
@@ -95,7 +100,6 @@ input[type="number"], input[type="text"][name="date"] {
     border: 0;
     color: @header-color;
     font-family: "Coda";
-    font-size: 1em;
     text-align: right;
 }
 
@@ -130,10 +134,10 @@ input[type="submit"], input[type="button"], input.button {
     border: 2px solid rgba(0, 216, 225, 1);
     color: rgba(0, 255, 255, 1);
     cursor: pointer;
+    font-size: 125%;
     width: 100%;
     height: 40px;
     font-family: "Coda";
-    font-size: 1.5em;
 }
 
 input[type="file"] {
@@ -176,7 +180,6 @@ table {
 
 table#stat-entry {
     clear: both;
-    font-size: 1em;
     margin-left: auto;
     margin-right: auto;
     max-width: 440px;
@@ -200,6 +203,7 @@ table#stat-entry {
         background: -ms-linear-gradient(left, #4a3d19, #0d0a05);
         /* Opera 11.10+ */
         background: -o-linear-gradient(left, #4a3d19, #0d0a05);
+        padding-left: 2px;
     }
 
     td {
@@ -219,10 +223,15 @@ table#stat-entry {
         cursor: pointer;
         margin-top: 20px;
     }
+
+    select {
+        color: black;
+    }
 }
 
 #agent-info {
     color: @header-color;
+    font-size: 125%;
     margin: 0 auto;
     max-width: 440px;
     padding: 15px 0 10px 0;
@@ -237,15 +246,12 @@ table#stat-entry {
 
     .about {
         .name, .level {
-            font-size: 1.5em;
         }
 
         .ap {
             border-top: 5px solid @header-color;
-            font-size: 1.3em;
 
             input {
-                font-size: 1em;
                 padding: 0;
                 text-align: left;
                 width: 115px;
@@ -257,7 +263,6 @@ table#stat-entry {
  #login-dialog {
     border: 2px solid rgba(0, 216, 225, 1);
     background: rgba(26, 37, 39, 1);
-    font-size: 1.6em;
     margin: 0 auto;
     max-width: 400px;
     position: relative;
@@ -324,7 +329,7 @@ table#stat-entry {
         clear: left;
         color: white;
         display: block;
-        font-size: 1.4em;
+        font-size: 110%;
         height: ~"@{ratio-height}px";
         padding-bottom: 20px;
         padding-left: 4px;
@@ -372,11 +377,11 @@ table#stat-entry {
 
         + p {
             display: block;
+            font-size: 24px; /* fixed size because it sits on the image */
             position: absolute;
             top: 21px;
             left: 0px;
             color: white;
-            font-size: 1.8em;
             font-weight: bold;
             width: 100%;
     
@@ -531,7 +536,6 @@ table#stat-entry {
 
 .leaderboard {
     display: inline-block;
-    font-size: 1.1em;
     max-width: 425px;
     vertical-align: top;
     width: 100%;
@@ -603,6 +607,7 @@ table#stat-entry {
 }
 
 .leaderboard-selector, .graph-selector {
+    font-size: 95%;
     margin-bottom: 18px;
 }
 
@@ -679,8 +684,6 @@ table#stat-entry {
   display: none;
 }
 
-.small-text { font-size: 0.6em; }
-
 .summary {
     text-align: center;
 
@@ -699,11 +702,15 @@ table#stat-entry {
             z-index: 100;
             position: absolute;
             color: white;
-            font-size: 1,8em;
             font-weight: bold;
             left: 13px;
             top: 0px;
         }
+    }
+
+    .badge-prediction {
+        font-size: 95%;
+        margin-top: 10px;
     }
 
     div:nth-child(1), div:nth-child(3) {
@@ -746,7 +753,7 @@ table#stat-entry {
     }
 
     .time-remaining {
-                font-size: 1.4em;
+        font-size: 110%;
         padding-top: ~"@{upcoming-badge-time-margin}px";
         padding-left: 80px;
     }
