@@ -127,6 +127,8 @@ function onPageLoad() {
 		$("table#stat-entry").hide();
 		$("#agent-info .ap input").hide();
 		$("#agent-info .ap .current").show();
+                var fileUpload = $("input[type='file'][name='screenshot']");
+                fileUpload.replaceWith( fileUpload = fileUpload.clone( true ) );
 		$("#submit-actions").show();
 	}
 
