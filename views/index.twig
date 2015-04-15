@@ -30,7 +30,11 @@
 		$("#login-dialog").hide();
 		StatTracker.pageToLoad = "{{ page }}";
 		StatTracker.getContributors();
-		StatTracker.authenticate();
+{% if page != "terms" %}
+                StatTracker.authenticate();
+{% else %}
+                StatTracker.loadPage();
+{% endif %}
 	});
 
 {% if not(attribute(constants, "ga_id") == null) %}
