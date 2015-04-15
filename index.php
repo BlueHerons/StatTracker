@@ -45,19 +45,22 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 	else if ($page == "terms-of-use") {
 		return $StatTracker['twig']->render("terms.html");
 	}
+        else if ($page == "logout") {
+            $StatTracker->getAuthenticationProvider()->logout($StatTracker);
+            return $StatTracker->redirect("./");
+        }
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
                                 $authResponse = $StatTracker->getAuthenticationProvider()->login($StatTracker);
                                 if ($authResponse->status == "registration_required") {
-                                    print_r($authResponse);
-                                    die();
                                     $StatTracker->sendRegistrationEmail($authResponse->email);
                                 }
 				return $StatTracker->json($authResponse);
 				break;
 			case "callback":
 				$StatTracker->getAuthenticationProvider()->callback($StatTracker);
+                                $StatTracker->getAuthenticationProvider()->login($StatTracker);
 				$page = $StatTracker['session']->get("page_after_login");
 				$page = empty($page) ? "dashboard" : $page;
 				return $StatTracker->redirect("./{$page}");

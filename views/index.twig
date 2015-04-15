@@ -28,8 +28,6 @@
 	<script>
 	$(document).ready(function() {
 		$("#login-dialog").hide();
-		$("#logout").on("click", function() { StatTracker.logout(); });
-
 		StatTracker.pageToLoad = "{{ page }}";
 		StatTracker.getContributors();
 		StatTracker.authenticate();
@@ -81,7 +79,7 @@
                                 <ul class="nav navbar-nav navbar-right">
 				    {% if agent is defined and agent.auth_code is not null %}
                                     <li class="navbar-link"><a href="#">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span></a></li>
-                                    <li class="navbar-link"><a href="#" id="logout">Logout</a></li>
+                                    <li class="navbar-link"><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
                                     {% else %}
 				    <li class="navbar-link"><a href="#">Welcome, agent</a></li>
                                     {% endif %}
