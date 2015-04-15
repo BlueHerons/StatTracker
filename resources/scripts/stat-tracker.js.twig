@@ -53,6 +53,10 @@ var StatTracker = new function() {
 					$("#login-buttons .google a").attr("href", result.url);
 				}
 				else if (result.status == "registration_required") {
+                                        $(".loading").hide();
+                                        $("body").css("height", "inherit");
+					$("footer").css("position", "absolute")
+					           .css("bottom", "0px");
 					$("#login-buttons").hide();
 					$("#login-dialog").show();
 					message = "An email has been sent to<br/>";
