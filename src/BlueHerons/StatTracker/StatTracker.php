@@ -122,11 +122,11 @@ class StatTracker extends Application {
 	 * @return void
 	 */
 	public function sendRegistrationEmail($email_address) {
-		$stmt = $this->db()->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
 		$stmt->execute(array($email_address));
 		$msg = "";
 
-		// If no auth code is found, instruct user to contact the admin agent.
+		// If no activation code is found, instruct user to contact the admin agent.
 		if ($stmt->rowCount() == 0) {
 			$stmt->closeCursor();
 			$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
@@ -146,8 +146,10 @@ class StatTracker extends Application {
 			       "<p/>".
 			       $_SERVER['HTTP_REFERER'];
 
-			$msg = sprintf($msg, $auth_code);
+			$msg = sprintf($msg, $activation_code);
 		}
+
+                $this->logger->info(sprintf("Sending registration email to %s", $email_address));
 
 		$transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
 				->setUsername(SMTP_USER)
