@@ -5,6 +5,7 @@ use BlueHerons\StatTracker\Agent;
 use Silex\Application;
 
 use Exception;
+use Katzgrau\KLogger\Logger;
 use PDO;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -16,8 +17,9 @@ class StatTracker extends Application {
         private static $db;
 	private static $stats;
         
-        private $basedir;
         private $authProvider;
+        private $basedir;
+        private $logger;
 
         public static function db() {
             if (!(self::$db instanceof PDO)) {
@@ -33,6 +35,7 @@ class StatTracker extends Application {
 
         public function __construct() {
             $this->basedir = dirname($_SERVER['SCRIPT_FILENAME']);
+            $this->logger = new Logger(LOG_DIR);
 
             parent::__construct();
             $this['debug'] = true;
@@ -96,9 +99,23 @@ class StatTracker extends Application {
 		    return null;
 		}
 
-		// Instantiate the first one found
-		$class = $authClasses[0];
-                $this->authProvider = new $class;
+                // If an AuthProvider is specfied in config, and it exists, use it
+                if (defined("AUTH_PROVIDER")) {
+                    $this->logger->debug(sprintf("Searching for specified provider %s", constant("AUTH_PROVIDER")));
+                    foreach ($authClasses as $classname) {
+                        $name = explode("\\", $classname);
+                        if ($name[sizeof($name)-1] == constant(AUTH_PROVIDER)) {
+                            $class = $classname;
+                            break;
+                        }
+                    }
+                }
+                else {
+		    $class = $authClasses[0];
+                }
+
+                $this->logger->debug(sprintf("Using %s as AuthenticationProvider", $class));
+                $this->authProvider = new $class($logger);
             }
 
             return $this->authProvider;
