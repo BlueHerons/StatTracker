@@ -28,34 +28,38 @@ $StatTracker->error(function(Exception $e, $code) {
 // 404
 $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 	if ($page == "dashboard" ||
+	    $page == "leaderboards" ||
 	    $page == "submit-stats" ||
-	    $page == "leaderboards") {
+            $page == "terms") {
 		$StatTracker['session']->set("page_after_login", $page);
 		return $StatTracker['twig']->render("index.twig", array(
+                        "agent" => $StatTracker->getAgent(),
 			"constants" => array(
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
+                                "admin_agent" => StatTracker::getConstant("ADMIN_AGENT"),
 				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
+			"stats" => $StatTracker->getStats(),
 			"page" => $page
 		));
 	}
-	else if ($page == "terms-of-use") {
-		return $StatTracker['twig']->render("terms.html");
-	}
+        else if ($page == "logout") {
+            $StatTracker->getAuthenticationProvider()->logout($StatTracker);
+            return $StatTracker->redirect("./");
+        }
 	else if ($page == "authenticate") {
 		switch ($_REQUEST['action']) {
 			case "login":
                                 $authResponse = $StatTracker->getAuthenticationProvider()->login($StatTracker);
                                 if ($authResponse->status == "registration_required") {
-                                    print_r($authResponse);
-                                    die();
                                     $StatTracker->sendRegistrationEmail($authResponse->email);
                                 }
 				return $StatTracker->json($authResponse);
 				break;
 			case "callback":
 				$StatTracker->getAuthenticationProvider()->callback($StatTracker);
+                                $StatTracker->getAuthenticationProvider()->login($StatTracker);
 				$page = $StatTracker['session']->get("page_after_login");
 				$page = empty($page) ? "dashboard" : $page;
 				return $StatTracker->redirect("./{$page}");
@@ -95,7 +99,10 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 
 	return $StatTracker['twig']->render($page.".twig", array(
 		"agent" => $StatTracker->getAgent(),
-		"constants" => array("email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")),
+		"constants" => array(
+                    "admin_agent" => StatTracker::getConstant("ADMIN_AGENT"),
+                    "email_submission" => StatTracker::getConstant("EMAIL_SUBMISSION")
+                ),
 		"stats" => $StatTracker->getStats(),
 		"faction_class" => $StatTracker->getAgent()->faction == "R" ? "resistance-agent" : "enlightened-agent",
 		"faction_color" => $StatTracker->getAgent()->faction == "R" ? RES_BLUE : ENL_GREEN,

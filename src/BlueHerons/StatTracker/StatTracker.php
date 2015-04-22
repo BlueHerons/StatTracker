@@ -5,6 +5,7 @@ use BlueHerons\StatTracker\Agent;
 use Silex\Application;
 
 use Exception;
+use Katzgrau\KLogger\Logger;
 use PDO;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -16,8 +17,9 @@ class StatTracker extends Application {
         private static $db;
 	private static $stats;
         
-        private $basedir;
         private $authProvider;
+        private $basedir;
+        private $logger;
 
         public static function db() {
             if (!(self::$db instanceof PDO)) {
@@ -33,6 +35,7 @@ class StatTracker extends Application {
 
         public function __construct() {
             $this->basedir = dirname($_SERVER['SCRIPT_FILENAME']);
+            $this->logger = new Logger(LOG_DIR);
 
             parent::__construct();
             $this['debug'] = true;
@@ -44,6 +47,13 @@ class StatTracker extends Application {
                     $this->basedir . "/resources/scripts",
                 )
             ));
+
+            $this['twig']->addFilter(new \Twig_SimpleFilter('name_sort', function($array) {
+                usort($array, function($a, $b) {
+                    return strcmp($a->name, $b->name);
+                });
+                return $array;
+            }));
         }
 
         public function getAgent() {
@@ -89,9 +99,23 @@ class StatTracker extends Application {
 		    return null;
 		}
 
-		// Instantiate the first one found
-		$class = $authClasses[0];
-                $this->authProvider = new $class;
+                // If an AuthProvider is specfied in config, and it exists, use it
+                if (defined("AUTH_PROVIDER")) {
+                    $this->logger->debug(sprintf("Searching for specified provider %s", constant("AUTH_PROVIDER")));
+                    foreach ($authClasses as $classname) {
+                        $name = explode("\\", $classname);
+                        if ($name[sizeof($name)-1] == constant(AUTH_PROVIDER)) {
+                            $class = $classname;
+                            break;
+                        }
+                    }
+                }
+                else {
+		    $class = $authClasses[0];
+                }
+
+                $this->logger->debug(sprintf("Using %s as AuthenticationProvider", $class));
+                $this->authProvider = new $class($logger);
             }
 
             return $this->authProvider;
@@ -115,11 +139,11 @@ class StatTracker extends Application {
 	 * @return void
 	 */
 	public function sendRegistrationEmail($email_address) {
-		$stmt = $this->db()->prepare("SELECT auth_code FROM Agent WHERE email = ?;");
+		$stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
 		$stmt->execute(array($email_address));
 		$msg = "";
 
-		// If no auth code is found, instruct user to contact the admin agent.
+		// If no activation code is found, instruct user to contact the admin agent.
 		if ($stmt->rowCount() == 0) {
 			$stmt->closeCursor();
 			$msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
@@ -139,8 +163,10 @@ class StatTracker extends Application {
 			       "<p/>".
 			       $_SERVER['HTTP_REFERER'];
 
-			$msg = sprintf($msg, $auth_code);
+			$msg = sprintf($msg, $activation_code);
 		}
+
+                $this->logger->info(sprintf("Sending registration email to %s", $email_address));
 
 		$transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
 				->setUsername(SMTP_USER)
@@ -161,9 +187,9 @@ class StatTracker extends Application {
 	 *
 	 * @return array of Stat objects - one for each possible stat
 	 */
-	public function getStats() {
+	public static function getStats() {
 		if (!is_array(self::$stats)) {
-			$stmt = $this->db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+			$stmt = self::db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
 			$rows = $stmt->fetchAll();
 
 			foreach($rows as $row) {
@@ -178,7 +204,7 @@ class StatTracker extends Application {
 				$stat->leaderboard = $leaderboard;
 				$stat->badges = array();
 
-				$stmt = $this->db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
+				$stmt = self::db()->prepare("SELECT level, amount_required FROM Badges WHERE stat = ? ORDER BY `amount_required` ASC;");
 				$stmt->execute(array($stat->stat));
 
 				while ($row2 = $stmt->fetch()) {
@@ -245,74 +271,6 @@ class StatTracker extends Application {
 	}
 
 	/**
-	 *
-	 */
-	public static function handleAgentStatsPOST($agent, $postdata) {
-		$response = new StdClass();
-		$response->error = false;
-
-		if (!$agent->isValid()) {
-			$response->error = true;
-			$response->message = sprintf("Invalid agent: %s", $agent->name);
-		}
-		else {
-			$stmt = $this->db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
-
-			try {
-				$stmt->execute(array($agent->name));
-				extract($stmt->fetch());
-
-				$ts = date("Y-m-d 00:00:00");
-				$dt = $postdata['date'] == null ? date("Y-m-d") : $postdata['date'];
-				$stmt = $this->db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
-
-				foreach ($this->getStats() as $stat) {
-					if (!isset($postdata[$stat->stat])) {
-						if ($stat->stat == "innovator") {
-							$agent->getStats("latest", true);
-							$postdata[$stat->stat] = $agent->stats[$stat->stat];
-						}
-						else {
-							continue;
-						}
-					}
-
-					$stat_key = $stat->stat;
-					$value = filter_var($postdata[$stat->stat], FILTER_SANITIZE_NUMBER_INT);
-					$value = !is_numeric($value) ? 0 : $value;
-
-					$stmt->execute(array($agent->name, $dt, $dt, $min_date, $stat_key, $value));
-
-					if ($response->error) {
-						break;
-					}
-				}
-
-				$stmt->closeCursor();
-				$ts = strtotime($dt);
-
-				if (!$response->error) {
-					$response->message = sprintf("Your stats for %s have been received.", date("l, F j", $ts));
-
-					if (!$agent->hasSubmitted()) {
-						$response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
-					}
-				}
-			}
-			catch (Exception $e) {
-				$response->error = true;
-				$response->message = sprintf("%s:%s\n(%s) %s", __FILE__, __LINE__, $this->db()->errorCode(), $this->db()->errorInfo());
-			}
-			finally {
-				$stmt->closeCursor();
-			}
-
-		}
-
-		return $response;
-	}
-
-	/**
 	 * Calculates the appropriate foreground color based on the given background color
 	 *
 	 * @param string $color hex color string
@@ -358,7 +316,7 @@ class StatTracker extends Application {
 				break;
 			case "two-weeks-ago":
 				$twoweeksago = date("Y-m-d", strtotime('14 days ago', $monday));
-				$stmt = $db->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
+				$stmt = $this->db()->prepare("CALL GetWeeklyLeaderboardForStat(?, ?);");
 				$stmt->execute(array($stat, $twoweeksago));
 				break;
 			case "alltime":

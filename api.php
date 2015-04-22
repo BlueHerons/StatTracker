@@ -192,8 +192,25 @@ $StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTra
 		return $StatTracker->abort(404);
 	}
 
-	$response = StatTracker::handleAgentStatsPost($agent, $_POST);
-	$StatTracker['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
+        // Filter out keys that do not represent stats
+        $data = array_intersect_key($_POST, array_merge(StatTracker::getStats(), array("date"=>"")));
+        $response = new stdClass();
+        $response->error = false;
+
+        try {
+	    $agent->updateStats($data);
+            $response->message = sprintf("Your stats for %s have been recieved.", date("l, F j", strtotime($data['date'])));
+
+            if (!$agent->hasSubmitted()) {
+                $response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+            }
+
+            $StatTracker['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
+        }
+        catch (Exception $e) {
+            $response->error = true;
+            $response->message = $e->getMessage();
+        }
 
 	return $StatTracker->json($response);
 })->before($validateRequest);
