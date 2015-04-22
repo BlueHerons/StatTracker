@@ -18,12 +18,12 @@ class GooglePlusProvider implements IAuthenticationProvider {
         private $logger;
 	private $plus;
 
-	public function __construct(Logger $logger = null) {
+	public function __construct($base_url, Logger $logger) {
 		$this->client = new Google_Client();
 		$this->client->setApplicationName(GOOGLE_APP_NAME);
 		$this->client->setClientId(GOOGLE_CLIENT_ID);
 		$this->client->setClientSecret(GOOGLE_CLIENT_SECRET);
-		$this->client->setRedirectUri(GOOGLE_REDIRECT_URL);
+		$this->client->setRedirectUri(sprintf("%s/authenticate?action=callback", $base_url));
 
 		$this->client->setScopes("https://www.googleapis.com/auth/plus.profile.emails.read");
 

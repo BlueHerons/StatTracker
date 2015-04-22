@@ -19,6 +19,7 @@ class StatTracker extends Application {
         
         private $authProvider;
         private $basedir;
+        private $baseUrl;
         private $logger;
 
         public static function db() {
@@ -115,10 +116,14 @@ class StatTracker extends Application {
                 }
 
                 $this->logger->debug(sprintf("Using %s as AuthenticationProvider", $class));
-                $this->authProvider = new $class($logger);
+                $this->authProvider = new $class($this->getBaseURL(), $this->logger);
             }
 
             return $this->authProvider;
+        }
+
+        public function getBaseURL() {
+            return $this->baseUrl;
         }
 
         public function scanAgentProfile($filename) {
@@ -181,6 +186,10 @@ class StatTracker extends Application {
 
 		$mailer->send($message);
 	}
+
+        public function setBaseURL($request) {
+            $this->baseUrl = sprintf("%s://%s%s", $request->getScheme(), $request->getHttpHost(), $request->getBaseUrl());
+        }
 
 	/**
 	 * Gets the list of all possible stats as Stat objects

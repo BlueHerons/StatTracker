@@ -11,7 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 $StatTracker = new StatTracker();
 
-$StatTracker['controllers']->before(function() {
+$StatTracker['controllers']->before(function(Request $request) use ($StatTracker) {
+        $StatTracker->setBaseUrl($request);
+
 	if (!is_dir(UPLOAD_DIR) || !is_writeable(UPLOAD_DIR)) {
 		throw new Exception(sprintf("UPLOAD_DIR (%s) is not writeable", UPLOAD_DIR));
 	}
