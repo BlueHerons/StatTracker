@@ -70,7 +70,7 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 				return $StatTracker->json($StatTracker->getAuthenticationProvider()->logout($StatTracker));
 				break;
 			default:
-				$StatTracker->abort(405, "Invalid Authentication action");
+				$StatTracker->abort(400, "Invalid authentication action");
 		}
 	}
 	else {
