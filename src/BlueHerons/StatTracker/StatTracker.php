@@ -126,9 +126,9 @@ class StatTracker extends Application {
             return $this->baseUrl;
         }
 
-        public function scanAgentProfile($filename) {
-            // TODO: Rewrite this implementation. This is just a hack to get around code restructuing
-            OCR::scanAgentProfile($filename, $this->getStats());
+        public function scanProfileScreenshot($filename, $async = true) {
+            $ocr = new OCR($this->getStats(), $this->logger);
+            return $ocr->scan($filename, $async);
         }
 
 	/**

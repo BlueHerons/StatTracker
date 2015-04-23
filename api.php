@@ -222,31 +222,36 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
 		return $StatTracker->abort(404);
 	}
 
-	$processImage = function() use ($request, $StatTracker) {
-		$content_type = explode(";", $request->headers->get("content_type"))[0];
-		$file = UPLOAD_DIR . OCR::getTempFileName();
+        $content_type = explode(";", $request->headers->get("content_type"))[0];
+	$file = UPLOAD_DIR . uniqid("ocr_") . ".png";
 
-		switch ($content_type) {
-			case "application/x-www-form-urlencoded":
-				// Not a file upload, but a POST of bytes
-				$hndl = fopen($file, "w+");
-				fwrite($hndl, file_get_contents("php://input"));
-				fclose($hndl);
-				break;
-			case "multipart/form-data":
-				// Typically an HTTP file upload
-				move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
-				break;
-			default:
-				return $StatTracker->abort(400, "Bad request of type " . $content_type);
-				break;
-		}
+	switch ($content_type) {
+	    case "application/x-www-form-urlencoded":
+	        // Not a file upload, but a POST of bytes
+		$hndl = fopen($file, "w+");
+		fwrite($hndl, file_get_contents("php://input"));
+		fclose($hndl);
+		break;
+	    case "multipart/form-data":
+                // Typically an HTTP file upload
+                move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+                break;
+            default:
+	        return $StatTracker->abort(400, "Bad request " . $content_type);
+		break;
+	}
 
-		// This method will print the results to the output stream
-                $StatTracker->scanAgentProfile($file);
+	$processImageAsync = function() use ($request, $StatTracker) {
+	    // This method will print the results to the output stream
+            $StatTracker->scanProfileScreenshot($file, true);
 	};
 
-	return $StatTracker->stream($processImage, 200, array ("Content-type" => "application/octet-stream"));
+        if (filter_var($request->query->get("async", true), FILTER_VALIDATE_BOOLEAN)) {
+	    return $StatTracker->stream($processImageAsync, 200, array ("Content-type" => "application/octet-stream"));
+        }
+        else {
+            return $StatTracker->json(array("stats" => $StatTracker->scanProfileScreenshot($file, false)));
+        }
 
 })->before($validateRequest);
 
