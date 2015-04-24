@@ -241,7 +241,7 @@ $StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code
 		break;
 	}
 
-	$processImageAsync = function() use ($request, $StatTracker) {
+	$processImageAsync = function() use ($StatTracker, $file) {
 	    // This method will print the results to the output stream
             $StatTracker->scanProfileScreenshot($file, true);
 	};

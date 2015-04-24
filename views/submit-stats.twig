@@ -151,7 +151,7 @@ function onPageLoad() {
 		var json = {};
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr?async=false",
+			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
 			data: data,
 			cache: false,
 			processData: false,

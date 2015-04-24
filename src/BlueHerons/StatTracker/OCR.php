@@ -56,7 +56,6 @@ class OCR {
      */
     private function sendMessage($thing) {
         if ($this->async) {
-            die("async true");
             $resp = new StdClass();
             $resp->session = $this->sess_id;
             if (is_object($thing) || is_array($thing)) {
