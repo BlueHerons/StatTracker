@@ -15,6 +15,9 @@ var StatTracker = new function() {
 			},
 			success: function(html) {
 				$("#main-content").html(html);
+                                if (document.body.scrollHeight <= document.body.offsetHeight) {
+                                    $("#main-content").css("height", "inherit");
+                                }
 				onPageLoad();
 			}
 		});
@@ -46,17 +49,15 @@ var StatTracker = new function() {
 					result = JSON.parse(result);
 				if (result.status == "authentication_required") {
 					$(".loading").hide();
-					$("body").css("height", "inherit");
-					$("footer").css("position", "absolute")
-					           .css("bottom", "0px");
 					$("#login-dialog").show();
 					$("#login-buttons .google a").attr("href", result.url);
+                                        if (document.body.scrollHeight <= document.body.offsetHeight) {
+                                            $("#main-content").css("height", "inherit");
+                                        }
 				}
 				else if (result.status == "registration_required") {
                                         $(".loading").hide();
-                                        $("body").css("height", "inherit");
-					$("footer").css("position", "absolute")
-					           .css("bottom", "0px");
+                                        $("#main-content").css("height", "inherit");
 					$("#login-buttons").hide();
 					$("#login-dialog").show();
 					message = "An email has been sent to<br/>";

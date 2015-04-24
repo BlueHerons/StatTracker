@@ -28,7 +28,9 @@ body {
     color: @text-color;
     font-family: "Coda", sans-serif;
     font-size: 16px;
+    height: inherit;
     margin: 0;
+    min-height: 100%;
     padding: 0;
     position: relative;
 
@@ -62,6 +64,8 @@ footer, .small-text {
 }
 
 footer {
+    height: 100px;
+    margin-top: -100px;
     padding: 10px;
     text-align: center;
     width: 100%;
@@ -277,7 +281,7 @@ table#stat-entry {
 
  #login-dialog {
     border: 2px solid rgba(0, 216, 225, 1);
-    background: rgba(26, 37, 39, 1);
+    background: #1A2527;
     margin: 0 auto;
     max-width: 400px;
     position: relative;
@@ -333,7 +337,7 @@ table#stat-entry {
 }
 
 #main-content {
-    height: inherit;
+    padding-bottom: 100px;
     padding-top: 51px;
     text-align: center;
     width: 100%;
