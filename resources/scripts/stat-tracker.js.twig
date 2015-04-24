@@ -1,108 +1,108 @@
 var StatTracker = new function() {
-	this.pageToLoad = "dashboard";
-	this.message = null;
+    this.pageToLoad = "dashboard";
+    this.message = null;
 
-	this.loadPage = function() {
-		$(".tabs li[class~='" + this.pageToLoad +"'] a").addClass("selected");
-		$.ajax({url: "{{ app.request.basepath }}/page/" + this.pageToLoad,
-			type: "GET",
-			dataType: "html",
-			data: location.search.substring(1),
-			statusCode: {
-				500: function() {
-					alert("Internal Server Error");
-				}
-			},
-			success: function(html) {
-				$("#main-content").html(html);
+    this.loadPage = function() {
+        $(".tabs li[class~='" + this.pageToLoad +"'] a").addClass("selected");
+        $.ajax({url: "{{ app.request.basepath }}/page/" + this.pageToLoad,
+            type: "GET",
+            dataType: "html",
+            data: location.search.substring(1),
+            statusCode: {
+                500: function() {
+                    alert("Internal Server Error");
+                }
+            },
+            success: function(html) {
+                $("#main-content").html(html);
                                 if (document.body.scrollHeight <= document.body.offsetHeight) {
                                     $("#main-content").css("height", "inherit");
                                 }
-				onPageLoad();
-			}
-		});
-	}
+                onPageLoad();
+            }
+        });
+    }
 
-	this.getContributors = function() {
-		$.ajax({url: "{{ app.request.basepath }}/api/contributors",
-			type: "GET",
-			dataType: "json",
-			success: function(json) {
-				$("#contributors span").html("");
-				json.forEach(function(item, i, arr) {
-					join = i == arr.length - 2 ? " and " :
-					       i == arr.length - 1? "." :
-					       ", ";
-					$("#contributors span").append("<a href=\"" + item.html_url + "\" target=\"_blank\">" + item.login + "</a>" + join);
-				});
-			}
-		});
+    this.getContributors = function() {
+        $.ajax({url: "{{ app.request.basepath }}/api/contributors",
+            type: "GET",
+            dataType: "json",
+            success: function(json) {
+                $("#contributors span").html("");
+                json.forEach(function(item, i, arr) {
+                    join = i == arr.length - 2 ? " and " :
+                           i == arr.length - 1? "." :
+                           ", ";
+                    $("#contributors span").append("<a href=\"" + item.html_url + "\" target=\"_blank\">" + item.login + "</a>" + join);
+                });
+            }
+        });
 
-	}
+    }
 
-	this.authenticate = function() {
-		$.ajax({url: "{{ app.request.basepath }}/authenticate?action=login",
-			type: 'GET',
-			contentType: 'json',
-			success: function(result) {
-				if (typeof result !== "object")
-					result = JSON.parse(result);
-				if (result.status == "authentication_required") {
-					$(".loading").hide();
-					$("#login-dialog").show();
-					$("#login-buttons .google a").attr("href", result.url);
+    this.authenticate = function() {
+        $.ajax({url: "{{ app.request.basepath }}/authenticate?action=login",
+            type: 'GET',
+            contentType: 'json',
+            success: function(result) {
+                if (typeof result !== "object")
+                    result = JSON.parse(result);
+                if (result.status == "authentication_required") {
+                    $(".loading").hide();
+                    $("#login-dialog").show();
+                    $("#login-buttons .google a").attr("href", result.url);
                                         if (document.body.scrollHeight <= document.body.offsetHeight) {
                                             $("#main-content").css("height", "inherit");
                                         }
-				}
-				else if (result.status == "registration_required") {
+                }
+                else if (result.status == "registration_required") {
                                         $(".loading").hide();
                                         $("#main-content").css("height", "inherit");
-					$("#login-buttons").hide();
-					$("#login-dialog").show();
-					message = "An email has been sent to<br/>";
-					message += "<strong>" + result.email + "</strong>";
-					message += "<br/>with steps to complete registration.";
-					$("#login-message").html(message);
-				}
-				else if (result.status == "okay") {
-					$("#login-dialog").hide();
-					if (result.agent.numSubmissions == 0) {
-						StatTracker.message = "Stats must be submitted before this tool can be utilized";
-						StatTracker.pageToLoad = "submit-stats";
-					}
+                    $("#login-buttons").hide();
+                    $("#login-dialog").show();
+                    message = "An email has been sent to<br/>";
+                    message += "<strong>" + result.email + "</strong>";
+                    message += "<br/>with steps to complete registration.";
+                    $("#login-message").html(message);
+                }
+                else if (result.status == "okay") {
+                    $("#login-dialog").hide();
+                    if (result.agent.numSubmissions == 0) {
+                        StatTracker.message = "Stats must be submitted before this tool can be utilized";
+                        StatTracker.pageToLoad = "submit-stats";
+                    }
 
-					StatTracker.loadPage();
-				}
-			},
-			processData: false
-		});
-	}
+                    StatTracker.loadPage();
+                }
+            },
+            processData: false
+        });
+    }
 
-	this.logout = function() {
-		$.ajax({url: "{{ app.request.basepath }}/authenticate?action=logout",
-			type: 'GET',
-			contentType: 'json',
-			success: function(result) {
-				if (typeof result !== "object") {
-					result = JSON.parse(result);
-				}
-				if (result.status == "logged_out") {
-					window.location = "{{ app.request.basepath }}";
-				}
-				console.log(result);
-			},
-			processData: false
-		});
-	}
+    this.logout = function() {
+        $.ajax({url: "{{ app.request.basepath }}/authenticate?action=logout",
+            type: 'GET',
+            contentType: 'json',
+            success: function(result) {
+                if (typeof result !== "object") {
+                    result = JSON.parse(result);
+                }
+                if (result.status == "logged_out") {
+                    window.location = "{{ app.request.basepath }}";
+                }
+                console.log(result);
+            },
+            processData: false
+        });
+    }
 
-	this.getQueryVar = function(variable) {
-		var query = window.location.search.substring(1);
-		var vars = query.split("&");
-		for (var i=0;i<vars.length;i++) {
-			var pair = vars[i].split("=");
-			if (pair[0] == variable){return pair[1];}
-		}
-		return(false);
-	}
+    this.getQueryVar = function(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable){return pair[1];}
+        }
+        return(false);
+    }
 };
