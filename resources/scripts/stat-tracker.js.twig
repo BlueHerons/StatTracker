@@ -23,23 +23,6 @@ var StatTracker = new function() {
         });
     }
 
-    this.getContributors = function() {
-        $.ajax({url: "{{ app.request.basepath }}/api/contributors",
-            type: "GET",
-            dataType: "json",
-            success: function(json) {
-                $("#contributors span").html("");
-                json.forEach(function(item, i, arr) {
-                    join = i == arr.length - 2 ? " and " :
-                           i == arr.length - 1? "." :
-                           ", ";
-                    $("#contributors span").append("<a href=\"" + item.html_url + "\" target=\"_blank\">" + item.login + "</a>" + join);
-                });
-            }
-        });
-
-    }
-
     this.authenticate = function() {
         $.ajax({url: "{{ app.request.basepath }}/authenticate?action=login",
             type: 'GET',

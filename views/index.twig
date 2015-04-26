@@ -114,7 +114,17 @@
 	<footer>
 		<p>Stat Tracker {{ attribute(constants, "version") }}</p>
 		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker" target="_blank">GitHub</a>
-		<p id="contributors">Brought to you by <span>[loading...]</span></p>
+		<p id="contributors">
+                    Brought to you by 
+{% for contributor in attribute(constants, "contributors") %}
+    <a href="{{ contributor.homepage }}">{{ contributor.name }}</a>
+    {% if loop.index != loop.length - 1 and not loop.last %}
+    , 
+    {% elseif loop.index == loop.length - 1 %}
+     and 
+    {% endif %}
+{% endfor %}
+                </p>
 	</footer>
 </body>
 </html>

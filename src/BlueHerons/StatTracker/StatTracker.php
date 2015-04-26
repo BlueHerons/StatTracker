@@ -126,6 +126,11 @@ class StatTracker extends Application {
         return $this->baseUrl;
     }
 
+    public function getContributors() {
+        $data = json_decode(file_get_contents($this->basedir . "/composer.json"));
+        return $data->authors;
+    }
+
     public function scanProfileScreenshot($filename, $async = true) {
         $ocr = new OCR($this->getStats(), $this->logger);
         return $ocr->scan($filename, $async);

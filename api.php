@@ -34,18 +34,6 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
 
-// Pass-though call to GitHub to retrieve everyone how has contributed to the repository
-$StatTracker->get("/api/contributors", function(Request $request) use ($StatTracker) {
-	$url = sprintf("https://api.github.com/repos/%s/%s/contributors", "BlueHerons", "StatTracker");
-
-	$curl = new Curl();
-	$curl->get($url);
-
-	$response = $curl->response;
-
-	return $StatTracker->json($response);
-});
-
 $StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);
 

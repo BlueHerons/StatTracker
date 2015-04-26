@@ -8,6 +8,27 @@
             "email": "john@johnluetke.net",
             "homepage": "http://github.com/johnluetke",
             "role": "Lead Developer"
+        },
+        {
+            "name": "Forrest McIntyre",
+            "homepage": "http://github.com/ForrestMcIntyre",
+            "role": "Contributor"
+        },
+        {
+            "name": "BoatAnchor",
+            "homepage": "http://github.com/BoatAnchor",
+            "role": "Contributor"
+        },
+        {
+            "name": "Kevin Brasier",
+            "email": "wonderfulweb@gmail.com",
+            "homepage": "http://github.com/Fragger",
+            "role": "Contributor"
+        },
+        {
+            "name": "Russell Aunger",
+            "homepage": "http://github.com/aunger",
+            "role": "Contributor"
         }
     ],
     "support": {
