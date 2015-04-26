@@ -31,7 +31,6 @@
 	$(document).ready(function() {
 		$("#login-dialog").hide();
 		StatTracker.pageToLoad = "{{ page }}";
-		StatTracker.getContributors();
 {% if page != "terms" %}
                 StatTracker.authenticate();
 {% else %}
