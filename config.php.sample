@@ -4,6 +4,8 @@
 // 
 // Make the necessary changes for your instance of Stat Tracker, and save this file as "config.php"
 //
+// Turn on/off extra messages useful for debugging
+define("DEBUG", false);
 
 // Database host. Example: database.thelocalresistance.com
 define("DB_HOST", "");

@@ -7,6 +7,7 @@ use Silex\Application;
 use Exception;
 use Katzgrau\KLogger\Logger;
 use PDO;
+use Psr\Log\LogLevel;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -35,11 +36,13 @@ class StatTracker extends Application {
     }
 
     public function __construct() {
-        $this->basedir = dirname($_SERVER['SCRIPT_FILENAME']);
-        $this->logger = new Logger(LOG_DIR);
-
         parent::__construct();
-        $this['debug'] = false;
+
+        $this['debug'] = filter_var(StatTracker::getConstant("DEBUG", false), FILTER_VALIDATE_BOOLEAN);
+
+        $this->basedir = dirname($_SERVER['SCRIPT_FILENAME']);
+        $this->logger = new Logger(LOG_DIR, $this['debug'] ? LogLevel::DEBUG : LogLevel::INFO);
+
         $this->register(new \Silex\Provider\SessionServiceProvider());
         $this->register(new \Silex\Provider\TwigServiceProvider(), array(
             'twig.path' => array(
