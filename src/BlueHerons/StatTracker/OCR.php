@@ -69,7 +69,7 @@ class OCR {
             else {
                 $resp->status = $thing;
             }
-    
+
             $json = json_encode($resp);
             $this->log(LogLevel::INFO, sprintf("Sending payload: %s", $json));
             echo $json;
@@ -90,7 +90,7 @@ class OCR {
      */
      private function prepareForOCR($imagePath) {
         $newFile = UPLOAD_DIR . pathinfo($imagePath, PATHINFO_FILENAME) . ".pbm";
-        
+
         try {
             $this->sendMessage("Measuring screenshot size...");
             $this->log(LogLevel::DEBUG, sprintf("Measuring %s", $imagePath));
@@ -110,7 +110,7 @@ class OCR {
                     $pixel = $img->getImagePixelColor($x, $y);
                     $color = $pixel->getColorAsString();
                     if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));                                           
+                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
                         break;
                     }
                 }
@@ -264,7 +264,7 @@ class OCR {
             $this->log(LogLevel::DEBUG, sprintf("Executing %s", $cmd));
             $this->sendMessage("Scanning screenshot...");
             exec($cmd, $lines);
-            
+
             if (sizeof($lines) < 1) {
                 throw new OCRException($this->sess_id, "No data was read from the uploaded image.");
             }
