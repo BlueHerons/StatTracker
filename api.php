@@ -187,7 +187,7 @@ $StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTra
 
         try {
 	    $agent->updateStats($data);
-            $response->message = sprintf("Your stats for %s have been recieved.", date("l, F j", strtotime($data['date'])));
+            $response->message = sprintf("Your stats for %s have been received.", date("l, F j", strtotime($data['date'])));
 
             if (!$agent->hasSubmitted()) {
                 $response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";

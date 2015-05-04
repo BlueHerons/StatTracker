@@ -162,7 +162,7 @@ function onPageLoad() {
 					last_response_len = e.loaded;
 					json = JSON.parse(response);
 					if (json.hasOwnProperty("error")) {
-						$("#message").show().html("An error occured while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
 					}
 					else {
 						$("#message").show().html(json.status);
@@ -204,7 +204,7 @@ function onPageLoad() {
 				}
 			},
 			error: function(response) {
-				$("#message").html("An error occured while processing your screenshot.");
+				$("#message").html("An error occurred while processing your screenshot.");
 				showActions();
 			},
 			complete: function() {

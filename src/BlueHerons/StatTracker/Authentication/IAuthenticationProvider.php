@@ -17,7 +17,7 @@ interface IAuthenticationProvider {
      *       has been created.
      * - "email": The email address provided via the Authentication Provider
      * - "error": true or false
-     *    - ONLY TRUE WHEN a application error occured, false otherwise
+     *    - ONLY TRUE WHEN a application error occurred, false otherwise
      * - "url": URL to direct the user to for authentication.
      *    - ONLY REQUIRED if "status" is "authentication_required"
      * - "agent" Agent object
@@ -31,7 +31,7 @@ interface IAuthenticationProvider {
      * - User has successfuly authenticated, but they have not completed registration
      * {"error": false, "status": "registration_required", "email": "agent_email@gmail.com"}
      *
-     * - Some error occured, and the user cannot do anything to fix it
+     * - Some error occurred, and the user cannot do anything to fix it
      * {"error": true, "message": "Google isn't available"}
      *
      * - Successful authentication
@@ -44,7 +44,7 @@ interface IAuthenticationProvider {
      *
      * This function MUST return a PHP object with the following properties:
      * - "error": true or false
-     *    - true if a application error occured. The "message" property is also required in this case.
+     *    - true if a application error occurred. The "message" property is also required in this case.
      * - "message": <user description of error>
      *    - Message that will be displayed to the user if "error" is true.
      * - "status": "logged_out"
