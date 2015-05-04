@@ -53,6 +53,8 @@ define("GOOGLE_CLIENT_ID",     "");
 define("GOOGLE_CLIENT_SECRET", "");
 define("GOOGLE_APP_NAME",      "");
 define("GOOGLE_REDIRECT_URL",  "");
+// Client ID for the optional accompanying Android app. See the wiki for more information.
+//define("GOOGLE_APP_CLIENT_ID", "");
 
 // You should not need to change any values below this line.
 
