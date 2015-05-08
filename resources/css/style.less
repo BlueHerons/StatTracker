@@ -135,7 +135,7 @@ input[type="number"][value=""] {
 }
 
 input[type="submit"], input[type="button"], input.button {
-    background: linear-gradient(to bottom, #0ea0ab -25%, #20474B 25%, #20474B 75%, #0ea0ab 125%);
+    background: linear-gradient(to bottom, #0ea0ab -25%, #20474B 15%, #20474B 85%, #0ea0ab 125%);
     border: 2px solid rgba(0, 216, 225, 1);
     color: rgba(0, 255, 255, 1);
     cursor: pointer;
@@ -802,4 +802,54 @@ table#stat-entry {
         padding-top: ~"@{upcoming-badge-time-margin}px";
         padding-left: 80px;
     }
+}
+
+.ui-datepicker {
+    background: linear-gradient(to bottom, #0ea0ab -25%, #20474B 15%, #20474B 85%, #0ea0ab 125%);
+    border: 2px solid rgba(0, 216, 225, 1);
+
+    > * {
+        margin: 5px;
+    }
+
+    .ui-datepicker-prev, .ui-datepicker-next {
+        color: @header-color;
+        cursor: pointer;
+        font-size: 75%;
+    }
+
+    .ui-datepicker-prev {
+        float: left;
+
+        span:before {
+            content: "< ";
+        }
+    }
+
+    .ui-datepicker-next {
+        float: right;
+
+        span:after {
+            content: " >";
+        }
+    }
+
+    .ui-datepicker-title {
+        clear: both;
+        color: @header-color;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .ui-datepicker-calendar {
+        td, th {
+            text-align: center;
+            width: 25px;
+        }
+
+        .ui-datepicker-unselectable {
+            opacity: 0.25;
+        }
+    }
+
 }
