@@ -153,11 +153,11 @@ class GooglePlusProvider implements IAuthenticationProvider {
             $reqUrl = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='.$access_token;
             $req = new \Google_Http_Request($reqUrl);
             $tokenInfo = json_decode($this->client->getAuth()->authenticatedRequest($req)->getResponseBody());
-            if ($tokenInfo->error) {
+            if (property_exists($tokenInfo, 'error')) {
                 // This is not a valid token.
                 throw new Exception("Invalid Access Token.");
             }
-            else if ($tokenInfo->audience != GOOGLE_APP_CLIENT_ID) {
+            else if (!property_exists($tokenInfo, 'audience') || $tokenInfo->audience != GOOGLE_APP_CLIENT_ID) {
                 // This is not meant for this app. It is VERY important to check
                 // the client ID in order to prevent man-in-the-middle attacks.
                 throw new Exception("Access Token not meant for this app.");
