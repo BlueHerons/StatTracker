@@ -4,13 +4,13 @@
     "license": "Apache-2.0",
     "authors": [
         {
-            "name": "John Luetke",
+            "name": "johnluetke",
             "email": "john@johnluetke.net",
             "homepage": "http://github.com/johnluetke",
             "role": "Lead Developer"
         },
         {
-            "name": "Forrest McIntyre",
+            "name": "ForrestMcIntyre",
             "homepage": "http://github.com/ForrestMcIntyre",
             "role": "Contributor"
         },
@@ -20,13 +20,13 @@
             "role": "Contributor"
         },
         {
-            "name": "Kevin Brasier",
+            "name": "Fragger",
             "email": "wonderfulweb@gmail.com",
             "homepage": "http://github.com/Fragger",
             "role": "Contributor"
         },
         {
-            "name": "Russell Aunger",
+            "name": "aunger",
             "homepage": "http://github.com/aunger",
             "role": "Contributor"
         }
