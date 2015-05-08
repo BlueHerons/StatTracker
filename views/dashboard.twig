@@ -190,7 +190,7 @@ function onPageLoad() {
 	});
 
 	function loadStatPrediction(stat, name) {
-		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/" + stat +"/graph",
+		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/" + stat +"/prediction",
 			data: { ts: '{{ agent.update_time }}' },
 			dataType: "json",
 			statusCode: {
@@ -198,52 +198,52 @@ function onPageLoad() {
 					alert("There was an error retrieving the graph for " + name + ".");
 				}
 			},
-			success: function(data) {
-				if (data.prediction.rate == null) {
+			success: function(prediction) {
+				if (prediction.rate == null) {
 					$(".prediction." + stat).hide();
 				}
-				else if (data.prediction.badge != null) {
+				else if (prediction.badge != null) {
 				
-					$(".prediction." + stat + " .next-badge .badge-image + .percent-complete span").html(Math.floor(data.prediction.progress * 100) +"%");
+					$(".prediction." + stat + " .next-badge .badge-image + .percent-complete span").html(Math.floor(prediction.progress * 100) +"%");
 
-					if (data.prediction.next == null) {
+					if (prediction.next == null) {
 						$(".prediction." + stat + " .next-badge").hide();
 					}
 
 					msg = "";
-					if (data.prediction.badge == "Level") {
+					if (prediction.badge == "Level") {
 						$(".prediction." + stat + " .current-badge .badge-image").removeClass("badge-icon-75");
 						$(".prediction." + stat + " .next-badge .badge-image").removeClass("badge-icon-75");
 						$(".prediction." + stat + " .current-badge .badge-image").addClass("level-icon-75");
 						$(".prediction." + stat + " .next-badge .badge-image").addClass("level-icon-75");
 
 						$(".prediction." + stat + " .current-badge .level-icon-75").addClass("{{ faction_class }}");
-						$(".prediction." + stat + " .current-badge .level-icon-75").addClass("l" + data.prediction.current);
+						$(".prediction." + stat + " .current-badge .level-icon-75").addClass("l" + prediction.current);
 
-						if (data.prediction.next == null) {
+						if (prediction.next == null) {
 							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-							msg += "Your average rate is " + data.prediction.rate + " " + data.prediction.unit + " per day";
+							msg += "Your average rate is " + prediction.rate + " " + prediction.unit + " per day";
 						}
 						else {
 							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("{{ faction_class }}");
-							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("l" + data.prediction.next);
-							$(".prediction." + stat + " .next-badge .level-icon-75").css("opacity", data.prediction.progress / 1.5);	
-							msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for level " + data.prediction.next + ".<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days.";
+							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("l" + prediction.next);
+							$(".prediction." + stat + " .next-badge .level-icon-75").css("opacity", prediction.progress / 1.5);	
+							msg = "You have " + prediction.amount_remaining + " " + prediction.unit + " remaining for level " + prediction.next + ".<p/>At your average rate of " + prediction.rate + " per day, that should take " + prediction.days_remaining + " days.";
 						}
 					}
 					else {
-						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(data.prediction.badge.toLowerCase().replace(" ", ""));
-						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(data.prediction.current.toString().toLowerCase());
+						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.badge.toLowerCase().replace(" ", ""));
+						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.current.toString().toLowerCase());
 
-						if (data.prediction.next != null) {
-							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(data.prediction.badge.toString().toLowerCase().replace(" ", ""));
-							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(data.prediction.next.toString().toLowerCase());
-							$(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", data.prediction.progress / 1.5);
-							msg = "You have " + data.prediction.amount_remaining + " " + data.prediction.unit + " remaining for the " + data.prediction.next + " badge.<p/>At your average rate of " + data.prediction.rate + " per day, that should take " + data.prediction.days_remaining + " days.";
+						if (prediction.next != null) {
+							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.badge.toString().toLowerCase().replace(" ", ""));
+							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.next.toString().toLowerCase());
+							$(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", prediction.progress / 1.5);
+							msg = "You have " + prediction.amount_remaining + " " + prediction.unit + " remaining for the " + prediction.next + " badge.<p/>At your average rate of " + prediction.rate + " per day, that should take " + prediction.days_remaining + " days.";
 						}
 						else {
 							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-							msg += "Your average rate is " + data.prediction.rate + " " + data.prediction.unit + " per day";
+							msg += "Your average rate is " + prediction.rate + " " + prediction.unit + " per day";
 						}
 					}
 	
@@ -252,7 +252,7 @@ function onPageLoad() {
 				else {
 					$(".prediction." + stat + " .summary .current-badge").hide();
 					$(".prediction." + stat + " .summary .next-badge").hide();
-					$(".prediction." + stat + " .rate").html("Your average rate is " + data.prediction.rate + " " + data.prediction.unit + " per day.");
+					$(".prediction." + stat + " .rate").html("Your average rate is " + prediction.rate + " " + prediction.unit + " per day.");
 				}
 			}
 		});
