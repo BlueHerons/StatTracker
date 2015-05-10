@@ -88,7 +88,7 @@ class OCR {
      *
      * @return path to new PBM image
      */
-     private function prepareForOCR($imagePath) {
+    private function prepareForOCR($imagePath) {
         $newFile = UPLOAD_DIR . pathinfo($imagePath, PATHINFO_FILENAME) . ".pbm";
 
         try {
@@ -258,7 +258,7 @@ class OCR {
      *
      * @return array of lines read from the image
      */
-     private function executeOCR($imagePath) {
+    private function executeOCR($imagePath) {
         try {
             $cmd = sprintf("%s -i %s", OCRAD, $imagePath);
             $this->log(LogLevel::DEBUG, sprintf("Executing %s", $cmd));
