@@ -358,17 +358,17 @@ class OCR {
                     $step = 'ap';
                     array_push($elements, $values[1]);
                 }
-                elseif ($step == 'ap' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
+                elseif ($step == 'ap' && strpos($line, 'Discovery') !== false) {
                     $step = 'discovery';
                     $count = 0;
                 }
                 // Some screenshots arent producing AP in the OCR results, which throws this off.
-                else if ($step == 'start' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
+                else if ($step == 'start' && strpos($line, 'Discovery') !== false) {
                     $step = 'discovery';
                     $count = 0;
                     array_push($elements, 0);
                 }
-                elseif ($step == 'discovery' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
+                elseif ($step == 'discovery' && strpos($line, 'Health') !== false) {
                     // inject a 0 if only 2 stats, which means that the agent has 0 portals discovered
                     if ($count == 2) {
                         $temp = array_pop($elements);
@@ -378,27 +378,27 @@ class OCR {
                     $count = 0;
                     $step = 'health';
                 }
-                elseif ($step == 'health' && preg_match('/^\s*Building\s*$/sxmi', $line)) {
+                elseif ($step == 'health' && strpos($line, 'Building') !== false) {
                     $step = 'building';
                 }
-                elseif ($step == 'building' && preg_match('/^\s*Combat\s*$/sxmi', $line)) {
+                elseif ($step == 'building' && strpos($line, 'Combat') !== false) {
                     $step = 'combat';
                 }
-                elseif ($step == 'combat' && preg_match('/^\s*Defense\s*$/sxmi', $line)) {
+                elseif ($step == 'combat' && strpos($line, 'Defense') !== false) {
                     $step = 'defense';
                 }
-                elseif ($step == 'defense' && preg_match('/^\s*Missions\s*$/sxmi', $line)) {
+                elseif ($step == 'defense' && strpos($line, 'Missions') !== false) {
                     $step = 'missions';
                 }
-                elseif ($step == 'defense' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
+                elseif ($step == 'defense' && strpos($line, 'Resource Gathering') !== false) {
                     // Inject a 0 for missions completed
                     array_push($elements, 0);
                     $step = 'resources';
                 }
-                elseif ($step == 'missions' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
+                elseif ($step == 'missions' && strpos($line, 'Resource Gathering') !== false) {
                     $step = 'resources';
                 }
-                elseif ($step == 'resources' && preg_match('/^\s*Mentoring\s*$/sxmi', $line)) {
+                elseif ($step == 'resources' && strpos($line, 'Mentoring') !== false) {
                     // Inject a 0 for "Glyph hack points"
                     if ($count == 2) {
                         $temp = array_pop($elements);
