@@ -430,9 +430,6 @@ class OCR {
                     $count++;
                     array_push($elements, $values[1]);
                 }
-                elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
-                    $warning = sprintf($lang['maybe because'], $values[1]);
-                }
             }
 
             // final check on count
