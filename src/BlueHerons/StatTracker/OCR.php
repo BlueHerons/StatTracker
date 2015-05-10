@@ -4,6 +4,7 @@ namespace BlueHerons\StatTracker;
 use Exception;
 use Imagick;
 use ImagickDraw;
+use ImagickPixel;
 use StdClass;
 
 use Psr\Log\LogLevel;
@@ -92,151 +93,185 @@ class OCR {
         $newFile = UPLOAD_DIR . pathinfo($imagePath, PATHINFO_FILENAME) . ".pbm";
 
         try {
-            $this->sendMessage("Measuring screenshot size...");
-            $this->log(LogLevel::DEBUG, sprintf("Measuring %s", $imagePath));
+            $this->sendMessage("Loading screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Loading %s", $imagePath));
+
             $img = new Imagick();
+
             $quantumRange = $img->getQuantumRange();
-            $black_point = $quantumRange['quantumRangeLong'] * 0.04;
-            $white_point = $quantumRange['quantumRangeLong'] - $black_point;
+            // Threshold in percent * quantumRange in which values higher go pure white and lower pure black
+            $threshold = 0.45 * $quantumRange['quantumRangeLong'];
+            // Color to compare to when looking for stat section
+            $statSectionColor = new ImagickPixel('#7b6728');
+            // Distance from 0-255 * quantumRange * sqrt(3) in which to consider colors similar when mapped into 3d space
+            $fuzz = 35/255 * $quantumRange['quantumRangeLong'] / sqrt(3);
+
             $img->readImage($imagePath);
             $identify = $img->identifyImage();
+            $width = $identify['geometry']['width'];
+            $height = $identify['geometry']['height'];
             $x = 0; $y = 0;
-            $pixel = $img->getImagePixelColor($x, $y);
-            $color = $pixel->getColorAsString();
-            $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
 
-            if ($color == "srgb(0,0,0") {
-                for ( ; $x < 500 ; $x += 1 , $y += 1) {
+            $this->sendMessage("Measuring screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Measuring %s", $imagePath));
+
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Start @ [%s,%s]", $x, $y));
+
+            for ( ; $y < $height / 8 ; $y += 5) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if ($this->isBlack($pixel)) {
+                    break;
+                }
+            }
+            if ($y >= $height / 8) {
+                throw new OCRException($this->sess_id, "failed to find top of Logo Box");
+            }
+            $logoBoxTop = $y;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Box Top @ [%s,%s]", $x, $y));
+
+            for ( ; $y < $height / 4 ; $y ++) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if (!$this->isBlack($pixel)) {
+                    break;
+                }
+            }
+            if ($y >= $height / 4) {
+                throw new OCRException($this->sess_id, "failed to find bottom of Logo Box");
+            }
+            $logoBoxBottom = $y - 1;
+            $logoBoxHeight = $logoBoxBottom - $logoBoxTop;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Box Bottom @ [%s,%s]", $x, $y));
+
+
+            for ( ; $x < $width / 4 ; $x += 10) {
+                for ($y = $logoBoxTop ; $y < $logoBoxBottom ; $y ++) {
                     $pixel = $img->getImagePixelColor($x, $y);
-                    $color = $pixel->getColorAsString();
-                    if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
+                    if ($this->isLight($pixel)) {
                         break;
                     }
                 }
+                if ($y < $logoBoxBottom) {
+                    break;
+                }
+            }
+            if ($x >= $width / 4) {
+                throw new OCRException($this->sess_id, "failed to find left of Logo");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Left @ [%s,%s]", $x, $y));
+
+            for ( ; $x < $width / 2 ; $x ++) {
+                for ($y = $logoBoxTop ; $y < $logoBoxBottom ; $y ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($y >= $logoBoxBottom) {
+                    break;
+                }
+            }
+            if ($x >= $width / 2) {
+                throw new OCRException($this->sess_id, "failed to find right of Logo");
+            }
+            $apBoxLeft = $x;
+            $apBoxWidth = $width - $apBoxLeft;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Left @ [%s,%s]", $x, $y));
+
+            for ($y = $logoBoxBottom ; $y > $logoBoxBottom - $logoBoxHeight / 4 ; $y -= 5) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x < $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 4) {
+                throw new OCRException($this->sess_id, "failed to find bottom of AP");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Bottom @ [%s,%s]", $x, $y));
+
+            for ( ; $y > $logoBoxBottom - $logoBoxHeight / 2 ; $y -= 5) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x >= $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
+                throw new OCRException($this->sess_id, "failed to find top of AP");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Top @ [%s,%s]", $x, $y));
+
+            for ( ; $y > $logoBoxBottom - $logoBoxHeight / 2 ; $y --) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x < $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
+                throw new OCRException($this->sess_id, "failed to find bottom of Progress Bar");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Progress Bar Bottom @ [%s,%s]", $x, $y));
+            $progressBarBottom = $y + 1;
+
+            $x = 0;
+            for ($y = $logoBoxBottom ; $y < $height * 0.75 ; $y ++) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if ($pixel->isSimilar($statSectionColor, $fuzz)) {
+                    break;
+                }
+            }
+            if ($y >= $height * 0.75) {
+                // This is non fatal, we can just not chop the image, usually this helps to make OCR faster by removing badges and mission icons
+                $statsTop = false;
+                $this->log(LogLevel::DEBUG, "Scanner Failed to find Stats Top");
             }
             else {
-                for ( ; $y < 500 ; $y += 5) {
-                    $pixel = $img->getImagePixelColor($x, $y);
-                    $color = $pixel->getColorAsString();
-                    if ($color == 'srgb(0,0,0)') {
-                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                        break;
-                    }
-                }
-                for ( ; $x < 500 ; $x += 1 , $y += 1) {
-                    $pixel = $img->getImagePixelColor($x, $y);
-                    $color = $pixel->getColorAsString();
-                    if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                        break;
-                    }
-                }
-                $count = 0;
-                for ( ; $x < 500 ; $x += 1 , $y -= 1) {
-                    $count++;
-                    $pixel = $img->getImagePixelColor($x, $y);
-                    $color = $pixel->getColorAsString();
-                    if (preg_match('/^srgb\((\d{1,2}),(\d{1,2}),(\d{1,2})\)$/sxmi', $color, $matches)
-                        && $matches[1] < 80
-                        && $matches[2] < 80
-                        && $matches[3] < 80) {
-                        if ($count <= 2) {
-                            $y += 1;
-                            continue;
-                        } else {
-                            $x -= 1;
-                            $y += 1;
-                            $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                            break;
-                        }
-                    }
-                }
-            }
-
-            for ( ; $x < 500 ; $x += 1) {
-                $pixel = $img->getImagePixelColor($x, $y);
-                $color = $pixel->getColorAsString();
-                if (preg_match('/^srgb\((\d{1,2}),(\d{1,2}),(\d{1,2})\)$/sxmi', $color, $matches)
-                    && $matches[1] < 80
-                    && $matches[2] < 80
-                    && $matches[3] < 80) {
-                    $x -= 1;
-                    $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                    break;
-                }
-            }
-            for ( ; $x < 500 ; $x += 1 , $y += 1) {
-                $pixel = $img->getImagePixelColor($x, $y);
-                $color = $pixel->getColorAsString();
-                if (preg_match('/^srgb\(\d,\d,\d\)$/sxmi', $color)) {
-                    $y += 1;
-                    $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                    break;
-                }
-            }
-            $rightx = $x;
-            $x = 0;
-            for ( ; $x < 500 ; $x += 1) {
-                $pixel = $img->getImagePixelColor($x, $y);
-                $color = $pixel->getColorAsString();
-                if (!preg_match('/^srgb\(\d,\d,\d\)$/sxmi', $color)) {
-                    $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                    break;
-                }
-            }
-
-            $space = $x;
-            $x += $rightx;
-            $y += $space;
-
-            if ($space <= 4) {
-                for ( ; $x < 500 ; $x += 1 , $y += 1) {
-                    $pixel = $img->getImagePixelColor($x, $y);
-                    $color = $pixel->getColorAsString();
-                    if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                        $x -= 1;
-                        $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                        break;
-                    }
-                }
-            }
-
-            for ( ; $y < 500 ; $y += 1) {
-                $pixel = $img->getImagePixelColor($x, $y);
-                $color = $pixel->getColorAsString();
-                if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                    $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                    break;
-                }
-            }
-            for ( ; $y < 500 ; $y += 1) {
-                $pixel = $img->getImagePixelColor($x, $y);
-                $color = $pixel->getColorAsString();
-                if (preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-                    $x -= round($space / 2);
-                    $this->log(LogLevel::DEBUG, sprintf("Scanner @ [%s,%s]", $x, $y));
-                    break;
-                }
+                $statsTop = $y - 1;
+                $this->log(LogLevel::DEBUG, sprintf("Scanner Stats Top @ [%s,%s]", $x, $y));
             }
 
             $this->sendMessage("Cropping screenshot..");
-            $this->log(LogLevel::DEBUG, sprintf("Cropping %s to W: %s, H: %s", $imagePath, $identify['geometry']['width'], $identify['geometry']['height'] - $y));
-            $img->cropImage($identify['geometry']['width'], $identify['geometry']['height'] - $y, 0, $y);
+            $this->log(LogLevel::DEBUG, sprintf("Cropping %s to W: %d, H: %d", $imagePath, $width, $height - $progressBarBottom));
+            $img->cropImage($width, $height - $progressBarBottom, 0, $progressBarBottom);
 
             $this->sendMessage("Masking screenshot...");
-            $this->log(LogLevel::DEBUG, sprintf("Masking %s", $imagePath));
+            $this->log(LogLevel::DEBUG, sprintf("Masking %s from 0, 0 to %d, %d", $imagePath, $apBoxLeft, $logoBoxBottom - $progressBarBottom));
             $draw = new ImagickDraw();
             $draw->setFillColor('black');
-            $draw->rectangle(0, 0, $x, $y);
+            $draw->rectangle(0, 0, $apBoxLeft, $logoBoxBottom - $progressBarBottom);
             $img->drawImage($draw);
 
+            if($statsTop !== false) {
+                $this->sendMessage("Chopping screenshot...");
+                $this->log(LogLevel::DEBUG, sprintf("Chopping %s from 0, %d by 0, %d", $imagePath, $logoBoxBottom - $progressBarBottom, $statsTop - $logoBoxBottom));
+                $img->chopImage(0, $statsTop - $logoBoxBottom, 0, $logoBoxBottom - $progressBarBottom);
+            }
+
+            $this->sendMessage("Resizing screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Resizing %s", $imagePath));
+            $img->resizeImage($width * 2, 0, imagick::FILTER_LANCZOS, 1);
+
             $this->sendMessage("Contrasting screenshot...");
-            $this->log(LogLevel::INFO, sprintf("Constrasting %s", $imagePath));
-            $this->log(LogLevel::DEBUG, sprintf("Gamma: %s, %s, %s", $black_point, 1, $white_point));
-            $img->levelImage($black_point, 1, $white_point);
-            $img->resizeImage($identify['geometry']['width'] * 2, 0,  imagick::FILTER_LANCZOS, 1);
+            $this->log(LogLevel::DEBUG, sprintf("Constrasting %s", $imagePath));
+            $img->thresholdImage($threshold);
+
+            $this->sendMessage("Saving screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Saving %s", $imagePath));
             $img->writeImage($newFile);
+
             $this->log(LogLevel::INFO, sprintf("Completed %s", $imagePath));
 
             return $newFile;
@@ -249,6 +284,23 @@ class OCR {
         finally {
             unlink($imagePath);
         }
+    }
+
+    /**
+     * Helper functions for the prepareForOCR function
+     *
+     * @param ImagickPixel $pixel color to evaluate
+     *
+     * @return boolean true if evaluation true
+     */
+    private function isBlack($pixel) {
+        $color = $pixel->getColor();
+        return ($color['r'] < 10 && $color['g'] < 10 && $color['b'] < 10);
+    }
+
+    private function isLight($pixel) {
+        $color = $pixel->getColor();
+        return ($color['r'] > 80 || $color['g'] > 80 || $color['b'] > 80);
     }
 
     /**
