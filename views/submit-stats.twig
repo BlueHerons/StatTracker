@@ -170,19 +170,19 @@ function onPageLoad() {
 				}
 			},
 			success: function(response) {
-                                if (json.hasOwnProperty("error")) {
-                                    $("#message").html(json.error);
-                                    showActions();
-                                    return;
-                                }
-                                else if (!json.hasOwnProperty("stats")) {
-                                    $("#message").html("Your screenshot failed to process. Please try again later.<p/><p/>Transaction " + json.session);
-                                    showActions();
-                                    return;
-                                }
-                                else {
-                                    $("#message").html("Your screenshot has been processed.<p/><p/>Click the \"Submit Stats\" button to submit.");
-                                }
+				if (json.hasOwnProperty("error")) {
+					$("#message").html(json.error);
+					showActions();
+					return;
+				}
+				else if (!json.hasOwnProperty("stats")) {
+					$("#message").html("Your screenshot failed to process. Please try again later.<p/><p/>Transaction " + json.session);
+					showActions();
+					return;
+				}
+				else {
+					$("#message").html("Your screenshot has been processed.<p/><p/>Click the \"Submit Stats\" button to submit.");
+				}
 
 				history.pushState({ show: "upload" }, "", "#upload");
 				showStats();
