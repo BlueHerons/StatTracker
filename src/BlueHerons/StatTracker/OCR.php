@@ -124,7 +124,7 @@ class OCR {
                 }
             }
             if ($y >= $height / 8) {
-                throw new OCRException($this->sess_id, "failed to find top of Logo Box");
+                throw new OCRException($this->sess_id, "Failed to find top of Logo Box");
             }
             $logoBoxTop = $y;
             $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Box Top @ [%s,%s]", $x, $y));
@@ -136,7 +136,7 @@ class OCR {
                 }
             }
             if ($y >= $height / 4) {
-                throw new OCRException($this->sess_id, "failed to find bottom of Logo Box");
+                throw new OCRException($this->sess_id, "Failed to find bottom of Logo Box");
             }
             $logoBoxBottom = $y - 1;
             $logoBoxHeight = $logoBoxBottom - $logoBoxTop;
@@ -155,7 +155,7 @@ class OCR {
                 }
             }
             if ($x >= $width / 4) {
-                throw new OCRException($this->sess_id, "failed to find left of Logo");
+                throw new OCRException($this->sess_id, "Failed to find left of Logo");
             }
             $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Left @ [%s,%s]", $x, $y));
 
@@ -171,7 +171,7 @@ class OCR {
                 }
             }
             if ($x >= $width / 2) {
-                throw new OCRException($this->sess_id, "failed to find right of Logo");
+                throw new OCRException($this->sess_id, "Failed to find right of Logo");
             }
             $apBoxLeft = $x;
             $apBoxWidth = $width - $apBoxLeft;
@@ -189,7 +189,7 @@ class OCR {
                 }
             }
             if ($y <= $logoBoxBottom - $logoBoxHeight / 4) {
-                throw new OCRException($this->sess_id, "failed to find bottom of AP");
+                throw new OCRException($this->sess_id, "Failed to find bottom of AP");
             }
             $this->log(LogLevel::DEBUG, sprintf("Scanner AP Bottom @ [%s,%s]", $x, $y));
 
@@ -205,7 +205,7 @@ class OCR {
                 }
             }
             if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
-                throw new OCRException($this->sess_id, "failed to find top of AP");
+                throw new OCRException($this->sess_id, "Failed to find top of AP");
             }
             $this->log(LogLevel::DEBUG, sprintf("Scanner AP Top @ [%s,%s]", $x, $y));
 
@@ -221,7 +221,7 @@ class OCR {
                 }
             }
             if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
-                throw new OCRException($this->sess_id, "failed to find bottom of Progress Bar");
+                throw new OCRException($this->sess_id, "Failed to find bottom of Progress Bar");
             }
             $this->log(LogLevel::DEBUG, sprintf("Scanner Progress Bar Bottom @ [%s,%s]", $x, $y));
             $progressBarBottom = $y + 1;
