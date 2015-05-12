@@ -73,7 +73,9 @@ class OCR {
 
             $json = json_encode($resp);
             $this->log(LogLevel::INFO, sprintf("Sending payload: %s", $json));
+            echo "\n";
             echo $json;
+            echo "\n";
             ob_flush();
             flush();
         }

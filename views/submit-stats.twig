@@ -147,8 +147,6 @@ function onPageLoad() {
 		$("#loading").show();
 		$("#message").show().html("Uploading screenshot...");
 		$("#submit-actions").hide();
-		var last_response_len = 0;
-		var json = {};
 		$.ajax({
 			type: "POST",
 			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
@@ -158,18 +156,17 @@ function onPageLoad() {
 			contentType: false,
 			xhrFields: {
 				onprogress: function(e) {
-					response = e.currentTarget.response.substring(last_response_len);
-					last_response_len = e.loaded;
-					json = JSON.parse(response);
+					var json = parseOCRResponse(e.currentTarget.response);
 					if (json.hasOwnProperty("error")) {
 						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
 					}
-					else {
+					else if(json.hasOwnProperty("status")) {
 						$("#message").show().html(json.status);
 					}
 				}
 			},
 			success: function(response) {
+				var json = parseOCRResponse(response);
 				if (json.hasOwnProperty("error")) {
 					$("#message").html(json.error);
 					showActions();
@@ -213,6 +210,20 @@ function onPageLoad() {
 			}
 		});
 	});
+
+	function parseOCRResponse(response) {
+		var split = response.split("\n\n");
+		var jsonStr = split[split.length - 1];
+		if (jsonStr[jsonStr.length - 1] === "\n") {
+			return JSON.parse(jsonStr.trim());
+		}
+		else if(split.length > 1) {
+			return JSON.parse(split[split.length - 2].trim());
+		}
+		else {
+			return {};
+		}
+	};
 
 	$("input[name='manual-entry']").on("click", function() { 
 		history.pushState({show: "manual"}, "", "#manual");
