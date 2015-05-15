@@ -25,7 +25,7 @@ class StatTracker extends Application {
 
     public static function db() {
         if (!(self::$db instanceof PDO)) {
-            self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=%s", DB_HOST, DB_NAME, DB_CHARSET), DB_USER, DB_PASS, array(
+            self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=%s", DATABASE_HOST, DATABASE_NAME, DATABASE_CHARSET), DATABASE_USER, DATABASE_PASS, array(
                   PDO::ATTR_EMULATE_PREPARES   => false
                 , PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION
                 , PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -106,7 +106,7 @@ class StatTracker extends Application {
                 $this->logger->debug(sprintf("Searching for specified provider %s", constant("AUTH_PROVIDER")));
                 foreach ($authClasses as $classname) {
                     $name = explode("\\", $classname);
-                    if ($name[sizeof($name)-1] == constant(AUTH_PROVIDER)) {
+                    if ($name[sizeof($name)-1] == constant("AUTH_PROVIDER")) {
                         $class = $classname;
                         break;
                     }
