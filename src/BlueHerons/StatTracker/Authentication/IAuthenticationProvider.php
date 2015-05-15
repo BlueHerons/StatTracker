@@ -67,3 +67,38 @@ interface IAuthenticationProvider {
      */
     public function callback(StatTracker $app);
 }
+
+class AuthResponse {
+
+    const AUTHENTICATION_REQUIRED = "authentication_required";
+    const OKAY = "okay";
+    const REGISTRATION_REQUIRED = "registration_required";
+
+    public static function authenticationRequired($url = "") {
+        return new AuthResponse(self::AUTHENTICATION_REQUIRED, array(
+                                    "url" => $url
+                                ));
+    }
+
+    public static function okay($agent) {
+        return new AuthResponse(self::OKAY, array(
+                                    "agent" => $agent
+                                ));
+    }
+
+    public static function registrationRequired($message = "") {
+        return new AuthResponse(self::REGISTRATION_REQUIRED, array(
+                                    "message" => $message
+                                ));
+    }
+
+    private function __construct($status, $fields, $error = false) {
+        $this->error = $error;
+        $this->status = $status;
+
+        foreach ($fields as $k => $v) {
+            $this->$k = $v;
+        }
+    }
+
+}
