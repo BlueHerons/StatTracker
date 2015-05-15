@@ -149,47 +149,28 @@ class StatTracker extends Application {
      * @return void
      */
     public function sendRegistrationEmail($email_address) {
-        $stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
-        $stmt->execute(array($email_address));
-        $msg = "";
+        $body = $this->getAuthenticationProvider()->getRegistrationEmail($email_address);
 
-        // If no activation code is found, instruct user to contact the admin agent.
-        if ($stmt->rowCount() == 0) {
-            $stmt->closeCursor();
-            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
-                   "registration, please contact <strong>" . ADMIN_AGENT . "</strong> through your secure chat ".
-                   "and ask them to enable access for you.";
+        if ($body === false) {
+            // Explicit false means no email should be sent
+            return;
         }
         else {
-            extract($stmt->fetch());
-            $stmt->closeCursor();
+            $this->logger->info(sprintf("Sending registration email to %s", $email_address));
 
-            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
-                   "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
-                   "faction comms:".
-                   "<p/>%s<p/>" .
-                   "You will recieve a reply message once you have been activated. This may take up to " .
-                   "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
-                   "<p/>".
-                   $_SERVER['HTTP_REFERER'];
-
-            $msg = sprintf($msg, $activation_code);
-        }
-
-        $this->logger->info(sprintf("Sending registration email to %s", $email_address));
-
-        $transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
+            $transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
                 ->setUsername(SMTP_USER)
                 ->setPassword(SMTP_PASS);
 
-        $mailer = \Swift_Mailer::newInstance($transport);
+            $mailer = \Swift_Mailer::newInstance($transport);
 
-        $message = \Swift_Message::newInstance('Stat Tracker Registration')
+            $message = \Swift_Message::newInstance('Stat Tracker Registration')
                 ->setFrom(array(GROUP_EMAIL => GROUP_NAME))
                 ->setTo(array($email_address))
                 ->setBody($msg, 'text/html', 'iso-8859-2');
 
-        $mailer->send($message);
+            $mailer->send($message);
+        }
     }
 
     public function setBaseURL($request) {

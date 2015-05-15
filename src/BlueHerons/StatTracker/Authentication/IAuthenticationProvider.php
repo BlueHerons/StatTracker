@@ -66,6 +66,16 @@ interface IAuthenticationProvider {
      * info from the provider here, and process it via the login() method, which will be called automatically.
      */
     public function callback(StatTracker $app);
+
+    /**
+     * When status == "registration_required", optionally send an email to the user stating what needs to be completed
+     * in order to complete registration.
+     *
+     * Return the entire body of an email message that shouold be sent to the user.
+     *
+     * If no email should be sent, return false
+     */
+    public function getRegistrationEmail($email_address);
 }
 
 class AuthResponse {

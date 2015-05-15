@@ -175,6 +175,37 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
     }
 
+    public function getRegistrationEmail($email_address) {
+        $stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
+        $stmt->execute(array($email_address));
+        $msg = "";
+
+        // If no activation code is found, instruct user to contact the admin agent.
+        if ($stmt->rowCount() == 0) {
+            $stmt->closeCursor();
+            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
+                   "registration, please contact <strong>" . ADMIN_AGENT . "</strong> through your secure chat ".
+                   "and ask them to enable access for you.";
+        }
+        else {
+            extract($stmt->fetch());
+            $stmt->closeCursor();
+
+            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
+                   "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
+                   "faction comms:".
+                   "<p/>%s<p/>" .
+                   "You will recieve a reply message once you have been activated. This may take up to " .
+                   "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
+                   "<p/>".
+                   $_SERVER['HTTP_REFERER'];
+
+            $msg = sprintf($msg, $activation_code);
+        }
+
+        return $msg;
+    }
+
     /**
      * Generates an authorization code for the given email address. If the email address is not
      * already in the database, it will be inserted. If it already exists, the authorization code
