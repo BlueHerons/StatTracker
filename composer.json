@@ -54,6 +54,8 @@
         "twig/twig": "~1.8"
     },
     "scripts": {
+        "post-update-cmd": "BlueHerons\\StatTracker\\Installer::postUpdate",
+        "post-install-cmd": "BlueHerons\\StatTracker\\Installer::postInstall",
         "describe": "composer describe-version; composer describe-contributors",
         "describe-contributors": "curl https://api.github.com/repos/BlueHerons/StatTracker/contributors | jsawk -a 'return this.join(\"\\n\")' 'return this.login' > CONTRIBUTORS; cat CONTRIBUTORS",
         "describe-version": "git describe --always > VERSION; cat VERSION"
