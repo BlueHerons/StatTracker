@@ -10,9 +10,10 @@ License:       Apache License 2.0
 
 namespace BlueHerons\Wordpress\Plugin\StatTracker;
 
-define("ST_CAPABILITY",        "access_stat_tracker");
-define("ST_USER_AUTH_FILTER",  "stat_tracker_user_auth");
-define("ST_AGENT_NAME_FILTER", "stat_tracker_agent_name");
+define("ST_ACCESS_CAPABILITY",  "access_stat_tracker");
+define("ST_APPROVE_CAPABILITY", "approve_stat_tracker");
+define("ST_USER_AUTH_FILTER",   "stat_tracker_user_auth");
+define("ST_AGENT_NAME_FILTER",  "stat_tracker_agent_name");
 
 class StatTrackerPlugin {
 
@@ -43,14 +44,14 @@ class StatTrackerPlugin {
      * @return WP_User if access is authorized, null if not.
      */
     public function authorizedUser($user) {
-        if ($user->has_cap(ST_CAPABILITY)) {
+        if ($user->has_cap(ST_ACCESS_CAPABILITY)) {
             return $user;
         }
         else {
-            $admins = get_users(array('role' => 'administrator'));
+            $admins = get_users(array('role' => ST_APPROVE_CAPABILITY));
             $list = array();
             foreach ($admins as $admin) {
-                if ($admin->has_cap(ST_CAPABILITY)) {
+                if ($admin->has_cap(ST_APPROVE_CAPABILITY)) {
                     $list[] = $admin->user_login;
                 }
             }
@@ -64,8 +65,8 @@ class StatTrackerPlugin {
      * Filter to add a new column to the user list
      */
     function addUserListColumns($columns) {
-	if (is_admin() && current_user_can(ST_CAPABILITY)) {
-		$columns[ST_CAPABILITY] = __("Stat Tracker", "stat-tracker");
+	if (is_admin() && current_user_can(ST_ACCESS_CAPABILITY)) {
+		$columns[ST_ACCESS_CAPABILITY] = __("Stat Tracker", "stat-tracker");
 	}
 	return $columns;
     }
@@ -75,10 +76,11 @@ class StatTrackerPlugin {
     */
     function userListColumns($value = '', $column_name, $user_id) {
         if (get_user_by('id', $user_id)->has_cap("bhr_access_stat_tracker")) {
-            get_user_by('id', $user_id)->add_cap(ST_CAPABILITY);
+            get_user_by('id', $user_id)->add_cap(ST_ACCESS_CAPABILITY);
         }
-        if (ST_CAPABILITY == $column_name) {
-            $value = get_user_by('id', $user_id)->has_cap(ST_CAPABILITY) ? "&#x2713;" : "";
+        if (ST_ACCESS_CAPABILITY == $column_name) {
+            $value = get_user_by('id', $user_id)->has_cap(ST_ACCESS_CAPABILITY) ? "&#x2713;" : "";
+            $value .= get_user_by('id', $user_id)->has_cap(ST_APPROVE_CAPABILITY) ? "+" : "";
         }
 
         return $value;
@@ -93,13 +95,24 @@ class StatTrackerPlugin {
     <table class="form-table">
         <tr>
 	    <th>
-		<label for="bhr_stat_tracker"><?php _e("Stat Tracker Access", "stat-tracker"); ?></label>
+		<label for="<?php echo ST_ACCESS_CAPABILITY; ?>"><?php _e("Access Stat Tracker", "stat-tracker"); ?></label>
 	    </th>
 	    <td><?php
         // Checkbox is enabled only for admins viewing another person's profile
-        $is_disabled = is_admin() && get_current_user_id() != $user->ID;
-                ?><input type="checkbox" name="<?php echo ST_CAPABILITY;?>" id="<?php echo ST_CAPABILITY;?>" <?php echo $user->has_cap(ST_CAPABILITY) ? "checked " : ""; echo $is_disabled ? "" : "disabled "; ?>/><br/>
-                <span class="description"><?php _e("Enables access to Stat Tracker.", "stat-tracker"); ?></span>
+        $is_disabled = !current_user_can(ST_APPROVE_CAPABILITY) || get_current_user_id() == $user->ID;
+                ?><input type="checkbox" name="<?php echo ST_ACCESS_CAPABILITY;?>" id="<?php echo ST_ACCESS_CAPABILITY;?>" <?php echo $user->has_cap(ST_ACCESS_CAPABILITY) ? "checked " : ""; echo $is_disabled ? "disabled " : ""; ?>/><br/>
+                <span class="description"><?php _e("Can access Stat Tracker.", "stat-tracker"); ?></span>
+            </td>
+        </tr>
+         <tr>
+	    <th>
+		<label for="bhr_stat_tracker"><?php _e("Approve for Stat Tracker", "stat-tracker"); ?></label>
+	    </th>
+	    <td><?php
+        // Checkbox is enabled only for admins viewing another person's profile
+        $is_disabled = !current_user_can(ST_APPROVE_CAPABILITY);
+                ?><input type="checkbox" name="<?php echo ST_APPROVE_CAPABILITY;?>" id="<?php echo ST_APPROVE_CAPABILITY;?>" <?php echo $user->has_cap(ST_APPROVE_CAPABILITY) ? "checked " : ""; echo $is_disabled ? "disabled " : ""; ?>/><br/>
+                <span class="description"><?php _e("Can approve others for Stat Tracker.", "stat-tracker"); ?></span>
             </td>
         </tr>
     </table>
@@ -107,15 +120,23 @@ class StatTrackerPlugin {
     }
 
     /**
-     * Hook for saving the ST_CAPABILITY to the user's permissions
+     * Hook for saving the ST_ACCESS_CAPABILITY to the user's permissions
      */
     function userProfileUpdate($user_id) {
-        if (isset($_REQUEST[ST_CAPABILITY])) {
-            get_userdata($user_id)->add_cap(ST_CAPABILITY);
+        if (isset($_REQUEST[ST_ACCESS_CAPABILITY]) && $_REQUEST[ST_ACCESS_CAPABILITY] == 'on') {
+            get_userdata($user_id)->add_cap(ST_ACCESS_CAPABILITY);
         }
         else {
-            get_userdata($user_id)->remove_cap(ST_CAPABILITY);
+            get_userdata($user_id)->remove_cap(ST_ACCESS_CAPABILITY);
         }
+
+        if (isset($_REQUEST[ST_APPROVE_CAPABILITY]) && $_REQUEST[ST_APPROVE_CAPABILITY] == 'on') {
+            get_userdata($user_id)->add_cap(ST_APPROVE_CAPABILITY);
+        }
+        else {
+            get_userdata($user_id)->remove_cap(ST_APPROVE_CAPABILITY);
+        }
+
     }
 }
 
