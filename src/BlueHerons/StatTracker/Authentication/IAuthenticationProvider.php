@@ -76,18 +76,32 @@ interface IAuthenticationProvider {
      * If no email should be sent, return false
      */
     public function getRegistrationEmail($email_address);
+
+    public function getAuthenticationUrl();
+
+    public function getName();
 }
 
 class AuthResponse {
 
     const AUTHENTICATION_REQUIRED = "authentication_required";
+    const LOGGED_OUT = "logged_out";
     const OKAY = "okay";
     const REGISTRATION_REQUIRED = "registration_required";
 
-    public static function authenticationRequired($url = "") {
+    public static function authenticationRequired(IAuthenticationProvider $provider) {
         return new AuthResponse(self::AUTHENTICATION_REQUIRED, array(
-                                    "url" => $url
+                                    "providers" => array(
+                                        array(
+                                            "name" => strtolower($provider->getName()),
+                                            "url" => $provider->getAuthenticationUrl()
+                                        )
+                                    )
                                 ));
+    }
+
+    public static function loggedOut() {
+        return new AuthResponse(self::LOGGED_OUT);
     }
 
     public static function okay($agent) {
@@ -102,7 +116,13 @@ class AuthResponse {
                                 ));
     }
 
-    private function __construct($status, $fields, $error = false) {
+    public static function error($message) {
+        return new AuthResponse(null, array(
+                                    "message" => $message
+                                ), true);
+    }
+
+    private function __construct($status, $fields = array(), $error = false) {
         $this->error = $error;
         $this->status = $status;
 

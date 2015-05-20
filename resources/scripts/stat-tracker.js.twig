@@ -33,10 +33,20 @@ var StatTracker = new function() {
                 if (result.status == "authentication_required") {
                     $(".loading").hide();
                     $("#login-dialog").show();
+
+                    for (i in result.providers) {
+                        var p = result.providers[i];
+                        $("#login-buttons").append(
+                            $("<div/>").addClass(p.name).html(
+                                $("<a/>").attr("href", p.url)
+                            )
+                        );
+                    }
+
                     $("#login-buttons .google a").attr("href", result.url);
-                                        if (document.body.scrollHeight <= document.body.offsetHeight) {
-                                            $("#main-content").css("height", "inherit");
-                                        }
+                    if (document.body.scrollHeight <= document.body.offsetHeight) {
+                        $("#main-content").css("height", "inherit");
+                    }
                 }
                 else if (result.status == "registration_required") {
                                         $(".loading").hide();

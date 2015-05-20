@@ -195,6 +195,14 @@ class GooglePlusProvider implements IAuthenticationProvider {
         return $msg;
     }
 
+    public function getAuthenticationUrl() {
+        return $this->client->createAuthUrl();
+    }
+
+    public function getName() {
+        return "Google";
+    }
+
     /**
      * Generates an authorization code for the given email address. If the email address is not
      * already in the database, it will be inserted. If it already exists, the authorization code

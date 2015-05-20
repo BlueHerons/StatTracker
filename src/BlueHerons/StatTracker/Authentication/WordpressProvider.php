@@ -82,7 +82,8 @@ class WordpressProvider implements IAuthenticationProvider {
             return $response;
         }
         else {
-            $response = AuthResponse::authenticationRequired(wp_login_url(sprintf("%s/authenticate?action=callback", $this->base_url)));
+            $app['session']->set("agent", null);
+            $response = AuthResponse::authenticationRequired($this);
         }
 
         return $response;
@@ -90,6 +91,7 @@ class WordpressProvider implements IAuthenticationProvider {
 
     public function logout(StatTracker $app) {
         wp_clear_auth_cookie();
+        $app['session']->set("agent", null);
         session_destroy();
         $response = new stdClass();
         $response->status = "logged_out";
@@ -103,6 +105,14 @@ class WordpressProvider implements IAuthenticationProvider {
 
     public function getRegistrationEmail($email_address) {
         return false;
+    }
+
+    public function getAuthenticationUrl() {
+        return wp_login_url(sprintf("%s/authenticate?action=callback", $this->base_url));
+    }
+
+    public function getName() {
+        return "Wordpress";
     }
 
     /**
@@ -143,6 +153,5 @@ class WordpressProvider implements IAuthenticationProvider {
             }
         }
     }
-
 }
 ?>
