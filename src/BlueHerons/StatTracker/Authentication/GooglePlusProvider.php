@@ -35,17 +35,13 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
         // Kick off the OAuth process
         if (empty($StatTracker['session']->get("token"))) {
-            $response->status = "authentication_required";
-            $response->url = $this->client->createAuthUrl();
-            return $response;
+            return AuthResponse::authenticationRequired($this);
         }
 
         $this->client->setAccessToken($StatTracker['session']->get("token"));
 
         if ($this->client->isAccessTokenExpired()) {
-            $response->status = "authentication_required";
-            $response->url = $this->client->createAuthUrl();
-            return $response;
+            return AuthResponse::authenticationRequired($this);
         }
 
         if ($StatTracker['session']->get("agent") === null) {
@@ -59,20 +55,17 @@ class GooglePlusProvider implements IAuthenticationProvider {
                 }
 
                 if (empty($email_address)) {
-                    $response->error = true;
-                    $response->message = "Google did not provide an email address.";
-                    return $response;
+                    return AuthResponse::error("Google did not provide an email address.");
                 }
 
-                $response->email = $email_address;
                 $agent = Agent::lookupAgentName($email_address);
 
                 if (!$agent->isValid()) {
                     // They need to register
                     $this->generateAuthCode($email_address);
                     $this->updateUserMeta($email_address, $me->id);
-                    $response->status = "registration_required";
-                                        $this->logger->info(sprintf("Registration required for %s", $email_address));
+                    $response= AuthResponse::registrationRequired(sprintf("An email has been sent to<br/><strong>%s</strong><br/>with steps to complete registration", $email_address));
+                    $this->logger->info(sprintf("Registration required for %s", $email_address));
                 }
                 else {
                     // Issue a new auth code
@@ -80,15 +73,13 @@ class GooglePlusProvider implements IAuthenticationProvider {
                     $this->updateUserMeta($email_address, $me->id);
                     $agent->getAuthCode(true);
                     $StatTracker['session']->set("agent", $agent);
-                    $response->status = "okay";
-                    $response->agent = $agent;
-                                        $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
+                    $response = AuthResponse::okay($agent);
+                    $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
                 }
             }
             catch (Exception $e) {
-                $response->error = true;
-                $response->message = $e->getMessage();
-                                $this->logger->error(sprintf("EXCEPTION: %s\n%s:%s", $e->getMessage(), $e->getFile(), $e->getLine()));
+                $response::error($e->getMessage());
+                $this->logger->error(sprintf("EXCEPTION: %s\n%s:%s", $e->getMessage(), $e->getFile(), $e->getLine()));
                 return $response;
             }
         }
@@ -97,11 +88,10 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
             // Ensure auth_code is valid
             if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
-                $response->status = "okay";
-                $response->agent = $agent;
+                $response = AuthResponse::okay($agent);
             }
             else {
-                                $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
+                $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
                 return $this->logout($StatTracker);
             }
         }
@@ -110,7 +100,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
     }
 
     public function logout(StatTracker $StatTracker) {
-                $agent = $StatTracker['session']->get("agent");
+        $agent = $StatTracker['session']->get("agent");
         $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
         foreach($cookies as $cookie) {
             $parts = explode('=', $cookie);
@@ -120,9 +110,8 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
         $this->client->revokeToken($StatTracker['session']->get("token"));
         session_destroy();
-        $response = new stdClass();
-        $response->status = "logged_out";
-                $this->logger->info(sprintf("%s logged out", $agent->name));
+        $response = AuthResponse::loggedOut();
+        $this->logger->info(sprintf("%s logged out", $agent->name));
         return $response;
     }
 
