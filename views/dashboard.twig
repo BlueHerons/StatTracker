@@ -370,7 +370,7 @@ function onPageLoad() {
 								x: 75
 							},
 							title : { text: null },
-							series: response.data,
+							series: [ response.data[1], response.data[0] ],
 							xAxis: {
 								categories: dates.data,
 								labels: {
