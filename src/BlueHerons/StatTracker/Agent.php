@@ -272,7 +272,7 @@ class Agent {
     }
 
     /**
-     * Gets the timestamp for which the last update was made for the agent. If $data is provided, the timestamp will
+     * Gets the timestamp for which the last update was made for the agent. If $date is provided, the timestamp will
      * be the update for that day
      */
     public function getUpdateTimestamp($date = "latest", $refresh = false) {
@@ -345,12 +345,13 @@ class Agent {
         }
 
         if (!isset($this->stats[$stat]) || $refresh) {
+            $ts = $this->getUpdateTimestamp($when, $refresh);
             if ($when == "latest" || new DateTime() < new DateTime($when)) {
-                $when = date("Y-m-d", $this->getUpdateTimestamp($when, $refresh));
+                $when = date("Y-m-d", $ts);
             }
 
-            $stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
-            $stmt->execute(array($stat, $this->name, $when));
+            $stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND (date = ? OR updated = FROM_UNIXTIME(?)) ORDER BY date DESC LIMIT 1;");
+            $r = $stmt->execute(array($stat, $this->name, $when, $ts));
             extract($stmt->fetch());
             $stmt->closeCursor();
 

@@ -101,9 +101,6 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 
 		$page_parameters['date'] = $date;
 	}
-	else {
-		$StatTracker->getAgent()->getStats("latest", true);
-	}
 
 	return $StatTracker['twig']->render($page.".twig", array(
 		"agent" => $StatTracker->getAgent(),

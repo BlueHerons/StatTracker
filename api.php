@@ -155,7 +155,7 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 			$agent->getStat($stat);
 			$data = new stdClass();
 			$data->value = $agent->stats[$stat];
-			$data->timestamp = $agent->latest_entry;
+			$data->timestamp = $agent->getUpdateTimestamp();
 			break;
 	}
 
