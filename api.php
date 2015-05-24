@@ -86,6 +86,44 @@ $StatTracker->get("/api/{auth_code}", function($auth_code) use ($StatTracker) {
 	return $StatTracker->json($agent);
 })->before($validateRequest);
 
+$StatTracker->match("/api/{auth_code}/token", function(Request $request, $auth_code) use ($StatTracker) {
+    $agent = Agent::lookupAgentByAuthCode($auth_code);
+
+    if (!$agent->isValid()) {
+        return $StatTracker->abort(403);
+    }
+
+    if (!$request->request->has("name")) {
+        return $StatTracker->abort(400);
+    }
+
+    $name = strtoupper($request->request->get("name"));
+
+    switch ($request->getMethod()) {
+        case "POST":
+            $token = $agent->createToken($name);
+
+            if ($token === false) {
+                return new Response(null, 202);
+            }
+            else {
+                return $StatTracker->json(array(
+                    "token" => $token
+                ), 201);
+            }
+            break;
+        case "DELETE":
+                $r = $agent->revokeToken($name);
+                if ($r === true) {
+                    return new Response(null, 200);
+                }
+                else {
+                    return new Response(null, 401);
+                }
+            break;
+    }
+})->method("POST|DELETE");
+
 // Retrieve badge information for the agent
 $StatTracker->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($StatTracker) {
 	$agent = Agent::lookupAgentByAuthCode($auth_code);

@@ -87,6 +87,7 @@ class Agent {
             $this->hasSubmitted();
             $this->getStat('ap');
             $this->getUpdateTimestamp();
+            $this->getTokens();
         }
     }
 
@@ -153,6 +154,67 @@ class Agent {
         }
 
         return $this->auth_code;
+    }
+
+    /**
+     * Gets the access tokens associated with this agent
+     *
+     * @param $refresh Refresh the cached list of access tokens
+     */
+    public function getTokens($refresh = false) {
+        if (!isset($this->tokens) || $refresh) {
+            $stmt = StatTracker::db()->prepare("SELECT name FROM Tokens WHERE agent = ?;");
+            $stmt->execute(array($this->name));
+            $tokens = array();
+
+            while ($row = $stmt->fetch()) {
+                extract($row);
+                $tokens[] = $name;
+            }
+            $this->tokens = $tokens;
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * Creates a new access token. The token is returned once from this method, it cannot be retrieved again.
+     *
+     * @return the token if a new one was created, false if not
+     */
+    public function createToken($name) {
+        if (!in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, RAND()), 256));");
+            $stmt->execute(array($this->name, $name, $this->name, $name));
+
+            // A token is return only when it is created
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = UCASE(?)");
+            $stmt->execute(array($this->name, $name));
+            extract($stmt->fetch());
+            return $token;
+        }
+
+        return false;
+    }
+
+    /**
+     * Revokes the named token. If the "API" token is revoked, a new one will be generated automatically
+     */
+    public function revokeToken($name) {
+        if (in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("DELETE FROM Tokens WHERE agent = ? and name = UCASE(?)");
+            $stmt->execute(array($this->name, $name));
+
+            // "API" token is special. If it was revoked, another one needs to be created
+            if (strtoupper($name) == "API") {
+                $this->getTokens(true);
+                $this->createToken(strtoupper($name));
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
