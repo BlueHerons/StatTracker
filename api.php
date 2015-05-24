@@ -95,22 +95,24 @@ $StatTracker->match("/api/{auth_code}/token", function(Request $request, $auth_c
 
     switch ($request->getMethod()) {
         case "GET":
-            $name = substr(str_shuffle(md5(time() . $auth_code . rand())), 0, 6);
+            $name = strtoupper(substr(str_shuffle(md5(time() . $auth_code . rand())), 0, 6));
             $token = $agent->createToken($name);
 
-            $stream = function () use ($name, $token) {
-                $qr = new QRCode();
-                $qr->setText($name . "||" . $token)
-                   ->setSize(200)
-                   ->setPadding(10)
-                   ->render();
-            };
+            $qr = new QRCode();
+            $qr->setText($name . "||" . $token)
+               ->setSize(200)
+               ->setPadding(10);
 
             if ($token === false) {
                 return new Response(null, 202);
             }
             else {
-                return $StatTracker->stream($stream, 200, array('Content-Type' => 'image/png'));
+                $data = array(
+                    "name" => $name,
+                    "token" => $token,
+                    "qr" => $qr->getDataUri()
+                );
+                return $StatTracker->json($data);
             }
             break;
         case "DELETE":
