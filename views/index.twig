@@ -83,8 +83,13 @@
 				</ul>
                                 <ul class="nav navbar-nav navbar-right">
 				    {% if agent is defined and agent.auth_code is not null %}
-                                    <li class="navbar-link"><a href="#">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span></a></li>
-                                    <li class="navbar-link"><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span><b class="caret"></b></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="{{ app.request.basepath }}/settings">Settings</a></li>
+                                            <li><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
+                                        </ul>
+                                    </li>
                                     {% else %}
 				    <li class="navbar-link"><a href="#">Welcome, agent</a></li>
                                     {% endif %}

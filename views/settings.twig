@@ -1,0 +1,53 @@
+<div class="settings-container">
+	<div class="container">
+		<div class="item">
+                    <h3>Access Tokens</h3>
+                    <p>Access tokens are how you submit and retrieve your data from Stat Tracker. They are unique to you.</p>
+                    <p>If you believe someone else is using your tokens, you can reset them below.</p>
+                    <table id="tokens">
+                        <tr>
+                            <th>Token</th>
+                            <th>Actions</th>
+                        </tr>
+                    </table>
+                    <h4>Create New Token</h4>
+                    <p>To access Stat Tracker from outside this website, you will to create a unique access token.</p>
+                    <input type="button" value="Create new Token" />
+		</div>
+	</div>
+</div>
+<script>
+function onPageLoad() {
+
+    function updateTokenTable() {
+        $.get("{{ app.request.basepath }}/api/{{ agent.auth_code }}", function(xhr) {
+            $("#tokens").find("tr:gt(0)").remove();
+            xhr.tokens.forEach(function(token) {
+                $("#tokens tr:last").after(
+                    $("<tr>").append($("<td>").html(token))
+                             .append($("<td>").html(
+                                $("<a>").attr("href", "#")
+                                        .click(function() { revokeToken(token) })
+                                        .html("Revoke")
+                            )
+                    )
+                );
+            });
+        });
+    }
+
+    function revokeToken(token) {
+        $.ajax({ url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/token",
+                 type: "DELETE",
+                 data: {
+                    name: token
+                 },
+                 success: function(xhr) {
+                    updateTokenTable();
+                 }
+        });
+    }
+
+    updateTokenTable();
+}
+</script>
