@@ -63,6 +63,22 @@ class Agent {
         }
     }
 
+    public static function lookupAgentByToken($token) {
+        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ?;");
+        $stmt->execute(array($token));
+        extract($stmt->fetch());
+        $stmt->closeCursor();
+
+        if (empty($agent)) {
+            return new Agent();
+        }
+        else {
+            $agent = new Agent($agent, $token);
+            $agent->faction = $faction;
+            return $agent;
+        }
+    }
+
     /**
      * Constructs a new Agent object for the given agent name. This object will include all information
      * publicly visible from the "Agent Profile" screen in Ingress: Agent name, AP, and badges earned.
