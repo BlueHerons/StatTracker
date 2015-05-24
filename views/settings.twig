@@ -2,19 +2,32 @@
 	<div class="container">
 		<div class="item">
                     <h3>Access Tokens</h3>
-                    <p>Access tokens are how you submit and retrieve your data from Stat Tracker. They are unique to you.</p>
-                    <p>If you believe someone else is using your tokens, you can reset them below.</p>
+                    <p>Access tokens are how you access Stat Tracker to submit and retrieve your data.</p>
                     <table id="tokens">
                         <tr>
                             <th>Token</th>
                             <th>Actions</th>
                         </tr>
                     </table>
+                    <p class="small">Note: the "API" token cannot be truly revoked, it is used to access your data through the website. If you revoke it, a new one will be generated and you will need to log in again.</p>
                     <h4>Create New Token</h4>
                     <p>To access Stat Tracker from outside this website, you will to create a unique access token.</p>
-                    <input type="button" value="Create new Token" />
+                    <input type="button" id="new-token" value="Create New Token" />
 		</div>
 	</div>
+</div>
+<div id="popup" style="display: none;">
+    <h3>Stat Tracker Access Token</h3>
+    <img id="qr"/>
+    <p id="token"/>
+    <p id="name">Token name:&nbsp;<span/></p>
+    <p id="instructions">
+    Scan the QR code with the Stat Tracker app, or copy/paste the code from below the image.
+    <p/>
+ <!--   "Token name" will identify this token on the previous screen, should it ever need to be revoked.
+    <p/> -->
+    Once you close this window, you will be unable to retrieve this token again.
+    <a href="#" id="close">Close</div>
 </div>
 <script>
 function onPageLoad() {
@@ -48,6 +61,25 @@ function onPageLoad() {
         });
     }
 
+    function createToken() {
+        $.ajax({
+            url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/token",
+            cache: false,
+            success: function(data) {
+                console.log(data);
+                $("#popup img#qr").attr("src", data.qr);
+                $("#popup p#token").html(data.token);
+                $("#popup p#name span").html(data.name);
+                $("#popup #close").click(function() {
+                    $("#popup").hide();
+                });
+                $("#popup").show();
+                updateTokenTable();
+            }
+        });
+    }
+
+    $("input#new-token").click(function() { createToken(); });
     updateTokenTable();
 }
 </script>
