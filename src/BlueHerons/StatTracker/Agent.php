@@ -10,6 +10,7 @@ use BlueHerons\StatTracker\StatTracker;
 class Agent {
 
     public $name;
+    public $token;
     public $auth_code;
     public $faction;
     public $level;
@@ -24,7 +25,7 @@ class Agent {
      * @return string Agent object
      */
     public static function lookupAgentName($email_address) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
+        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction, t.token FROM Agent a JOIN Tokens t ON a.agent = t.agent WHERE a.email = ? AND t.name = \"API\";");
         $stmt->execute(array($email_address));
         extract($stmt->fetch());
         $stmt->closeCursor();
@@ -33,7 +34,7 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $auth_code);
+            $agent = new Agent($agent, $token);
             $agent->faction = $faction;
             return $agent;
         }
@@ -97,6 +98,7 @@ class Agent {
 
         $this->name = $agent;
         $this->auth_code = $auth_code;
+        $this->token = $auth_code;
 
         if ($this->isValid()) {
             $this->getLevel();
@@ -113,7 +115,7 @@ class Agent {
      * @return boolean true if agent is valid, false otherwise
      */
     public function isValid() {
-        return $this->name != "Agent" && !empty($this->auth_code);
+        return $this->name != "Agent" && !empty($this->token);
     }
 
     /**
@@ -150,6 +152,10 @@ class Agent {
         $stmt->closeCursor();
 
         return array("data" => $data, "slice_colors" => $colors);
+    }
+
+    public function getToken() {
+        return $this->token;
     }
 
     /**
