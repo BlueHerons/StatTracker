@@ -8,12 +8,12 @@ use BlueHerons\StatTracker\OCR;
 use BlueHerons\StatTracker\StatTracker;
 
 use Curl\Curl;
+use Endroid\QrCode\QrCode;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-
 
 $StatTracker = new StatTracker();
 
@@ -93,36 +93,42 @@ $StatTracker->match("/api/{auth_code}/token", function(Request $request, $auth_c
         return $StatTracker->abort(403);
     }
 
-    if (!$request->request->has("name")) {
-        return $StatTracker->abort(400);
-    }
-
-    $name = strtoupper($request->request->get("name"));
-
     switch ($request->getMethod()) {
-        case "POST":
+        case "GET":
+            $name = substr(str_shuffle(md5(time() . $auth_code . rand())), 0, 6);
             $token = $agent->createToken($name);
+
+            $stream = function () use ($name, $token) {
+                $qr = new QRCode();
+                $qr->setText($name . "||" . $token)
+                   ->setSize(200)
+                   ->setPadding(10)
+                   ->render();
+            };
 
             if ($token === false) {
                 return new Response(null, 202);
             }
             else {
-                return $StatTracker->json(array(
-                    "token" => $token
-                ), 201);
+                return $StatTracker->stream($stream, 200, array('Content-Type' => 'image/png'));
             }
             break;
         case "DELETE":
-                $r = $agent->revokeToken($name);
-                if ($r === true) {
-                    return new Response(null, 200);
-                }
-                else {
-                    return new Response(null, 401);
-                }
+            if (!$request->request->has("name")) {
+                return $StatTracker->abort(400);
+            }
+
+            $name = strtoupper($request->request->get("name"));
+            $r = $agent->revokeToken($name);
+            if ($r === true) {
+                return new Response(null, 200);
+            }
+            else {
+                return new Response(null, 401);
+            }
             break;
     }
-})->method("POST|DELETE");
+})->method("GET|DELETE");
 
 // Retrieve badge information for the agent
 $StatTracker->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($StatTracker) {
