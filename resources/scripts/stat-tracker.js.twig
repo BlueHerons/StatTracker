@@ -64,6 +64,12 @@ var StatTracker = new function() {
 
                     StatTracker.loadPage();
                 }
+                else if (result.status == "logged_out") {
+                    $(".loading").hide();
+                    $("#login-dialog").show();
+                    $("#main-content").css("height", "inherit");
+                    $("#login-message").html("You have been logged out. Refresh this page to log in again.");
+                }
             },
             processData: false
         });
