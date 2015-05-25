@@ -24,7 +24,7 @@ class Agent {
      *
      * @return string Agent object
      */
-    public static function lookupAgentName($email_address, $token2 = true) {
+    public static function lookupAgentName($email_address) {
         $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));
         extract($stmt->fetch());
@@ -85,6 +85,10 @@ class Agent {
             return new Agent();
         }
         else {
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET last_used = NOW() WHERE token = ?;");
+            $stmt->execute(array($token));
+            $stmt->closeCursor();
+
             $agent = new Agent($agent, $token);
             $agent->faction = $faction;
             return $agent;
