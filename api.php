@@ -98,8 +98,14 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
             $name = strtoupper(substr(str_shuffle(md5(time() . $token . rand())), 0, 6));
             $token = $agent->createToken($name);
 
+            $url = sprintf("%s://%s", $request->getScheme(), $request->getHost());
+            $url = $url . $request->getBaseUrl();
+
+            $code = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
+            $code = sprintf($code, $token, $name, $agent->name, $url);
+
             $qr = new QRCode();
-            $qr->setText($name . "||" . $token)
+            $qr->setText($code)
                ->setSize(200)
                ->setPadding(10);
 
