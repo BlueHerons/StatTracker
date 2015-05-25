@@ -22,15 +22,20 @@
 </div>
 <div id="popup" style="display: none;">
     <h3>Stat Tracker Access Token</h3>
-    <img id="qr"/>
-    <p id="token"/>
-    <p id="name">Token name:&nbsp;<span/></p>
+    <a id="qr">
+        <img />
+    </a>
+    <table>
+        <tr><th>Token name</th></tr>
+        <tr><td id="name"></td></tr>
+        <tr><th>Token value:</th></tr>
+        <tr><td id="token"></td></tr>
+    </table>
+
     <p id="instructions">
-    Scan the QR code, or copy/paste the code from below the image.
-    <p/>
- <!--   "Token name" will identify this token on the previous screen, should it ever need to be revoked.
-    <p/> -->
-    Once you close this window, you will be unable to retrieve this token again.
+        Scan or click the QR code, or copy/paste the code from below the image.
+        <p/>
+        Once you close this window, you will be unable to retrieve this token again.
     </p>
     <a href="#" id="close">Close</div>
 </div>
@@ -76,10 +81,10 @@ function onPageLoad() {
             url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/token",
             cache: false,
             success: function(data) {
-                console.log(data);
-                $("#popup img#qr").attr("src", data.qr);
-                $("#popup p#token").html(data.token);
-                $("#popup p#name span").html(data.name);
+                $("#popup a#qr").attr("href", data.uri);
+                $("#popup a#qr img").attr("src", data.qr);
+                $("#popup #token").html(data.token);
+                $("#popup #name").html(data.name);
                 $("#popup #close").click(function() {
                     $("#popup").hide();
                 });

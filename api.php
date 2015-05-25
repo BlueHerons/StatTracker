@@ -101,11 +101,11 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
             $url = sprintf("%s://%s", $request->getScheme(), $request->getHost());
             $url = $url . $request->getBaseUrl();
 
-            $code = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
-            $code = sprintf($code, $token, $name, $agent->name, $url);
+            $uri = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
+            $uri = sprintf($uri, $token, $name, $agent->name, $url);
 
             $qr = new QRCode();
-            $qr->setText($code)
+            $qr->setText($uri)
                ->setSize(200)
                ->setPadding(10);
 
@@ -116,7 +116,8 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
                 $data = array(
                     "name" => $name,
                     "token" => $token,
-                    "qr" => $qr->getDataUri()
+                    "qr" => $qr->getDataUri(),
+                    "uri" => $uri
                 );
                 return $StatTracker->json($data);
             }

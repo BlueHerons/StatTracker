@@ -373,6 +373,21 @@ table#stat-entry {
     background-color: black;
     word-wrap: break-word;
 
+    table {
+        margin-bottom: 15px;
+
+        td, th {
+            text-align: center;
+            vertical-align: top;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        th {
+            width: 100px;
+        }
+    }
+
     > * {
         margin: 0 auto;
         max-width: 90%;
@@ -404,6 +419,10 @@ table#stat-entry {
     > a {
         color: @leaderboard-hover-color;
         padding-top: 10px;
+    }
+
+    > a img {
+        padding: 20px;
     }
 }
 
