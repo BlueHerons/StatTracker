@@ -24,8 +24,8 @@ class Agent {
      *
      * @return string Agent object
      */
-    public static function lookupAgentName($email_address) {
-        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction, t.token FROM Agent a JOIN Tokens t ON a.agent = t.agent WHERE a.email = ? AND t.name = \"API\";");
+    public static function lookupAgentName($email_address, $token2 = true) {
+        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));
         extract($stmt->fetch());
         $stmt->closeCursor();
@@ -34,8 +34,19 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $token);
+            $agent = new Agent($agent);
             $agent->faction = $faction;
+
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ?;");
+            $stmt->execute(array($agent->name, "API"));
+            extract($stmt->fetch());
+            $stmt->closeCursor();
+
+            if ($token !== null) {
+                $agent = new Agent($agent->name, $token);
+                $agent->faction = $faction;
+            }
+
             return $agent;
         }
     }
@@ -443,7 +454,7 @@ class Agent {
                 $this->stats = array();
             }
 
-            $this->stats[$stat] = $value;
+            $this->stats[$stat] = !is_numeric($value) ? 0 : $value;
         }
 
         return $this->stats[$stat];
