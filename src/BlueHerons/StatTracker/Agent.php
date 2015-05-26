@@ -221,7 +221,7 @@ class Agent {
      */
     public function createToken($name) {
         if (!in_array($name, $this->getTokens())) {
-            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, RAND()), 256));");
+            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens (agent, name, token) VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, RAND()), 256));");
             $stmt->execute(array($this->name, $name, $this->name, $name));
 
             // A token is return only when it is created
