@@ -364,27 +364,23 @@ table#stat-entry {
 #ratios {
     margin: 0 auto;
     min-width: ~"@{ratio-width}px";
-    width: ~"@{ratio-width}px";
 
     .ratio {
-        clear: left;
         color: white;
-        display: block;
+        display: inline-block;
         font-size: 110%;
         height: ~"@{ratio-height}px";
-        padding-bottom: 20px;
-        padding-left: 4px;
+        margin: 0 15px 20px 15px;
 
         .badges {
-
             > * {
                 float: left;
             }
 
             .seperator {
                 padding-top: ~"@{ratio-seperator-padding}px";
-                padding-left: 10px;
-                padding-right: 10px;
+                padding-left: 5px;
+                padding-right: 5px;
             }
         }
 
