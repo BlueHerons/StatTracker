@@ -41,6 +41,7 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
                                 "admin_agent" => StatTracker::getConstant("ADMIN_AGENT"),
                                 "contributors" => $StatTracker->getContributors(),
+                                "debug" => StatTracker::getConstant("DEBUG", false),
 				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),

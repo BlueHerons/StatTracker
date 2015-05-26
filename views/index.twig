@@ -52,7 +52,7 @@
 	</script>
 </head>
 <body>
-	<nav class="navbar navbar-inverse navbar-fixed-top headroom" role="navigation">
+	<nav class="navbar navbar-inverse navbar-static-top headroom" role="navigation">
 		<div class="container-fluid">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapsable">
@@ -99,7 +99,13 @@
 			</div>
 		</div>
 	</nav>
-				
+	
+        {% if attribute(constants, "debug") %}
+        <div class="message">
+        Debug mode is enabled!
+        </div>
+        {% endif %}
+			
 	<div id="main-content" class="container-fluid">
 		<div class="loading"></div>
 		<div id="login-dialog">
