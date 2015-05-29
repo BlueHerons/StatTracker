@@ -37,8 +37,8 @@ class Agent {
             $agent = new Agent($agent);
             $agent->faction = $faction;
 
-            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ?;");
-            $stmt->execute(array($agent->name, "API"));
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ? AND revoked = ?;");
+            $stmt->execute(array($agent->name, "API", 0));
             extract($stmt->fetch());
             $stmt->closeCursor();
 
@@ -76,8 +76,8 @@ class Agent {
     }
 
     public static function lookupAgentByToken($token) {
-        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ?;");
-        $stmt->execute(array($token));
+        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ? AND t.revoked = ?;");
+        $stmt->execute(array($token, 0));
         extract($stmt->fetch());
         $stmt->closeCursor();
 
@@ -200,8 +200,8 @@ class Agent {
      */
     public function getTokens($refresh = false) {
         if (!isset($this->tokens) || $refresh) {
-            $stmt = StatTracker::db()->prepare("SELECT name FROM Tokens WHERE agent = ?;");
-            $stmt->execute(array($this->name));
+            $stmt = StatTracker::db()->prepare("SELECT name FROM Tokens WHERE agent = ? AND revoked = ?;");
+            $stmt->execute(array($this->name, 0));
             $tokens = array();
 
             while ($row = $stmt->fetch()) {
@@ -221,12 +221,12 @@ class Agent {
      */
     public function createToken($name) {
         if (!in_array($name, $this->getTokens())) {
-            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens (agent, name, token) VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, RAND()), 256));");
+            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens (agent, name, token) VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, UUID()), 256));");
             $stmt->execute(array($this->name, $name, $this->name, $name));
 
             // A token is return only when it is created
-            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = UCASE(?)");
-            $stmt->execute(array($this->name, $name));
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = UCASE(?) AND revoked = ?");
+            $stmt->execute(array($this->name, $name, 0));
             extract($stmt->fetch());
             return $token;
         }
@@ -239,8 +239,8 @@ class Agent {
      */
     public function revokeToken($name) {
         if (in_array($name, $this->getTokens())) {
-            $stmt = StatTracker::db()->prepare("DELETE FROM Tokens WHERE agent = ? and name = UCASE(?)");
-            $stmt->execute(array($this->name, $name));
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET revoked = ?, name = CONCAT(name, '-', UNIX_TIMESTAMP(NOW())) WHERE agent = ? and name = UCASE(?)");
+            $stmt->execute(array(1, $this->name, $name));
 
             // "API" token is special. If it was revoked, another one needs to be created
             if (strtoupper($name) == "API") {

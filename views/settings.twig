@@ -72,6 +72,9 @@ function onPageLoad() {
                  },
                  success: function(xhr) {
                     updateTokenTable();
+                    if (token == "API") {
+                        document.location.reload();
+                    }
                  }
         });
     }
