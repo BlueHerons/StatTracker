@@ -25,7 +25,7 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
          b.name,
          b.level,
          d.value / b.amount_required,
-         ((b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat)) remaining
+         COALESCE(((b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat)),9999.9) remaining
     FROM Data d
     JOIN Badges b ON d.stat = b.stat
     JOIN Stats s ON d.stat = s.stat

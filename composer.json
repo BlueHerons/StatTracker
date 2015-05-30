@@ -1,12 +1,52 @@
 {
+    "name": "BlueHerons/StatTracker",
+    "type": "project",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "johnluetke",
+            "email": "john@johnluetke.net",
+            "homepage": "http://github.com/johnluetke",
+            "role": "Lead Developer"
+        },
+        {
+            "name": "Fragger",
+            "email": "wonderfulweb@gmail.com",
+            "homepage": "http://github.com/Fragger",
+            "role": "Developer"
+        },
+        {
+            "name": "ForrestMcIntyre",
+            "homepage": "http://github.com/ForrestMcIntyre",
+            "role": "Contributor"
+        },
+        {
+            "name": "others",
+            "homepage": "https://github.com/BlueHerons/StatTracker/graphs/contributors"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/BlueHerons/StatTracker/issues",
+        "wiki": "https://github.com/BlueHerons/StatTracker/wiki"
+    },
+    "autoload": {
+        "psr-4": {
+            "BlueHerons\\StatTracker\\": "src/BlueHerons/StatTracker"
+        }
+    },
     "require": {
+        "php": ">=5.5",
+        "ext-imagick": "~3.1",
+        "ext-pdo_mysql": "*",
+        "lib-curl": "*",
         "google/apiclient": "~1.0@beta",
         "katzgrau/klogger": "1.0.*",
         "oyejorge/less.php": "~1.5",
         "php-curl-class/php-curl-class": "~2.1",
         "swiftmailer/swiftmailer": "~5.1.0",
         "silex/silex": "~1.2",
-        "twig/twig": "~1.8"
+        "twig/twig": "~1.8",
+        "endroid/qrcode": "^1.5"
     },
     "scripts": {
         "describe": "composer describe-version; composer describe-contributors",

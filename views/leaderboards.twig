@@ -1,11 +1,3 @@
-<div class="quick-links">
-{% for stat in stats %}
-	{% if stat.hasLeaderboard() %}
-	<a href="#{{ stat.stat }}">{{ stat.name }}</a> {% if not loop.last %} &nbsp;|&nbsp; {% endif %}
-	{% endif %}
-{% endfor %}
-</div>
-
 {% for stat in stats if stat.hasWeeklyLeaderboard() %}
 	{% include 'single_leaderboard.twig' %}
 {% endfor %}
@@ -32,7 +24,7 @@ function onPageLoad() {
 		$("span.leaderboard-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
 
 		$(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
-		$.ajax({url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/" + stat + "/leaderboard/" + when,
+		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat + "/leaderboard/" + when,
 			dataType: "json",
 			statusCode: {
 				500: function() {
@@ -44,7 +36,16 @@ function onPageLoad() {
 				$.each(data, function() {
 					updated = (this.age == 0) ? "Today" :
 							(this.age == 1) ? "Yesterday" : this.age + " days ago";
-					row = "<tr><td>" + this.rank + "</td><td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td><td>" + numeral(this.value).format("0,0") + "</td><td>" + updated + "</td></tr>";
+					row =  "<tr><td>" + this.rank + "</td>";
+                                        if ($(".leaderboard." + stat).data("has-weekly") == 1 && this.hasOwnProperty("change") && this.change != 0)   {
+                                            row += "<td><div title=\"Was ranked #" + (this.rank + this.change) + " last week\" class=\"rank-diff\"><div class=\"arrow " + ((this.change > 0) ? "up" : "down") + "\" />" + Math.abs(this.change) + "</div></td>";
+                                        }
+                                        else {
+                                            row += "<td/>";
+                                        }
+                                        row += "<td class=\"" + (this.faction == "R" ? "resistance-agent" : "enlightened-agent") + "\">" + this.agent + "</td>";
+                                        row += "<td>" + this.value + "</td>";
+                                        row += "<td>" + updated + "</td></tr>";
 	
 					if ($(".leaderboard." + stat + " table tbody tr").length == 0) {
 						$(".leaderboard." + stat + " table tbody").append(row);

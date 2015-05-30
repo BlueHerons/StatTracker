@@ -1,6 +1,7 @@
 <div id="message" />	
 
-<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+<form method="post" action="./api/{{ agent.token }}/submit-stats" id="submit-stats">
+	<div id="loading" class="loading"/>
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
 		<div class="about">
@@ -66,9 +67,9 @@
 <script>
 function onPageLoad() {
 	$("#message").hide();
+	$("#loading").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
-	$("#stat-navigation").hide();
 	$("input[name='date']").datepicker({
 		constrainInput: true,
 		dateFormat: "yy-mm-dd",
@@ -77,51 +78,111 @@ function onPageLoad() {
 		maxDate: 0
 		
 	});
+
+	window.onpopstate = function(event) {
+		console.log(event);
+		$("#message").hide();
+		if (event.state.show == "actions") {
+			showActions();
+		}
+		else if (event.state.show == "manual") {
+			showStats();
+		}
+		else if (event.state.show == "upload") {
+			showStats();
+		}
+	}
+
+	history.pushState({ show: "actions" }, "", "#actions");
+
 	$("input[name='date']").on("change", function() {
-		window.location = location.pathname + "?date=" + $(this).val();
+		if (window.location.hash === "#manual") {
+			$("#loading").show();
+			$("table#stat-entry").hide();
+			$("#agent-info").hide();
+			
+			$.get("{{ app.request.basepath }}/api/{{ agent.token }}/profile/" + $(this).val())
+			 .done(function(data, status, jqXHR) {
+				console.log(data);
+				for (stat in data.stats) {
+					val = data.stats[stat];
+					$("input[type='number'][name='"+ stat +"']").val(val);
+				}
+			 })
+			 .error(function() {
+				$("input[type='number']").val(0);
+			 })
+			 .always(function() {
+				$("input[type='number']").removeClass("warning error increase");
+				$("#loading").hide();
+				$("table#stat-entry").show();
+				$("#agent-info").show();
+				$("#agent-info .ap .current").hide();
+				$("#agent-info .ap input").show();
+			 });
+		}
 	});
 
-	function manualEntry() {
+	function showActions() {
+		$("table#stat-entry").hide();
+		$("#agent-info .ap input").hide();
+		$("#agent-info .ap .current").show();
+                var fileUpload = $("input[type='file'][name='screenshot']");
+                fileUpload.replaceWith( fileUpload = fileUpload.clone( true ) );
+		$("#submit-actions").show();
+	}
+
+	function showStats() {
 		$("#submit-actions").hide();
-		$("#stat-navigation").show();
 		$("#agent-info .ap .current").hide();
 		$("#agent-info .ap input").show();
 		$("table#stat-entry").show();
 	};
-
-	if (StatTracker.getQueryVar("date")) {
-		manualEntry();
-	}
 
 	$("input[name='screenshot']").on("change", function() {
 		var file = $("input[name='screenshot']").prop("files")[0];
 		var data = new FormData();
 		data.append("screenshot", file);
 		$("#agent-info").hide();
-		$("#message").show().html("Uploading screenshot...").after("<div class='loading' />");
+		$("#loading").show();
+		$("#message").show().html("Uploading screenshot...");
 		$("#submit-actions").hide();
-		var last_response_len = 0;
-		var json = {};
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/ocr",
 			data: data,
 			cache: false,
 			processData: false,
 			contentType: false,
 			xhrFields: {
 				onprogress: function(e) {
-					response = e.currentTarget.response.substring(last_response_len);
-					last_response_len = e.loaded;
-					json = JSON.parse(response);
-					$("#message").show().html(json.status);
+					var json = parseOCRResponse(e.currentTarget.response);
+					if (json.hasOwnProperty("error")) {
+						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+					}
+					else if(json.hasOwnProperty("status")) {
+						$("#message").show().html(json.status);
+					}
 				}
 			},
 			success: function(response) {
-				$("#agent-info").show();
-				$("#agent-info .ap .current").hide();
-				$("#agent-info .ap input").show();
-				$("table#stat-entry").show();
+				var json = parseOCRResponse(response);
+				if (json.hasOwnProperty("error")) {
+					$("#message").html(json.error);
+					showActions();
+					return;
+				}
+				else if (!json.hasOwnProperty("stats")) {
+					$("#message").html("Your screenshot failed to process. Please try again later.<p/><p/>Transaction " + json.session);
+					showActions();
+					return;
+				}
+				else {
+					$("#message").html("Your screenshot has been processed.<p/><p/>Click the \"Submit Stats\" button to submit.");
+				}
+
+				history.pushState({ show: "upload" }, "", "#upload");
+				showStats();
 
 				for (stat in json.stats) {
 					val = json.stats[stat];
@@ -140,23 +201,41 @@ function onPageLoad() {
 				}
 			},
 			error: function(response) {
-				$("#message").html("An error occured while processing your screenshot.");
-				$("form#ocr").show();
+				$("#message").html("An error occurred while processing your screenshot.");
+				showActions();
 			},
 			complete: function() {
+				$("#agent-info").show();
 				$(".loading").hide();
 			}
 		});
 	});
 
-	$("input[name='manual-entry']").on("click", function() { manualEntry(); });
+	function parseOCRResponse(response) {
+		var split = response.split("\n\n");
+		var jsonStr = split[split.length - 1];
+		if (jsonStr[jsonStr.length - 1] === "\n") {
+			return JSON.parse(jsonStr.trim());
+		}
+		else if(split.length > 1) {
+			return JSON.parse(split[split.length - 2].trim());
+		}
+		else {
+			return {};
+		}
+	};
+
+	$("input[name='manual-entry']").on("click", function() { 
+		history.pushState({show: "manual"}, "", "#manual");
+		showStats(); 
+	});
 
 	$("form#submit-stats").submit(function() {
 		$("#message").hide().before("<div class='loading' />")
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {
