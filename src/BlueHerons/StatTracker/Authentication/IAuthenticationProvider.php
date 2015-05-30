@@ -110,9 +110,10 @@ class AuthResponse {
                                 ));
     }
 
-    public static function registrationRequired($message = "") {
+    public static function registrationRequired($message = "", $email_address = "") {
         return new AuthResponse(self::REGISTRATION_REQUIRED, array(
-                                    "message" => $message
+                                    "message" => $message,
+                                    "email" => $email_address
                                 ));
     }
 

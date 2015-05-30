@@ -1,0 +1,103 @@
+<div class="settings-container">
+	<div class="container">
+                <h3>Access Tokens</h3>
+                <p>Access tokens are how you access Stat Tracker to submit and retrieve your data.</p>
+		<div class="item">
+                    <h4>Create New Token</h4>
+                    <p>To access Stat Tracker from outside this website, you will to create a unique access token.</p>
+                    <input type="button" id="new-token" value="Create New Token" />
+                </div>
+                <div class="item">
+                    <h4>Current Access Tokens</h4>
+                    <table id="tokens">
+                        <tr>
+                            <th>Token</th>
+                            <th>Actions</th>
+                        </tr>
+                    </table>
+                    <p class="small-text">Note: the "API" token cannot be truly revoked, it is used to access your data through the website. If you revoke it, a new one will be generated and you will need to log in again.</p>
+
+		</div>
+	</div>
+</div>
+<div id="popup" style="display: none;">
+    <h3>Stat Tracker Access Token</h3>
+    <a id="qr">
+        <img />
+    </a>
+    <table>
+        <tr><th>Token name</th></tr>
+        <tr><td id="name"></td></tr>
+        <tr><th>Token value:</th></tr>
+        <tr><td id="token"></td></tr>
+    </table>
+
+    <p id="instructions">
+        Scan or click the QR code, or copy/paste the code from below the image.
+        <p/>
+        Once you close this window, you will be unable to retrieve this token again.
+    </p>
+    <a href="#" id="close">Close</div>
+</div>
+<script>
+function onPageLoad() {
+
+    function updateTokenTable() {
+        $.ajax({
+            url: "{{ app.request.basepath }}/api/{{ agent.token }}",
+            cache: false,
+            success: function(xhr) {
+                $("#tokens").find("tr:gt(0)").remove();
+                xhr.tokens.forEach(function(token) {
+                    $("#tokens tr:last").after(
+                        $("<tr>").append($("<td>").html(token))
+                                 .append($("<td>").html(
+                                    $("<a>").attr("href", "#")
+                                            .click(function() { revokeToken(token) })
+                                            .html("Revoke")
+                                )
+                        )
+                    );
+                });
+            }
+        });
+    }
+
+    function revokeToken(token) {
+        $.ajax({ url: "{{ app.request.basepath }}/api/{{ agent.token }}/token",
+                 type: "DELETE",
+                 cache: false,
+                 data: {
+                    name: token
+                 },
+                 success: function(xhr) {
+                    updateTokenTable();
+                    if (token == "API") {
+                        document.location.reload();
+                    }
+                 }
+        });
+    }
+
+    function createToken() {
+        $.ajax({
+            url: "{{ app.request.basepath }}/api/{{ agent.token }}/token",
+            cache: false,
+            success: function(data) {
+                $("#popup a#qr").attr("href", data.uri);
+                $("#popup a#qr img").attr("src", data.qr);
+                $("#popup #token").html(data.token);
+                $("#popup #name").html(data.name);
+                $("#popup #close").click(function() {
+                    $("#popup").hide();
+                });
+                $("#popup").show();
+                updateTokenTable();
+            }
+        });
+    }
+
+    $("input#new-token").click(function() { createToken(); });
+    updateTokenTable();
+}
+</script>

@@ -10,7 +10,7 @@ use BlueHerons\StatTracker\StatTracker;
 class Agent {
 
     public $name;
-    public $auth_code;
+    public $token;
     public $faction;
     public $level;
     public $stats;
@@ -24,7 +24,7 @@ class Agent {
      * @return string Agent object
      */
     public static function lookupAgentName($email_address) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
+        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));
         extract($stmt->fetch());
         $stmt->closeCursor();
@@ -33,23 +33,26 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $auth_code);
+            $agent = new Agent($agent);
             $agent->faction = $faction;
+
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ? AND revoked = ?;");
+            $stmt->execute(array($agent->name, "API", 0));
+            extract($stmt->fetch());
+            $stmt->closeCursor();
+
+            if ($token !== null) {
+                $agent = new Agent($agent->name, $token);
+                $agent->faction = $faction;
+            }
+
             return $agent;
         }
     }
 
-    /**
-     * Retruns the registered Agent for the given auth_code. If not agent is found, a generic
-     * Agent object is returned.
-     *
-     * @param string $auth_code
-     *
-     * @return object Agent object
-     */
-    public static function lookupAgentByAuthCode($auth_code) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
-        $stmt->execute(array($auth_code));
+    public static function lookupAgentByToken($token) {
+        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ? AND t.revoked = ?;");
+        $stmt->execute(array($token, 0));
         extract($stmt->fetch());
         $stmt->closeCursor();
 
@@ -57,7 +60,11 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $auth_code);
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET last_used = NOW() WHERE token = ?;");
+            $stmt->execute(array($token));
+            $stmt->closeCursor();
+
+            $agent = new Agent($agent, $token);
             $agent->faction = $faction;
             return $agent;
         }
@@ -74,19 +81,20 @@ class Agent {
      *
      * @throws Exception if agent name is not found.
      */
-    public function __construct($agent = "Agent", $auth_code = null) {
+    public function __construct($agent = "Agent", $token = null) {
         if (!is_string($agent)) {
             throw new Exception("Agent name must be a string");
         }
 
         $this->name = $agent;
-        $this->auth_code = $auth_code;
+        $this->token = $token;
 
         if ($this->isValid()) {
             $this->getLevel();
             $this->hasSubmitted();
             $this->getStat('ap');
             $this->getUpdateTimestamp();
+            $this->getTokens();
         }
     }
 
@@ -96,7 +104,7 @@ class Agent {
      * @return boolean true if agent is valid, false otherwise
      */
     public function isValid() {
-        return $this->name != "Agent" && !empty($this->auth_code);
+        return $this->name != "Agent" && !empty($this->token);
     }
 
     /**
@@ -135,24 +143,69 @@ class Agent {
         return array("data" => $data, "slice_colors" => $colors);
     }
 
-    /**
-     * Gets the auth code for the agent
-     *
-     * @param bool $refresh Whether or not to refetch the value from the database
-     *
-     * @return the auth code for thw agent
-     */
-    public function getAuthCode($refresh = false) {
-        if (!isset($this->auth_code) || $refresh) {
-            $stmt = StatTracker::db()->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
-            $stmt->execute(array($this->name));
-            extract($stmt->fetch());
-            $stmt->closeCursor();
+    public function getToken() {
+        return $this->token;
+    }
 
-            $this->auth_code = $auth_code;
+    /**
+     * Gets the access tokens associated with this agent
+     *
+     * @param $refresh Refresh the cached list of access tokens
+     */
+    public function getTokens($refresh = false) {
+        if (!isset($this->tokens) || $refresh) {
+            $stmt = StatTracker::db()->prepare("SELECT name FROM Tokens WHERE agent = ? AND revoked = ?;");
+            $stmt->execute(array($this->name, 0));
+            $tokens = array();
+
+            while ($row = $stmt->fetch()) {
+                extract($row);
+                $tokens[] = $name;
+            }
+            $this->tokens = $tokens;
         }
 
-        return $this->auth_code;
+        return $this->tokens;
+    }
+
+    /**
+     * Creates a new access token. The token is returned once from this method, it cannot be retrieved again.
+     *
+     * @return the token if a new one was created, false if not
+     */
+    public function createToken($name) {
+        if (!in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens (agent, name, token) VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, UUID()), 256));");
+            $stmt->execute(array($this->name, $name, $this->name, $name));
+
+            // A token is return only when it is created
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = UCASE(?) AND revoked = ?");
+            $stmt->execute(array($this->name, $name, 0));
+            extract($stmt->fetch());
+            return $token;
+        }
+
+        return false;
+    }
+
+    /**
+     * Revokes the named token. If the "API" token is revoked, a new one will be generated automatically
+     */
+    public function revokeToken($name) {
+        if (in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET revoked = ?, name = CONCAT(name, '-', UNIX_TIMESTAMP(NOW())) WHERE agent = ? and name = UCASE(?)");
+            $stmt->execute(array(1, $this->name, $name));
+
+            // "API" token is special. If it was revoked, another one needs to be created
+            if (strtoupper($name) == "API") {
+                $this->getTokens(true);
+                $this->createToken(strtoupper($name));
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -359,7 +412,7 @@ class Agent {
                 $this->stats = array();
             }
 
-            $this->stats[$stat] = $value;
+            $this->stats[$stat] = !is_numeric($value) ? 0 : $value;
         }
 
         return $this->stats[$stat];

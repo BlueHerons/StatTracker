@@ -46,7 +46,6 @@ class WordpressProvider implements IAuthenticationProvider {
                     $this->logger->info(sprintf("Registration required for %s", $email_address));
                 }
                 else {
-                    $this->generateAuthCode($user->user_email);
                     $agent = Agent::lookupAgentName($user->user_email);
 
                     if (!$agent->isValid()) {
@@ -54,12 +53,22 @@ class WordpressProvider implements IAuthenticationProvider {
 
                         $this->logger->info(sprintf("Adding new user %s", $name));
 
+                        $agent->name = $name;
+
                         // Insert them into the DB
                         $stmt = $app->db()->prepare("UPDATE Agent SET agent = ? WHERE email = ?");
                         $stmt->execute(array($name, $user->user_email));
                         $stmt->closeCursor();
                     
+                        // Generate an API token
+                        $this->generateAPIToken($agent);
+
                         $agent = Agent::lookupAgentName($user->user_email);
+
+                        if (!$agent->isValid()) {
+                            $this->logger->error(sprintf("%s still not a valid agent", $agent->name));
+                            return AuthResponse::error("An unrecoverable error has occured");
+                        }
                     }
 
                     $app['session']->set("agent", $agent);
@@ -70,11 +79,11 @@ class WordpressProvider implements IAuthenticationProvider {
             else {
                 $agent = $app['session']->get("agent");
 
-                if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
+                if (Agent::lookupAgentByToken($agent->getToken())->isValid()) {
                     $response = AuthResponse::okay($agent);
                 }
                 else {
-                    $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
+                    $this->logger->info(sprintf("Invalid token for %s. Logging out", $agent->name));
                     return $this->logout($app);
                 }
             }
@@ -125,32 +134,13 @@ class WordpressProvider implements IAuthenticationProvider {
      *
      * @return void
      */
-    private function generateAuthCode($email_address, $newIfExists = false) {
-        $length = 6;
-
-        $code = md5($email_address);
-        $code = str_shuffle($code);
-        $start = rand(0, strlen($code) - $length - 1);
-        $code = substr($code, $start, $length);
-        $num_rows = 0;
-
-        if (!$newIfExists) {
-            $stmt = StatTracker::db()->prepare("SELECT agent FROM Agent WHERE email = ?;");
-            $stmt->execute(array($email_address));
-            $num_rows = $stmt->rowCount();
-            $stmt->closeCursor();
+    private function generateAPIToken($agent) {
+        $token = $agent->createToken("API");
+        if ($token === false) {
+            return false;
         }
-
-        if ($num_rows != 1 || $newIfExists) {
-            try {
-                $stmt = StatTracker::db()->prepare("INSERT INTO Agent (`email`, `auth_code`) VALUES (?, ?) ON DUPLICATE KEY UPDATE auth_code = VALUES(auth_code);");
-                $stmt->execute(array($email_address, $code));
-                $stmt->closeCursor();
-            }
-            catch (PDOException $e) {
-                // Failing to insert an auth code will cause a generic registration email to be sent to the user.
-                error_log($e);
-            }
+        else {
+            $agent->token = $token;
         }
     }
 }

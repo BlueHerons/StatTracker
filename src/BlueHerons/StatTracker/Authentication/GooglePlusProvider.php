@@ -61,17 +61,27 @@ class GooglePlusProvider implements IAuthenticationProvider {
                 $agent = Agent::lookupAgentName($email_address);
 
                 if (!$agent->isValid()) {
-                    // They need to register
-                    $this->generateAuthCode($email_address);
-                    $this->updateUserMeta($email_address, $me->id);
-                    $response= AuthResponse::registrationRequired(sprintf("An email has been sent to<br/><strong>%s</strong><br/>with steps to complete registration", $email_address));
-                    $this->logger->info(sprintf("Registration required for %s", $email_address));
+                    // Could be no token, or new user.
+                    // If a name is present, they have been approved, so generate a token and proceed
+                    if (!empty($agent->name)) {
+                        $this->generateAPIToken($agent);
+                        $agent = Agent::lookupAgentName($email_address);
+                        if (!$agent->isValid()) {
+                            $response = AuthResponse::error("Not a valid agent");
+                        }
+                        else {
+                            $StatTracker['session']->set("agent", $agent);
+                            $response = AuthResponse::okay($agent);
+                        }
+                    }
+                    else {
+                        // They need to register, this code is a challenge
+                        $this->generateAuthCode($email_address);
+                        $response= AuthResponse::registrationRequired(sprintf("An email has been sent to<br/><strong>%s</strong><br/>with steps to complete registration", $email_address), $email_address);
+                        $this->logger->info(sprintf("Registration required for %s", $email_address));
+                    }
                 }
                 else {
-                    // Issue a new auth code
-                    $this->generateAuthCode($email_address, true);
-                    $this->updateUserMeta($email_address, $me->id);
-                    $agent->getAuthCode(true);
                     $StatTracker['session']->set("agent", $agent);
                     $response = AuthResponse::okay($agent);
                     $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
@@ -86,12 +96,12 @@ class GooglePlusProvider implements IAuthenticationProvider {
         else {
             $agent = $StatTracker['session']->get("agent");
 
-            // Ensure auth_code is valid
-            if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
+            // Ensure token is valid
+            if (Agent::lookupAgentByToken($agent->getToken())->isValid()) {
                 $response = AuthResponse::okay($agent);
             }
             else {
-                $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
+                $this->logger->info(sprintf("Expired token for %s. Logging out", $agent->name));
                 return $this->logout($StatTracker);
             }
         }
@@ -165,7 +175,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
     }
 
     public function getRegistrationEmail($email_address) {
-        $stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
+        $stmt = StatTracker::db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));
         $msg = "";
 
@@ -242,22 +252,13 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
     }
 
-    /**
-     * Updates meta data about the user from the OAuth service on login. This isn't used by the app, but helps to
-     * validate who a registering user is.
-     *
-     * @param string $email_address the primary identifier for the user
-     * @param string $profile_id    the G+ id of the user
-     */
-    public function updateUserMeta($email_address, $profile_id) {
-        try {
-            $stmt = StatTracker::db()->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
-            $stmt->execute(array($profile_id, $email_address));
-            $stmt->closeCursor();
+    private function generateAPIToken($agent) {
+        $token = $agent->createToken("API");
+        if ($token === false) {
+            return false;
         }
-        catch (PDOException $e) {
-            // This exception is not vital to functionality, so eat it.
-            error_log($e);
+        else {
+            $agent->token = $token;
         }
     }
 }

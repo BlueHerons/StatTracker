@@ -32,6 +32,7 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 	if ($page == "dashboard" ||
 	    $page == "leaderboards" ||
 	    $page == "submit-stats" ||
+            $page == "settings" ||
             $page == "terms") {
 		$StatTracker['session']->set("page_after_login", $page);
 		return $StatTracker['twig']->render("index.twig", array(

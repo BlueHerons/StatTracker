@@ -32,6 +32,7 @@ body {
     margin: 0;
     min-height: 100%;
     padding: 0;
+    padding-top: 50px;
     position: relative;
 
     #message, .message {
@@ -86,7 +87,7 @@ form#ocr {
     max-width: 440px;
 }
 
-h2, h3 {
+h2, h3, h4 {
     color: @title-color;
     font-size: 125%;
     font-weight: bold;
@@ -364,6 +365,71 @@ table#stat-entry {
     width: 100%;
 }
 
+#popup {
+    position: absolute;
+    padding-top: 50px;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    z-index: 1000;
+    background-color: black;
+    word-wrap: break-word;
+
+    table {
+        margin-bottom: 15px;
+
+        td, th {
+            text-align: center;
+            vertical-align: top;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        th {
+            width: 100px;
+        }
+    }
+
+    > * {
+        margin: 0 auto;
+        max-width: 90%;
+    }
+
+    > h3 {
+        padding-top: 15px;
+    }
+
+    #qr {
+        padding: 25px 0;
+    }
+
+    > p {
+        padding-bottom: 10px;
+    }
+
+    p#name {
+        color: @header-color;
+
+        span {
+            color: @text-color;
+        }
+    }
+
+    p#instructions {
+    }
+
+    > a {
+        color: @leaderboard-hover-color;
+        padding-top: 10px;
+    }
+
+    > a img {
+        padding: 20px;
+    }
+}
+
 #ratios {
     margin: 0 auto;
     min-width: ~"@{ratio-width}px";
@@ -553,7 +619,7 @@ table#stat-entry {
 .badge-icon-75.trekker.platinum { background-position: -825px -225px; }
 .badge-icon-75.trekker.onyx     { background-position: -825px -300px; }
 
-.dashboard-container {
+.dashboard-container, .settings-container {
     .breakdown {
         display: inline-block;
         vertical-align: top;
@@ -565,16 +631,29 @@ table#stat-entry {
         }
     }
 
-	.container {
+    .container {
     	padding-left: 0px !important;
     	padding-right: 0px !important;
     
+        table {
+            margin: 0 auto;
+            
+            td, th {
+                min-width: 75px;
+                text-align: center;
+            }
+        }
+
         .item {
             display: inline-block;
             text-align: center;
             max-width: 500px;
             vertical-align: top;
             width: 100%;
+
+            table {
+                margin-bottom: 10px;
+            }
         }
 
         @media (min-width: 1000px) {

@@ -140,9 +140,9 @@ class StatTracker extends Application {
      * Sends the autorization code for the given email address to that address. The email includes
      * instructions on how to complete the registration process as well.
      *
-     * Most providers should generate an auth_code and use that as a challenge during the registration process. If
+     * Most providers should generate an code and use that as a challenge during the registration process. If
      * that is not possible given a provider, then a rather generic email will be sent to the user, instructing
-     * to contact the specified ADMIN_AGENT.
+     * to contact the specified ADMIN_AGENT. Providers can also opt to not send any email.
      *
      * @param string $email_address The address to send the registration email to.
      *

@@ -8,16 +8,16 @@ use BlueHerons\StatTracker\OCR;
 use BlueHerons\StatTracker\StatTracker;
 
 use Curl\Curl;
+use Endroid\QrCode\QrCode;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-
 $StatTracker = new StatTracker();
 
-// Assert that auth_code and stat parameters, if present, match expected format
+// Assert that token and stat parameters, if present, match expected format
 $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 	function validateParameter($param, $regex) {
 		if (strlen($param) > 0) {
@@ -28,14 +28,14 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 		}
 	}
 
-	// Ensure {auth_code} is 6 hexidecimal digits
-	if (!validateParameter($request->get("auth_code"), "/^[a-f0-9]{6}$/")) { return $StatTracker->abort(400); }
+	// Ensure {token} is 6 hexidecimal digits
+	if (!validateParameter($request->get("token"), "/^[a-f0-9]{64}$/i")) { return $StatTracker->abort(400); }
 	// Ensure {stat} is alpha characters and an underscore
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
 
-$StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_code, $when, $format) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->get("/api/{token}/profile/{when}.{format}", function($token, $when, $format) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	$response = new stdClass;
 
@@ -47,7 +47,7 @@ $StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_cod
 		$ts = $agent->getUpdateTimestamp($when, true);
 
 		if ($ts == null) {
-			return $StatTracker->abort(404);
+			return $StatTracker->abort(403);
 		}
 		else {
 			$response->date = date("c", $ts);
@@ -61,7 +61,7 @@ $StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_cod
 		$response->stats = $agent->getStats("latest", true);
 	}
 	else {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
 	switch ($format) {
@@ -76,22 +76,75 @@ $StatTracker->get("/api/{auth_code}/profile/{when}.{format}", function($auth_cod
   ->value ("when",   "latest");
 
 // Retrieve basic information about the agent
-$StatTracker->get("/api/{auth_code}", function($auth_code) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->get("/api/{token}", function($token) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
 	return $StatTracker->json($agent);
 })->before($validateRequest);
 
+$StatTracker->match("/api/{token}/token", function(Request $request, $token) use ($StatTracker) {
+    $agent = Agent::lookupAgentByToken($token);
+
+    if (!$agent->isValid()) {
+        return $StatTracker->abort(403);
+    }
+
+    switch ($request->getMethod()) {
+        case "GET":
+            $name = strtoupper(substr(str_shuffle(md5(time() . $token . rand())), 0, 6));
+            $token = $agent->createToken($name);
+
+            $url = sprintf("%s://%s", $request->getScheme(), $request->getHost());
+            $url = $url . $request->getBaseUrl();
+
+            $uri = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
+            $uri = sprintf($uri, $token, $name, $agent->name, $url);
+
+            $qr = new QRCode();
+            $qr->setText($uri)
+               ->setSize(200)
+               ->setPadding(10);
+
+            if ($token === false) {
+                return new Response(null, 202);
+            }
+            else {
+                $data = array(
+                    "name" => $name,
+                    "token" => $token,
+                    "qr" => $qr->getDataUri(),
+                    "uri" => $uri
+                );
+                return $StatTracker->json($data);
+            }
+            break;
+        case "DELETE":
+            if (!$request->request->has("name")) {
+                return $StatTracker->abort(400);
+            }
+
+            $name = strtoupper($request->request->get("name"));
+            $r = $agent->revokeToken($name);
+            if ($r === true) {
+                return new Response(null, 200);
+            }
+            else {
+                return new Response(null, 401);
+            }
+            break;
+    }
+})->method("GET|DELETE");
+
 // Retrieve badge information for the agent
-$StatTracker->get("/api/{auth_code}/badges/{what}", function(Request $request, $auth_code, $what) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->get("/api/{token}/badges/{what}", function(Request $request, $token, $what) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 	
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
 	$limit = is_numeric($request->query->get("limit")) ? (int)$request->query->get("limit") : 4;
@@ -112,11 +165,11 @@ $StatTracker->get("/api/{auth_code}/badges/{what}", function(Request $request, $
   ->value("what", "today");
 
 // Retrieve ratio information for the agent
-$StatTracker->get("/api/{auth_code}/ratios", function($auth_code) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->get("/api/{token}/ratios", function($token) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
 	$data = $agent->getRatios();
@@ -124,11 +177,11 @@ $StatTracker->get("/api/{auth_code}/ratios", function($auth_code) use ($StatTrac
 })->before($validateRequest);
 
 // Retrieve raw or compiled data for a single stat for the agent
-$StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($auth_code, $stat, $view, $when, $format) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->get("/api/{token}/{stat}/{view}/{when}.{format}", function($token, $stat, $view, $when, $format) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
         else if (!$StatTracker->isValidStat($stat)) {
                 return $StatTracker->abort(404);
@@ -173,11 +226,11 @@ $StatTracker->get("/api/{auth_code}/{stat}/{view}/{when}.{format}", function($au
 
 
 // Allow agents to submit stats
-$StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->post("/api/{token}/submit", function($token) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
         // Filter out keys that do not represent stats
@@ -193,7 +246,7 @@ $StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTra
                 $response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
             }
 
-            $StatTracker['session']->set("agent", Agent::lookupAgentByAuthCode($auth_code));
+            $StatTracker['session']->set("agent", Agent::lookupAgentByToken($token));
         }
         catch (Exception $e) {
             $response->error = true;
@@ -203,11 +256,11 @@ $StatTracker->post("/api/{auth_code}/submit", function($auth_code) use ($StatTra
 	return $StatTracker->json($response);
 })->before($validateRequest);
 
-$StatTracker->post("/api/{auth_code}/ocr", function(Request $request, $auth_code) use ($StatTracker) {
-	$agent = Agent::lookupAgentByAuthCode($auth_code);
+$StatTracker->post("/api/{token}/ocr", function(Request $request, $token) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
-		return $StatTracker->abort(404);
+		return $StatTracker->abort(403);
 	}
 
         $content_type = explode(";", $request->headers->get("content_type"))[0];
