@@ -275,7 +275,17 @@ $StatTracker->post("/api/{token}/ocr", function(Request $request, $token) use ($
 		break;
 	    case "multipart/form-data":
                 // Typically an HTTP file upload
-                move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+                if ($_FILES['screenshot']['error'] !== 0) {
+                    $response = $StatTracker->json(array(
+                        "error" => $StatTracker->getFileUploadError($_FILES['screenshot']['error'])
+                    ));
+                    // Need to append two newlines
+                    $response->setContent($response->getContent() . PHP_EOL . PHP_EOL);
+                    return $response;
+                }
+                else {
+                    move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+                }
                 break;
             default:
 	        return $StatTracker->abort(400, "Bad request " . $content_type);
