@@ -102,7 +102,7 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
             $url = $url . $request->getBaseUrl();
 
             $uri = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
-            $uri = sprintf($uri, $token, $name, $agent->name, $url);
+            $uri = sprintf($uri, $token, $name, $agent->name, urlencode($url));
 
             $qr = new QRCode();
             $qr->setText($uri)
