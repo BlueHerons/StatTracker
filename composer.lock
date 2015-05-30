@@ -4,20 +4,70 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "a3d4adcbb62ffb67827916ff94e4ce69",
+    "hash": "67f426f035c231dd8a2b00d700a38018",
     "packages": [
         {
-            "name": "google/apiclient",
-            "version": "1.1.2",
+            "name": "endroid/qrcode",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/google/google-api-php-client.git",
-                "reference": "9c35bbbbaf04a5236d763560dab1e2f6e672a724"
+                "url": "https://github.com/endroid/QrCode.git",
+                "reference": "66ae9d90c680094142ad0a6e138f56d700bc7312"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google/google-api-php-client/zipball/9c35bbbbaf04a5236d763560dab1e2f6e672a724",
-                "reference": "9c35bbbbaf04a5236d763560dab1e2f6e672a724",
+                "url": "https://api.github.com/repos/endroid/QrCode/zipball/66ae9d90c680094142ad0a6e138f56d700bc7312",
+                "reference": "66ae9d90c680094142ad0a6e138f56d700bc7312",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Endroid\\": "src/Endroid/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jeroen van den Enden",
+                    "email": "info@endroid.nl",
+                    "homepage": "http://endroid.nl/"
+                }
+            ],
+            "description": "Endroid QR Code",
+            "homepage": "https://github.com/endroid/QrCode",
+            "keywords": [
+                "code",
+                "endroid",
+                "qr",
+                "qrcode"
+            ],
+            "time": "2015-04-12 20:49:54"
+        },
+        {
+            "name": "google/apiclient",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/google/google-api-php-client.git",
+                "reference": "2adb5ba90612858d4add0342eee6b8b9aaca398d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/google/google-api-php-client/zipball/2adb5ba90612858d4add0342eee6b8b9aaca398d",
+                "reference": "2adb5ba90612858d4add0342eee6b8b9aaca398d",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +96,7 @@
             "keywords": [
                 "google"
             ],
-            "time": "2014-11-25 14:35:03"
+            "time": "2015-05-21 19:35:32"
         },
         {
             "name": "katzgrau/klogger",
@@ -102,16 +152,16 @@
         },
         {
             "name": "oyejorge/less.php",
-            "version": "v1.7.0.3",
+            "version": "v1.7.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oyejorge/less.php.git",
-                "reference": "6e08ecb07e6f6d9170c23e8744c58fdd822ad0de"
+                "reference": "fc971e6d3eb54dff3d3eba4734ff207d37cb4e0e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oyejorge/less.php/zipball/6e08ecb07e6f6d9170c23e8744c58fdd822ad0de",
-                "reference": "6e08ecb07e6f6d9170c23e8744c58fdd822ad0de",
+                "url": "https://api.github.com/repos/oyejorge/less.php/zipball/fc971e6d3eb54dff3d3eba4734ff207d37cb4e0e",
+                "reference": "fc971e6d3eb54dff3d3eba4734ff207d37cb4e0e",
                 "shasum": ""
             },
             "require": {
@@ -157,7 +207,7 @@
                 "php",
                 "stylesheet"
             ],
-            "time": "2015-03-10 18:12:59"
+            "time": "2015-05-27 17:50:32"
         },
         {
             "name": "php-curl-class/php-curl-class",
@@ -418,21 +468,20 @@
         },
         {
             "name": "symfony/debug",
-            "version": "v2.6.7",
-            "target-dir": "Symfony/Component/Debug",
+            "version": "v2.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Debug.git",
-                "reference": "ad4511a8fddce7ec163b513ba39a30ea4f32c9e7"
+                "reference": "1df2971b27a6ff73dae4ea622f42802000ec332d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Debug/zipball/ad4511a8fddce7ec163b513ba39a30ea4f32c9e7",
-                "reference": "ad4511a8fddce7ec163b513ba39a30ea4f32c9e7",
+                "url": "https://api.github.com/repos/symfony/Debug/zipball/1df2971b27a6ff73dae4ea622f42802000ec332d",
+                "reference": "1df2971b27a6ff73dae4ea622f42802000ec332d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.3",
+                "php": ">=5.3.9",
                 "psr/log": "~1.0"
             },
             "conflict": {
@@ -451,11 +500,11 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.6-dev"
+                    "dev-master": "2.7-dev"
                 }
             },
             "autoload": {
-                "psr-0": {
+                "psr-4": {
                     "Symfony\\Component\\Debug\\": ""
                 }
             },
@@ -475,11 +524,11 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-08 13:17:44"
+            "time": "2015-05-22 14:54:25"
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v2.6.7",
+            "version": "v2.6.9",
             "target-dir": "Symfony/Component/EventDispatcher",
             "source": {
                 "type": "git",
@@ -538,17 +587,17 @@
         },
         {
             "name": "symfony/http-foundation",
-            "version": "v2.6.7",
+            "version": "v2.6.9",
             "target-dir": "Symfony/Component/HttpFoundation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/HttpFoundation.git",
-                "reference": "8a0d00980ef9f6b47ddbf24bdfbf70fead760816"
+                "reference": "f9b28dcc6d3e50f5568b42dda7292656a9fe8432"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/HttpFoundation/zipball/8a0d00980ef9f6b47ddbf24bdfbf70fead760816",
-                "reference": "8a0d00980ef9f6b47ddbf24bdfbf70fead760816",
+                "url": "https://api.github.com/repos/symfony/HttpFoundation/zipball/f9b28dcc6d3e50f5568b42dda7292656a9fe8432",
+                "reference": "f9b28dcc6d3e50f5568b42dda7292656a9fe8432",
                 "shasum": ""
             },
             "require": {
@@ -588,21 +637,21 @@
             ],
             "description": "Symfony HttpFoundation Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-02 15:18:45"
+            "time": "2015-05-22 14:53:08"
         },
         {
             "name": "symfony/http-kernel",
-            "version": "v2.6.7",
+            "version": "v2.6.9",
             "target-dir": "Symfony/Component/HttpKernel",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/HttpKernel.git",
-                "reference": "2010194de0a57731af9404c7f97fd300db98b7a3"
+                "reference": "7c883eb1a5d8b52b1fa6d4134b82304c6bb7007f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/HttpKernel/zipball/2010194de0a57731af9404c7f97fd300db98b7a3",
-                "reference": "2010194de0a57731af9404c7f97fd300db98b7a3",
+                "url": "https://api.github.com/repos/symfony/HttpKernel/zipball/7c883eb1a5d8b52b1fa6d4134b82304c6bb7007f",
+                "reference": "7c883eb1a5d8b52b1fa6d4134b82304c6bb7007f",
                 "shasum": ""
             },
             "require": {
@@ -666,21 +715,21 @@
             ],
             "description": "Symfony HttpKernel Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-11 01:58:49"
+            "time": "2015-05-29 22:55:07"
         },
         {
             "name": "symfony/routing",
-            "version": "v2.6.7",
+            "version": "v2.6.9",
             "target-dir": "Symfony/Component/Routing",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Routing.git",
-                "reference": "1455ec537940f7428ea6aa9411f3c4bca69413a0"
+                "reference": "dc9df18a1cfe87de65e270e8f01407ca6d7c39cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Routing/zipball/1455ec537940f7428ea6aa9411f3c4bca69413a0",
-                "reference": "1455ec537940f7428ea6aa9411f3c4bca69413a0",
+                "url": "https://api.github.com/repos/symfony/Routing/zipball/dc9df18a1cfe87de65e270e8f01407ca6d7c39cb",
+                "reference": "dc9df18a1cfe87de65e270e8f01407ca6d7c39cb",
                 "shasum": ""
             },
             "require": {
@@ -735,7 +784,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2015-05-02 15:18:45"
+            "time": "2015-05-15 13:32:45"
         },
         {
             "name": "twig/twig",
