@@ -44,7 +44,7 @@ function onPageLoad() {
 
     function updateTokenTable() {
         $.ajax({
-            url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}",
+            url: "{{ app.request.basepath }}/api/{{ agent.token }}",
             cache: false,
             success: function(xhr) {
                 $("#tokens").find("tr:gt(0)").remove();
@@ -64,7 +64,7 @@ function onPageLoad() {
     }
 
     function revokeToken(token) {
-        $.ajax({ url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/token",
+        $.ajax({ url: "{{ app.request.basepath }}/api/{{ agent.token }}/token",
                  type: "DELETE",
                  cache: false,
                  data: {
@@ -81,7 +81,7 @@ function onPageLoad() {
 
     function createToken() {
         $.ajax({
-            url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/token",
+            url: "{{ app.request.basepath }}/api/{{ agent.token }}/token",
             cache: false,
             success: function(data) {
                 $("#popup a#qr").attr("href", data.uri);

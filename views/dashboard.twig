@@ -76,7 +76,7 @@ function onPageLoad() {
 		loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
 	});
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/badges/upcoming",
+	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming",
 		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
@@ -104,7 +104,7 @@ function onPageLoad() {
 		}
 	});
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ratios",
+	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ratios",
 		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
@@ -141,7 +141,7 @@ function onPageLoad() {
 		}
 	});
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ap/breakdown",
+	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown",
 		data: { ts: '{{ agent.update_time }}' },
 		dataType: "json",
 		statusCode: {
@@ -190,7 +190,7 @@ function onPageLoad() {
 	});
 
 	function loadStatPrediction(stat, name) {
-		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/" + stat +"/prediction",
+		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/prediction",
 			data: { ts: '{{ agent.update_time }}' },
 			dataType: "json",
 			statusCode: {
@@ -259,7 +259,7 @@ function onPageLoad() {
 	}
 		
 	function loadStatGraph(stat, name, what, when) {
-		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
+		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
 			data: { ts: '{{ agent.update_time }}' },
 			dataType: "json",
 			statusCode: {

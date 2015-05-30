@@ -1,6 +1,6 @@
 <div id="message" />	
 
-<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+<form method="post" action="./api/{{ agent.token }}/submit-stats" id="submit-stats">
 	<div id="loading" class="loading"/>
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
@@ -101,7 +101,7 @@ function onPageLoad() {
 			$("table#stat-entry").hide();
 			$("#agent-info").hide();
 			
-			$.get("{{ app.request.basepath }}/api/{{ agent.auth_code }}/profile/" + $(this).val())
+			$.get("{{ app.request.basepath }}/api/{{ agent.token }}/profile/" + $(this).val())
 			 .done(function(data, status, jqXHR) {
 				console.log(data);
 				for (stat in data.stats) {
@@ -149,7 +149,7 @@ function onPageLoad() {
 		$("#submit-actions").hide();
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/ocr",
 			data: data,
 			cache: false,
 			processData: false,
@@ -235,7 +235,7 @@ function onPageLoad() {
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {
