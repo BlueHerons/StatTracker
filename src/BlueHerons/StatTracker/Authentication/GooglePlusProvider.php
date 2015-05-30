@@ -96,12 +96,12 @@ class GooglePlusProvider implements IAuthenticationProvider {
         else {
             $agent = $StatTracker['session']->get("agent");
 
-            // Ensure auth_code is valid
+            // Ensure token is valid
             if (Agent::lookupAgentByToken($agent->getToken())->isValid()) {
                 $response = AuthResponse::okay($agent);
             }
             else {
-                $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
+                $this->logger->info(sprintf("Expired token for %s. Logging out", $agent->name));
                 return $this->logout($StatTracker);
             }
         }

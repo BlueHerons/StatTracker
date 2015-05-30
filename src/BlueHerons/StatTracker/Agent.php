@@ -11,7 +11,6 @@ class Agent {
 
     public $name;
     public $token;
-    public $auth_code;
     public $faction;
     public $level;
     public $stats;
@@ -51,30 +50,6 @@ class Agent {
         }
     }
 
-    /**
-     * Retruns the registered Agent for the given auth_code. If not agent is found, a generic
-     * Agent object is returned.
-     *
-     * @param string $auth_code
-     *
-     * @return object Agent object
-     */
-    public static function lookupAgentByAuthCode($auth_code) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
-        $stmt->execute(array($auth_code));
-        extract($stmt->fetch());
-        $stmt->closeCursor();
-
-        if (empty($agent)) {
-            return new Agent();
-        }
-        else {
-            $agent = new Agent($agent, $auth_code);
-            $agent->faction = $faction;
-            return $agent;
-        }
-    }
-
     public static function lookupAgentByToken($token) {
         $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ? AND t.revoked = ?;");
         $stmt->execute(array($token, 0));
@@ -106,14 +81,13 @@ class Agent {
      *
      * @throws Exception if agent name is not found.
      */
-    public function __construct($agent = "Agent", $auth_code = null) {
+    public function __construct($agent = "Agent", $token = null) {
         if (!is_string($agent)) {
             throw new Exception("Agent name must be a string");
         }
 
         $this->name = $agent;
-        $this->auth_code = $auth_code;
-        $this->token = $auth_code;
+        $this->token = $token;
 
         if ($this->isValid()) {
             $this->getLevel();
@@ -171,26 +145,6 @@ class Agent {
 
     public function getToken() {
         return $this->token;
-    }
-
-    /**
-     * Gets the auth code for the agent
-     *
-     * @param bool $refresh Whether or not to refetch the value from the database
-     *
-     * @return the auth code for thw agent
-     */
-    public function getAuthCode($refresh = false) {
-        if (!isset($this->auth_code) || $refresh) {
-            $stmt = StatTracker::db()->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
-            $stmt->execute(array($this->name));
-            extract($stmt->fetch());
-            $stmt->closeCursor();
-
-            $this->auth_code = $auth_code;
-        }
-
-        return $this->auth_code;
     }
 
     /**
