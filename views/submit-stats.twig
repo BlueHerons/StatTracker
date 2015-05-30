@@ -1,6 +1,6 @@
 <div id="message" />	
 
-<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+<form method="post" action="./api/{{ agent.token }}/submit-stats" id="submit-stats">
 	<div id="loading" class="loading"/>
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
@@ -101,7 +101,7 @@ function onPageLoad() {
 			$("table#stat-entry").hide();
 			$("#agent-info").hide();
 			
-			$.get("{{ app.request.basepath }}/api/{{ agent.auth_code }}/profile/" + $(this).val())
+			$.get("{{ app.request.basepath }}/api/{{ agent.token }}/profile/" + $(this).val())
 			 .done(function(data, status, jqXHR) {
 				console.log(data);
 				for (stat in data.stats) {
@@ -127,6 +127,8 @@ function onPageLoad() {
 		$("table#stat-entry").hide();
 		$("#agent-info .ap input").hide();
 		$("#agent-info .ap .current").show();
+                var fileUpload = $("input[type='file'][name='screenshot']");
+                fileUpload.replaceWith( fileUpload = fileUpload.clone( true ) );
 		$("#submit-actions").show();
 	}
 
@@ -145,29 +147,40 @@ function onPageLoad() {
 		$("#loading").show();
 		$("#message").show().html("Uploading screenshot...");
 		$("#submit-actions").hide();
-		var last_response_len = 0;
-		var json = {};
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/ocr",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/ocr",
 			data: data,
 			cache: false,
 			processData: false,
 			contentType: false,
 			xhrFields: {
 				onprogress: function(e) {
-					response = e.currentTarget.response.substring(last_response_len);
-					last_response_len = e.loaded;
-					json = JSON.parse(response);
+					var json = parseOCRResponse(e.currentTarget.response);
 					if (json.hasOwnProperty("error")) {
-						$("#message").show().html("An error occured while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
 					}
-					else {
+					else if(json.hasOwnProperty("status")) {
 						$("#message").show().html(json.status);
 					}
 				}
 			},
 			success: function(response) {
+				var json = parseOCRResponse(response);
+				if (json.hasOwnProperty("error")) {
+					$("#message").html(json.error);
+					showActions();
+					return;
+				}
+				else if (!json.hasOwnProperty("stats")) {
+					$("#message").html("Your screenshot failed to process. Please try again later.<p/><p/>Transaction " + json.session);
+					showActions();
+					return;
+				}
+				else {
+					$("#message").html("Your screenshot has been processed.<p/><p/>Click the \"Submit Stats\" button to submit.");
+				}
+
 				history.pushState({ show: "upload" }, "", "#upload");
 				showStats();
 
@@ -188,7 +201,7 @@ function onPageLoad() {
 				}
 			},
 			error: function(response) {
-				$("#message").html("An error occured while processing your screenshot.");
+				$("#message").html("An error occurred while processing your screenshot.");
 				showActions();
 			},
 			complete: function() {
@@ -197,6 +210,20 @@ function onPageLoad() {
 			}
 		});
 	});
+
+	function parseOCRResponse(response) {
+		var split = response.split("\n\n");
+		var jsonStr = split[split.length - 1];
+		if (jsonStr[jsonStr.length - 1] === "\n") {
+			return JSON.parse(jsonStr.trim());
+		}
+		else if(split.length > 1) {
+			return JSON.parse(split[split.length - 2].trim());
+		}
+		else {
+			return {};
+		}
+	};
 
 	$("input[name='manual-entry']").on("click", function() { 
 		history.pushState({show: "manual"}, "", "#manual");
@@ -208,7 +235,7 @@ function onPageLoad() {
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: StatTracker.baseUrl + "api/{{ agent.auth_code }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {

@@ -5,32 +5,37 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no" />
 
 	<link rel="shortcut icon" href="favicon.ico" />
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Coda:400,700" />
-	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
 	<link rel="stylesheet" href="{{ app.request.basepath }}/resources/css/style.css" />
+
+	<style>
+		@media (max-width: 439px) { .hidden-xxs { display: none !important; } }
+		@media (max-width: 439px) { .visible-xxs { display: block !important; } }
+		@media (min-width: 768px) { .navbar-text { margin-left: 0px; } }
+		.navbar-text span { padding-right: 15px; }
+		.navbar-text a { color: #999; text-decoration: none; }
+		.navbar-text a:hover { color: #FFF; }
+	</style>
 
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="//code.highcharts.com/4.0/highcharts.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/headroom.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/jQuery.headroom.min.js"></script>
 	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/jquery.tablesorter.min.js"></script>
 	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/stat-tracker.js"></script>
 	<script>
 	$(document).ready(function() {
 		$("#login-dialog").hide();
-		$("#login-dialog").dialog({
-			autoOpen: false,
-			closeOnEscape: false,
-			dialogClass: "no-close",
-	                modal: true,
-			resizable: false,
-	                width: 400,
-	                height: "auto",
-			title: "Welcome, agent"
-        	});
-
 		StatTracker.pageToLoad = "{{ page }}";
-		StatTracker.getContributors();
-		StatTracker.authenticate();
+{% if page != "terms" %}
+                StatTracker.authenticate();
+{% else %}
+                StatTracker.loadPage();
+{% endif %}
+                $("nav.navbar").headroom();
 	});
 
 {% if not(attribute(constants, "ga_id") == null) %}
@@ -45,38 +50,87 @@
 	</script>
 </head>
 <body>
-	<ul class="tabs">
-		<li class="dashboard">
-			<a href="./dashboard">Dashboard</a>
-		</li>
-		<li class="submit-stats">
-			<a href="./submit-stats">Submit Stats</a>
-		</li>
-		<li class="leaderboards">
-			<a href="./leaderboards">Leaderboards</a>
-		</li>
-	</ul>
+	<nav class="navbar navbar-inverse navbar-fixed-top headroom" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapsable">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				 </button>
+				<a class="navbar-brand hidden-xxs hidden-sm" href="{{ app.request.basepath }}">{{ attribute(constants, "group_name") }}</span></a>
+				<a class="navbar-brand visible-xxs visible-sm hidden-md hidden-lg" href="{{ app.request.basepath }}">Stat Tracker</span></a>
+				<p class="navbar-text hidden-xxs hidden-sm"><span>&raquo;</span><a href="{{ app.request.basepath }}">Stat Tracker</a></p>
+			</div>
 
-	<div id="main-content">
-		<div class="loading"></div>
-	</div>
+			<div class="collapse navbar-collapse" id="navbar-collapsable">
+				<ul class="nav navbar-nav">
+					<li><a href="{{ app.request.basepath }}/dashboard">Dashboard</a></li>
+					<li><a href="{{ app.request.basepath }}/submit-stats">Submit Stats</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Leaderboards<b class="caret"></b></a>
+						<ul class="dropdown-menu scrollable-menu" role="menu">
+						{% for stat in stats if stat.hasWeeklyLeaderboard() %}
+							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
+						{% endfor %}
+						{% for stat in stats|sort %}
+							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
+						{% endfor %}
 
-	<div id="login-dialog">
-		<div id="login-buttons">
-			<div class="google">
-				<a href=""><span>Sign in with Google</span></a>
+						</ul>
+					</li>
+				</ul>
+                                <ul class="nav navbar-nav navbar-right">
+				    {% if agent is defined and agent.token is not null %}
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span><b class="caret"></b></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="{{ app.request.basepath }}/settings">Settings</a></li>
+                                            <li><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
+                                        </ul>
+                                    </li>
+                                    {% else %}
+				    <li class="navbar-link"><a href="#">Welcome, agent</a></li>
+                                    {% endif %}
+                                </ul>
 			</div>
 		</div>
+	</nav>
+	
+        {% if attribute(constants, "debug") %}
+        <div class="message">
+        Debug mode is enabled!
+        </div>
+        {% endif %}
+			
+	<div id="main-content" class="container-fluid">
+		<div class="loading"></div>
+		<div id="login-dialog">
+			<p>Welcome, Agent</p>
+			<div id="login-buttons">
+			</div>
+	
+			<div id="login-message"></div>
 
-		<div id="login-message"></div>
-
-		<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms-of-use">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
+			<p class="small-text">By signing into Stat Tracker, you are agreeing to the <a href="./terms">terms of use</a>. Please read and understand the terms of use to understand how the data you submit is used.</p>
+		</div>
 	</div>
-
+	
 	<footer>
 		<p>Stat Tracker {{ attribute(constants, "version") }}</p>
 		<p>Source code available on <a href="//github.com/BlueHerons/StatTracker" target="_blank">GitHub</a>
-		<p id="contributors">Brought to you by <span>[loading...]</span></p>
+		<p id="contributors">
+                    Brought to you by 
+{% for contributor in attribute(constants, "contributors") %}
+    <a href="{{ contributor.homepage }}">{{ contributor.name }}</a>
+    {% if loop.index != loop.length - 1 and not loop.last %}
+    , 
+    {% elseif loop.index == loop.length - 1 %}
+     and 
+    {% endif %}
+{% endfor %}
+                </p>
 	</footer>
 </body>
 </html>

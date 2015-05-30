@@ -4,10 +4,25 @@
     "license": "Apache-2.0",
     "authors": [
         {
-            "name": "John Luetke",
+            "name": "johnluetke",
             "email": "john@johnluetke.net",
             "homepage": "http://github.com/johnluetke",
             "role": "Lead Developer"
+        },
+        {
+            "name": "Fragger",
+            "email": "wonderfulweb@gmail.com",
+            "homepage": "http://github.com/Fragger",
+            "role": "Developer"
+        },
+        {
+            "name": "ForrestMcIntyre",
+            "homepage": "http://github.com/ForrestMcIntyre",
+            "role": "Contributor"
+        },
+        {
+            "name": "others",
+            "homepage": "https://github.com/BlueHerons/StatTracker/graphs/contributors"
         }
     ],
     "support": {
@@ -30,7 +45,8 @@
         "php-curl-class/php-curl-class": "~2.1",
         "swiftmailer/swiftmailer": "~5.1",
         "silex/silex": "~1.2",
-        "twig/twig": "~1.8"
+        "twig/twig": "~1.8",
+        "endroid/qrcode": "^1.5"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.5"

@@ -4,392 +4,480 @@ namespace BlueHerons\StatTracker;
 use Exception;
 use Imagick;
 use ImagickDraw;
+use ImagickPixel;
 use StdClass;
 
+use Psr\Log\LogLevel;
 use Katzgrau\KLogger\Logger;
 
 class OCR {
 
-	private static $logger = null;
+    private $logger;
+    private $stats;
 
-	/**
-	 * Retrieves a PSR-3 compliant logger instance for use
-	 *
-	 * @return Object implementing PSR-3 LoggerInterface
-	 */
-	private static function logger() {
-		if (self::$logger == null) {
-			self::$logger = new Logger(LOG_DIR);
-		}
-		return self::$logger;
-	}
+    public function __construct($stats, $logger) {
+        $this->logger = $logger == null ? new Logger(LOG_DIR) : $logger;
+        $this->stats = $stats;
+    }
 
-	/**
-	 * Sends a response object to the client. This is intended to be used as part of a response that is streamed, so the
-	 * ouput buffer is flushed (sent to the client) immediately.
-	 *
-	 * @param mixed $thing the thing to send to the client wrapped in a response object. Can be a string, exception or object
-	 */
-	private static function sendMessage($thing) {
-		$resp = new StdClass();
-		if (is_object($thing)) {
-			if ($thing instanceof Exception) {
-				$resp->error = $thing->getMessage();
-			}
-			else {
-				$resp = (object) array_merge((array)$resp, (array)$thing);
-			}
-		}
-		else {
-			$resp->status = $thing;
-		}
+    /**
+     * Scans an agent profile screenshot and returns an array of stat values.
+     *
+     * @param string $imagePath the path to the image
+     *
+     * @return array array of stat key's and values from the screenshot
+     */
+    public function scan($filename, $async = true) {
+        $this->async = $async;
+        $this->sess_id = pathinfo($filename, PATHINFO_FILENAME);
 
-                $json = json_encode($resp);
-                self::logger()->debug(sprintf("Sending payload: %s", $json));
-                echo $json;
-		ob_flush();
-		flush();
-	}
+        try {
+            $filename = $this->prepareForOCR($filename);
+            $lines = $this->executeOCR($filename);
+            $data = $this->processData($lines);
 
-	/**
-	 * Scans an agent profile screenshot and returns an array of stat values.
-	 *
-	 * @param string $imagePath the path to the image
-	 *
-	 * @return array array of stat key's and values from the screenshot
-	 */
-	public static function scanAgentProfile($imagePath, $stats) {
-		try {
-			$response = new StdClass();
-			$response->status = array();
-			self::logger()->debug(sprintf("Beginning scan of %s", $imagePath));
-			$imagePath = self::convertToPBM($imagePath);
-			$lines = self::executeOCR($imagePath);
-			$data = self::processAgentData($lines, $stats);
-			self::logger()->debug("Parsed Stats:", $data);
-			$response->status = "Your screenshot has been processed.<p/>Please review your stats and click the \"Submit Stats\" button to submit.";
-			$response->stats = $data;
-			self::sendMessage($response);
-		}
-		catch (Exception $e) {
-			self::logger()->error(sprintf("%s: %s\n%s", get_class($e), $e->getMessage(), $e->getTraceAsString()));
-			self::sendMessage($e);
-			die();
-		}
-		finally {
-			ob_flush();
-			flush();
-		}
-	}
+            $this->sendMessage(array("stats" => $data));
+            return $data;
+        }
+        catch (OCRException $e) {
+            $this->sendMessage($e);
+        }
+    }
 
-	/**
-	 * Generates a random, temporary file name.
-	 *
-	 * @param string $extension optional extension for the filename
-	 *
-	 * @return temporary file name
-	 */
-	public static function getTempFileName($extension = "png") {
-		return substr(str_shuffle(md5(time())), 0, 6) . "." . $extension;
-	}
+    private function log($level, $message, array $context = array()) {
+        $message = sprintf("%s - %s", $this->sess_id, $message);
+        $this->logger->log($level, $message, $context);
+    }
 
-	/**
-	 * Converts a source image to PBM format for use with the OCRAD scanner. Also blacks out agent avatar and
-	 * stat labels.
-	 *
-	 * Special thanks to Eu Ji (https://plus.google.com/115412883382513227875/about) of ingress-stats.org
-	 *
-	 * @param string $imagePath the path of the image to convert.
-	 *
-	 * @return path to new PBM image
-	 */
-	public static function convertToPBM($imagePath) {
+    /**
+     * Sends a response object to the client. This is intended to be used as part of a response that is streamed, so the
+     * ouput buffer is flushed (sent to the client) immediately.
+     *
+     * @param mixed $thing the thing to send to the client wrapped in a response object. Can be a string, exception or object
+     */
+    private function sendMessage($thing) {
+        if ($this->async) {
+            $resp = new StdClass();
+            $resp->session = $this->sess_id;
+            if (is_object($thing) || is_array($thing)) {
+                if ($thing instanceof Exception) {
+                    $resp->error = $thing->getMessage();
+                }
+                else {
+                    $resp = (object) array_merge((array)$resp, (array)$thing);
+                }
+            }
+            else {
+                $resp->status = $thing;
+            }
 
-		$newFile = UPLOAD_DIR . self::getTempFileName("pbm");
+            $json = json_encode($resp);
+            $this->log(LogLevel::INFO, sprintf("Sending payload: %s", $json));
+            echo "\n";
+            echo $json;
+            echo "\n";
+            ob_flush();
+            flush();
+        }
+    }
 
-		try {
-			self::sendMessage("Measuring screenshot size...");
-			self::logger()->info(sprintf("Measuring %s", $imagePath));
-			$img = new Imagick();
-			$quantumRange = $img->getQuantumRange();
-			$black_point = $quantumRange['quantumRangeLong'] * 0.04;
-			$white_point = $quantumRange['quantumRangeLong'] - $black_point;
-			$img->readImage($imagePath);
-			$identify = $img->identifyImage();
-			$x = 0; $y = 0;
-			$pixel = $img->getImagePixelColor($x, $y);
-			$color = $pixel->getColorAsString();
-			self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-			if ($color == "srgb(0,0,0") {
-				for ( ; $x < 500 ; $x += 1 , $y += 1) {
-					$pixel = $img->getImagePixelColor($x, $y);
-					$color = $pixel->getColorAsString();
-					if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-						self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-						break;
-					}
-				}
-			}
-			else {
-				for ( ; $y < 500 ; $y += 5) {
-					$pixel = $img->getImagePixelColor($x, $y);
-					$color = $pixel->getColorAsString();
-					if ($color == 'srgb(0,0,0)') {
-						self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-						break;
-					}
-				}
-				for ( ; $x < 500 ; $x += 1 , $y += 1) {
-					$pixel = $img->getImagePixelColor($x, $y);
-					$color = $pixel->getColorAsString();
-					if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-						self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-						break;
-					}
-				}
-				$count = 0;
-				for ( ; $x < 500 ; $x += 1 , $y -= 1) {
-					$count++;
-					$pixel = $img->getImagePixelColor($x, $y);
-					$color = $pixel->getColorAsString();
-					if (preg_match('/^srgb\((\d{1,2}),(\d{1,2}),(\d{1,2})\)$/sxmi', $color, $matches)
-						&& $matches[1] < 80
-						&& $matches[2] < 80
-						&& $matches[3] < 80) {
-						if ($count <= 2) {
-							$y += 1;
-							continue;
-						} else {
-							$x -= 1;
-							$y += 1;
-							self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-							break;
-						}
-					}
-				}
-			}
+    /**
+     * Converts a source image to PBM format for use with the OCRAD scanner. Also blacks out agent avatar and
+     * stat labels.
+     *
+     * Special thanks to Eu Ji (https://plus.google.com/115412883382513227875/about) of ingress-stats.org
+     *
+     * @param string $imagePath the path of the image to convert.
+     *
+     * @return path to new PBM image
+     */
+    private function prepareForOCR($imagePath) {
+        $newFile = UPLOAD_DIR . pathinfo($imagePath, PATHINFO_FILENAME) . ".pbm";
 
-			for ( ; $x < 500 ; $x += 1) {
-				$pixel = $img->getImagePixelColor($x, $y);
-				$color = $pixel->getColorAsString();
-				if (preg_match('/^srgb\((\d{1,2}),(\d{1,2}),(\d{1,2})\)$/sxmi', $color, $matches)
-					&& $matches[1] < 80
-					&& $matches[2] < 80
-					&& $matches[3] < 80) {
-					$x -= 1;
-					self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-					break;
-				}
-			}
-			for ( ; $x < 500 ; $x += 1 , $y += 1) {
-				$pixel = $img->getImagePixelColor($x, $y);
-				$color = $pixel->getColorAsString();
-				if (preg_match('/^srgb\(\d,\d,\d\)$/sxmi', $color)) {
-					$y += 1;
-					self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-					break;
-				}
-			}
-			$rightx = $x;
-			$x = 0;
-			for ( ; $x < 500 ; $x += 1) {
-				$pixel = $img->getImagePixelColor($x, $y);
-				$color = $pixel->getColorAsString();
-				if (!preg_match('/^srgb\(\d,\d,\d\)$/sxmi', $color)) {
-					self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-					break;
-				}
-			}
+        try {
+            $this->sendMessage("Loading screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Loading %s", $imagePath));
 
-			$space = $x;
-			$x += $rightx;
-			$y += $space;
+            $img = new Imagick();
 
-			if ($space <= 4) {
-				for ( ; $x < 500 ; $x += 1 , $y += 1) {
-					$pixel = $img->getImagePixelColor($x, $y);
-					$color = $pixel->getColorAsString();
-					if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-						$x -= 1;
-						self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-						break;
-					}
-				}
-			}
+            $quantumRange = $img->getQuantumRange();
+            // Threshold in percent * quantumRange in which values higher go pure white and lower pure black
+            $threshold = 0.45 * $quantumRange['quantumRangeLong'];
+            // Color to compare to when looking for stat section
+            $statSectionColor = new ImagickPixel('#7b6728');
+            // Distance from 0-255 * quantumRange * sqrt(3) in which to consider colors similar when mapped into 3d space
+            $fuzz = 35/255 * $quantumRange['quantumRangeLong'] / sqrt(3);
 
-			for ( ; $y < 500 ; $y += 1) {
-				$pixel = $img->getImagePixelColor($x, $y);
-				$color = $pixel->getColorAsString();
-				if (!preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-					self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-					break;
-				}
-			}
-			for ( ; $y < 500 ; $y += 1) {
-				$pixel = $img->getImagePixelColor($x, $y);
-				$color = $pixel->getColorAsString();
-				if (preg_match('/^srgb\(\d{1,2},\d{1,2},\d{1,2}\)$/sxmi', $color)) {
-					$x -= round($space / 2);
-					self::logger()->debug(sprintf("Scanner @ [%s,%s]", $x, $y));
-					break;
-				}
-			}
+            $img->readImage($imagePath);
+            $identify = $img->identifyImage();
+            $width = $identify['geometry']['width'];
+            $height = $identify['geometry']['height'];
+            $x = 0; $y = 0;
 
-			self::sendMessage("Cropping screenshot..");
-			self::logger()->info(sprintf("Cropping %s to W: %s, H: %s", $imagePath, $identify['geometry']['width'], $identify['geometry']['height'] - $y));
-			$img->cropImage($identify['geometry']['width'], $identify['geometry']['height'] - $y, 0, $y);
+            $this->sendMessage("Measuring screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Measuring %s", $imagePath));
 
-			self::sendMessage("Masking screenshot...");
-			self::logger()->info(sprintf("Masking %s", $imagePath));
-			$draw = new ImagickDraw();
-			$draw->setFillColor('black');
-			$draw->rectangle(0, 0, $x, $y);
-			$img->drawImage($draw);
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Start @ [%s,%s]", $x, $y));
 
-			self::sendMessage("Contrasting screenshot...");
-			self::logger()->info(sprintf("Constrasting %s", $imagePath));
-			self::logger()->debug(sprintf("Gamma: %s, %s, %s", $black_point, 1, $white_point));
-			$img->levelImage($black_point, 1, $white_point);
-			$img->resizeImage($identify['geometry']['width'] * 2, 0,  imagick::FILTER_LANCZOS, 1);
-			$img->writeImage($newFile);
-			self::logger()->info(sprintf("Done with %s", $imagePath));
+            for ( ; $y < $height / 8 ; $y += 5) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if ($this->isBlack($pixel)) {
+                    break;
+                }
+            }
+            if ($y >= $height / 8) {
+                throw new OCRException($this->sess_id, "Failed to find top of Logo Box");
+            }
+            $logoBoxTop = $y;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Box Top @ [%s,%s]", $x, $y));
 
-			return $newFile;
-		}
-		catch (Exception $e) {
-			copy($imagePath, $imagePath . "_errored");
-			if (file_exists($newFile)) unlink($newFile);
-			throw $e;
-		}
-		finally {
-			unlink($imagePath);
-		}
-	}
+            for ( ; $y < $height / 4 ; $y ++) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if (!$this->isBlack($pixel)) {
+                    break;
+                }
+            }
+            if ($y >= $height / 4) {
+                throw new OCRException($this->sess_id, "Failed to find bottom of Logo Box");
+            }
+            $logoBoxBottom = $y - 1;
+            $logoBoxHeight = $logoBoxBottom - $logoBoxTop;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Box Bottom @ [%s,%s]", $x, $y));
 
-	/**
-	 * Invokes external OCR tool
-	 *
-	 * @param string $imagePath path to the image to scan
-	 *
-	 * @return array of lines read from the image
-	 */
-	public static function executeOCR($imagePath) {
-		try {
-			$cmd = sprintf("%s -i %s", OCRAD, $imagePath);
-			self::logger()->debug(sprintf("Executing %s", $cmd));
-			self::sendMessage("Scanning screenshot...");
-			exec($cmd, $lines);
-			self::logger()->debug("OCR results:", $lines);
-			return $lines;
-		}
-		catch (Exception $e) {
-			copy($imagePath, $imagePath . "_errored");
-			throw $e;
-		}
-		finally {
-			unlink($imagePath);
-		}
-	}
 
-	/**
-	 * Converts a source image to PBM format for use with the OCRAD scanner. Also blacks out agent avatar and
-	 * stat labels.
-	 *
-	 * Special thanks to Eu Ji (https://plus.google.com/115412883382513227875/about) of ingress-stats.org
-	 *
-	 * @param string $imagePath the path of the image to convert.
-	 *
-	 * @return path to new PBM image
-	 */
-	public static function processAgentData($lines, $stats) {
-		try {
-			self::sendMessage("Processing scanned results...");
-			$step = 'start';
-			$elements = array();
-			foreach($lines as $line) {
-				if ($step == 'start' && preg_match('/^\s*([\d\s\|.egiloqt,]+)\s*AP\s*$/sxmi', $line, $values)) {
-					$step = 'ap';
-					array_push($elements, $values[1]);
-				} elseif ($step == 'ap' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
-					$step = 'discovery';
-					$count = 0;
-                                }
-                                // Some screenshots arent producing AP in the OCR results, which throws this off.
-                                else if ($step == 'start' && preg_match('/^\s*Discovery\s*$/sxmi', $line)) {
-                                        $step = 'discovery';
-                                        $count = 0;
-                                        array_push($elements, 0);
-                                }
-				elseif ($step == 'discovery' && preg_match('/^\s*Health\s*$/sxmi', $line)) {
-					// inject a 0 if only 2 stats, which means that the agent has 0 portals discovered
-					if ($count == 2) {
-						$temp = array_pop($elements);
-						array_push($elements, '0');
-						array_push($elements, $temp);
-					}
-					$step = 'health';
-				} elseif ($step == 'health' && preg_match('/^\s*Building\s*$/sxmi', $line)) {
-					$step = 'building';
-				} elseif ($step == 'building' && preg_match('/^\s*Combat\s*$/sxmi', $line)) {
-					$step = 'combat';
-				} elseif ($step == 'combat' && preg_match('/^\s*Defense\s*$/sxmi', $line)) {
-					$step = 'defense';
-				} elseif ($step == 'defense' && preg_match('/^\s*Missions\s*$/sxmi', $line)) {
-					$step = 'missions';
-				} elseif ($step == 'defense' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
-					// Inject a 0 for missions completed
-					array_push($elements, 0);
-					$step = 'resources';
-				} elseif ($step == 'missions' && preg_match('/^\s*Resource\sGathering\s*$/sxmi', $line)) {
-					$step = 'resources';
-				} elseif ($step == 'resources' && preg_match('/^\s*Mentoring\s*$/sxmi', $line)) {
-					$step = 'mentoring';
-				} elseif ($step == 'discovery' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:XM)?\s*$/sxmi', $line, $values)) {
-					$count++;
-					array_push($elements, $values[1]);
-				} elseif ($step == 'health' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:km|kln)\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif ($step == 'building' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:MUs|XM|km|kln)?\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif ($step == 'combat' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif ($step == 'defense' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:(?:(?:km|kln|MU)-)?(?:days|clays|ilays|cl_ys|__ys|d_ys|_ays|\(l_ys))\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
-					array_push($elements, $values[1]);
-				} elseif (preg_match('/^\s*(month|week|now)\s*$/sxmi', $line, $values)) {
-					$warning = sprintf($lang['maybe because'], $values[1]);
-				}
-			}
+            for ( ; $x < $width / 4 ; $x += 10) {
+                for ($y = $logoBoxTop ; $y < $logoBoxBottom ; $y ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($y < $logoBoxBottom) {
+                    break;
+                }
+            }
+            if ($x >= $width / 4) {
+                throw new OCRException($this->sess_id, "Failed to find left of Logo");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Logo Left @ [%s,%s]", $x, $y));
 
-			$elements = preg_replace('/[.]|,|\s/', '', $elements);
-			$elements = preg_replace('/o/i', '0', $elements);
-			$elements = preg_replace('/\||l|i/i', '1', $elements);
-			$elements = preg_replace('/q/i', '4', $elements);
-			$elements = preg_replace('/t/i', '7', $elements);
-			$elements = preg_replace('/a|e/i', '8', $elements);
-			$elements = preg_replace('/g/', '9', $elements);
+            for ( ; $x < $width / 2 ; $x ++) {
+                for ($y = $logoBoxTop ; $y < $logoBoxBottom ; $y ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($y >= $logoBoxBottom) {
+                    break;
+                }
+            }
+            if ($x >= $width / 2) {
+                throw new OCRException($this->sess_id, "Failed to find right of Logo");
+            }
+            $apBoxLeft = $x;
+            $apBoxWidth = $width - $apBoxLeft;
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Left @ [%s,%s]", $x, $y));
 
-			$data = array();
+            for ($y = $logoBoxBottom ; $y > $logoBoxBottom - $logoBoxHeight / 4 ; $y -= 5) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x < $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 4) {
+                throw new OCRException($this->sess_id, "Failed to find bottom of AP");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Bottom @ [%s,%s]", $x, $y));
 
-			foreach ($stats as $stat) {
-				if ($stat->ocr) {
-					if (sizeof($elements) > 0) {
-						$data[$stat->stat] = (int)(array_shift($elements));
-					}
-					else {
-						$data[$stat->stat] = 0;
-					}
-				}
-			}
+            for ( ; $y > $logoBoxBottom - $logoBoxHeight / 2 ; $y -= 5) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x >= $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
+                throw new OCRException($this->sess_id, "Failed to find top of AP");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner AP Top @ [%s,%s]", $x, $y));
 
-			return $data;
-		}
-		catch (Exception $e) {
-			throw $e;
-		}
-	}
+            for ( ; $y > $logoBoxBottom - $logoBoxHeight / 2 ; $y --) {
+                for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
+                    $pixel = $img->getImagePixelColor($x, $y);
+                    if ($this->isLight($pixel)) {
+                        break;
+                    }
+                }
+                if ($x < $apBoxLeft + $apBoxWidth / 4) {
+                    break;
+                }
+            }
+            if ($y <= $logoBoxBottom - $logoBoxHeight / 2) {
+                throw new OCRException($this->sess_id, "Failed to find bottom of Progress Bar");
+            }
+            $this->log(LogLevel::DEBUG, sprintf("Scanner Progress Bar Bottom @ [%s,%s]", $x, $y));
+            $progressBarBottom = $y + 1;
+
+            $x = 0;
+            for ($y = $logoBoxBottom ; $y < $height * 0.75 ; $y ++) {
+                $pixel = $img->getImagePixelColor($x, $y);
+                if ($pixel->isSimilar($statSectionColor, $fuzz)) {
+                    break;
+                }
+            }
+            if ($y >= $height * 0.75) {
+                // This is non fatal, we can just not chop the image, usually this helps to make OCR faster by removing badges and mission icons
+                $statsTop = false;
+                $this->log(LogLevel::DEBUG, "Scanner Failed to find Stats Top");
+            }
+            else {
+                $statsTop = $y - 1;
+                $this->log(LogLevel::DEBUG, sprintf("Scanner Stats Top @ [%s,%s]", $x, $y));
+            }
+
+            $this->sendMessage("Cropping screenshot..");
+            $this->log(LogLevel::DEBUG, sprintf("Cropping %s to W: %d, H: %d", $imagePath, $width, $height - $progressBarBottom));
+            $img->cropImage($width, $height - $progressBarBottom, 0, $progressBarBottom);
+
+            $this->sendMessage("Masking screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Masking %s from 0, 0 to %d, %d", $imagePath, $apBoxLeft, $logoBoxBottom - $progressBarBottom));
+            $draw = new ImagickDraw();
+            $draw->setFillColor('black');
+            $draw->rectangle(0, 0, $apBoxLeft, $logoBoxBottom - $progressBarBottom);
+            $img->drawImage($draw);
+
+            if($statsTop !== false) {
+                $this->sendMessage("Chopping screenshot...");
+                $this->log(LogLevel::DEBUG, sprintf("Chopping %s from 0, %d by 0, %d", $imagePath, $logoBoxBottom - $progressBarBottom, $statsTop - $logoBoxBottom));
+                $img->chopImage(0, $statsTop - $logoBoxBottom, 0, $logoBoxBottom - $progressBarBottom);
+            }
+
+            $this->sendMessage("Resizing screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Resizing %s", $imagePath));
+            $img->resizeImage($width * 2, 0, imagick::FILTER_LANCZOS, 1);
+
+            $this->sendMessage("Contrasting screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Constrasting %s", $imagePath));
+            $img->thresholdImage($threshold);
+
+            $this->sendMessage("Saving screenshot...");
+            $this->log(LogLevel::DEBUG, sprintf("Saving %s", $imagePath));
+            $img->writeImage($newFile);
+
+            $this->log(LogLevel::INFO, sprintf("Completed %s", $imagePath));
+
+            return $newFile;
+        }
+        catch (Exception $e) {
+            copy($imagePath, $imagePath . "_errored");
+            if (file_exists($newFile)) unlink($newFile);
+            throw $e;
+        }
+        finally {
+            unlink($imagePath);
+        }
+    }
+
+    /**
+     * Helper functions for the prepareForOCR function
+     *
+     * @param ImagickPixel $pixel color to evaluate
+     *
+     * @return boolean true if evaluation true
+     */
+    private function isBlack($pixel) {
+        $color = $pixel->getColor();
+        return ($color['r'] < 10 && $color['g'] < 10 && $color['b'] < 10);
+    }
+
+    private function isLight($pixel) {
+        $color = $pixel->getColor();
+        return ($color['r'] > 80 || $color['g'] > 80 || $color['b'] > 80);
+    }
+
+    /**
+     * Invokes external OCR tool
+     *
+     * @param string $imagePath path to the image to scan
+     *
+     * @return array of lines read from the image
+     */
+    private function executeOCR($imagePath) {
+        try {
+            $cmd = sprintf("%s -i %s", OCRAD, $imagePath);
+            $this->log(LogLevel::DEBUG, sprintf("Executing %s", $cmd));
+            $this->sendMessage("Scanning screenshot...");
+            exec($cmd, $lines);
+
+            if (sizeof($lines) < 1) {
+                throw new OCRException($this->sess_id, "No data was read from the uploaded image.");
+            }
+
+            $this->log(LogLevel::DEBUG, "OCR results:", $lines);
+            return $lines;
+        }
+        catch (Exception $e) {
+            copy($imagePath, $imagePath . "_errored");
+            throw $e;
+        }
+        finally {
+            unlink($imagePath);
+        }
+    }
+
+    /**
+     * Converts a source image to PBM format for use with the OCRAD scanner. Also blacks out agent avatar and
+     * stat labels.
+     *
+     * Special thanks to Eu Ji (https://plus.google.com/115412883382513227875/about) of ingress-stats.org
+     *
+     * @param string $imagePath the path of the image to convert.
+     *
+     * @return path to new PBM image
+     */
+    private function processData($lines) {
+        try {
+            $this->sendMessage("Processing scanned results...");
+            $step = 'start';
+            $elements = array();
+            foreach($lines as $line) {
+
+                if (strlen(trim($line)) == 0) continue;
+
+                $this->log(LogLevel::DEBUG, sprintf("Step: %s, Value: %s", $step, $line));
+
+                if ($step == 'start' && preg_match('/^\s*([\d\s\|.egiloqt,]+)\s*AP\s*$/sxmi', $line, $values)) {
+                    $step = 'ap';
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'ap' && strpos($line, 'Discovery') !== false) {
+                    $step = 'discovery';
+                    $count = 0;
+                }
+                // Some screenshots arent producing AP in the OCR results, which throws this off.
+                else if ($step == 'start' && strpos($line, 'Discovery') !== false) {
+                    $step = 'discovery';
+                    $count = 0;
+                    array_push($elements, 0);
+                }
+                elseif ($step == 'discovery' && strpos($line, 'Health') !== false) {
+                    // inject a 0 if only 2 stats, which means that the agent has 0 portals discovered
+                    if ($count == 2) {
+                        $temp = array_pop($elements);
+                        array_push($elements, '0');
+                        array_push($elements, $temp);
+                    }
+                    $count = 0;
+                    $step = 'health';
+                }
+                elseif ($step == 'health' && strpos($line, 'Building') !== false) {
+                    $step = 'building';
+                }
+                elseif ($step == 'building' && strpos($line, 'Combat') !== false) {
+                    $step = 'combat';
+                }
+                elseif ($step == 'combat' && strpos($line, 'Defense') !== false) {
+                    $step = 'defense';
+                }
+                elseif ($step == 'defense' && strpos($line, 'Missions') !== false) {
+                    $step = 'missions';
+                }
+                elseif ($step == 'defense' && strpos($line, 'Resource Gathering') !== false) {
+                    // Inject a 0 for missions completed
+                    array_push($elements, 0);
+                    $step = 'resources';
+                }
+                elseif ($step == 'missions' && strpos($line, 'Resource Gathering') !== false) {
+                    $step = 'resources';
+                }
+                elseif ($step == 'resources' && strpos($line, 'Mentoring') !== false) {
+                    // Inject a 0 for "Glyph hack points"
+                    if ($count == 2) {
+                        $temp = array_pop($elements);
+                        array_push($elements, '0');
+                        array_push($elements, $temp);
+                    }
+                    $step = 'mentoring';
+                }
+                elseif ($step == 'discovery' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:XM)?\s*$/sxmi', $line, $values)) {
+                    $count++;
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'health' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:km|kln)\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'building' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:MUs|XM|km|kln)?\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'combat' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'defense' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(?:(?:(?:km|kln|MU)-)?(?:days|clays|ilays|cl_ys|__ys|d_ys|_ays|\(l_ys))\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+                elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
+                    $count++;
+                    array_push($elements, $values[1]);
+                }
+            }
+
+            // final check on count
+            if ($step == 'resources' && $count == 2) {
+                $temp = array_pop($elements);
+                array_push($elements, '0');
+                array_push($elements, $temp);
+            }
+
+            $elements = preg_replace('/[.]|,|\s/', '', $elements);
+            $elements = preg_replace('/o/i', '0', $elements);
+            $elements = preg_replace('/\||l|i/i', '1', $elements);
+            $elements = preg_replace('/q/i', '4', $elements);
+            $elements = preg_replace('/t/i', '7', $elements);
+            $elements = preg_replace('/a|e/i', '8', $elements);
+            $elements = preg_replace('/g/', '9', $elements);
+
+            $data = array();
+
+            foreach ($this->stats as $stat) {
+                if ($stat->ocr) {
+                    if (sizeof($elements) > 0) {
+                        $data[$stat->stat] = (int)(array_shift($elements));
+                    }
+                    else {
+                        $data[$stat->stat] = 0;
+                    }
+                }
+            }
+
+            $this->log(LogLevel::DEBUG, print_r($data, true));
+
+            return $data;
+        }
+        catch (Exception $e) {
+            throw $e;
+        }
+    }
+}
+
+class OCRException extends Exception {
+
+    public function __construct($session_id, $message) {
+        $this->session = $session_id;
+        parent::__construct($message);
+    }
+>>>>>>> master
 }
 ?>
