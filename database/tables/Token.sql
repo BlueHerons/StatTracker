@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `Tokens` (
   PRIMARY KEY (`agent`,`name`),
   UNIQUE KEY `token` (`token`),
   KEY `agent` (`agent`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 ALTER TABLE `Tokens`

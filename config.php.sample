@@ -16,9 +16,9 @@ define("DATABASE_USER", "");
 // Password for the database user specified above.
 define("DATABASE_PASS", "");
 // Charset for the characters. No need to change this
-define("DATABASE_CHARSET", "utf8mb4");
+define("DATABASE_CHARSET", "utf8");
 // Collation for the characters. No need to change this
-define("DATABASE_COLLATION", "utf8mb4_general_ci");
+define("DATABASE_COLLATION", "utf8");
 
 // Email configuration. Stat Tracker uses email for registration and optionally stat submission.
 // Email host. Example: smtp.gmail.com
