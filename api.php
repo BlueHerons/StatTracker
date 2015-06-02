@@ -99,7 +99,7 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
             $token = $agent->createToken($name);
 
             $url = sprintf("%s://%s", $request->getScheme(), $request->getHost());
-            $url = $url . $request->getBaseUrl();
+            $url = $url . $request->getBaseUrl() . "/";
 
             $uri = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
             $uri = sprintf($uri, $token, $name, $agent->name, urlencode($url));
