@@ -222,13 +222,13 @@ function onPageLoad() {
 
 						if (prediction.next == null) {
 							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-							msg += "Your average rate is " + numeral(prediction.rate).format("0,0") + " " + prediction.unit + " per day";
+							msg += "Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day";
 						}
 						else {
 							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("{{ faction_class }}");
 							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("l" + prediction.next);
 							$(".prediction." + stat + " .next-badge .level-icon-75").css("opacity", prediction.progress / 1.5);	
-							msg = "You have " + numeral(data.prediction.amount_remaining).format("0,0") + " " + data.prediction.unit + " remaining for level " + data.prediction.next + ".<p/>At your average rate of " + numeral(data.prediction.rate).format("0,0") + " per day, that should take " + data.prediction.days_remaining + " days.";
+							msg = "You have " + format(data.prediction.amount_remaining) + " " + data.prediction.unit + " remaining for level " + data.prediction.next + ".<p/>At your average rate of " + format(data.prediction.rate) + " per day, that should take " + format(data.prediction.days_remaining) + " days.";
 						}
 					}
 					else {
@@ -239,11 +239,11 @@ function onPageLoad() {
 							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.badge.toString().toLowerCase().replace(" ", ""));
 							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.next.toString().toLowerCase());
 							$(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", prediction.progress / 1.5);
-							msg = "You have " + numeral(prediction.amount_remaining).format("0,0") + " " + prediction.unit + " remaining for the " + prediction.next + " badge.<p/>At your average rate of " + numeral(prediction.rate).format("0,0") + " per day, that should take " + prediction.days_remaining + " days.";
+							msg = "You have " + format(prediction.amount_remaining) + " " + prediction.unit + " remaining for the " + prediction.next + " badge.<p/>At your average rate of " + format(prediction.rate) + " per day, that should take " + format(prediction.days_remaining) + " days.";
 						}
 						else {
 							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-                                                        msg += "Your average rate is " + numeral(prediction.rate).format("0,0") + " " + prediction.unit + " per day";
+                                                        msg += "Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day";
 						}
 					}
 	
@@ -252,7 +252,7 @@ function onPageLoad() {
 				else {
 					$(".prediction." + stat + " .summary .current-badge").hide();
 					$(".prediction." + stat + " .summary .next-badge").hide();
-					$(".prediction." + stat + " .rate").html("Your average rate is " + numeral(prediction.rate).format("0,0") + " " + prediction.unit + " per day.");
+					$(".prediction." + stat + " .rate").html("Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day.");
 				}
 			}
 		});
