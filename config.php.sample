@@ -16,9 +16,9 @@ define("DATABASE_USER", "");
 // Password for the database user specified above.
 define("DATABASE_PASS", "");
 // Charset for the characters. No need to change this
-define("DATABASE_CHARSET", "utf8mb4");
+define("DATABASE_CHARSET", "utf8");
 // Collation for the characters. No need to change this
-define("DATABASE_COLLATION", "utf8mb4_general_ci");
+define("DATABASE_COLLATION", "utf8_general_ci");
 
 // Email configuration. Stat Tracker uses email for registration and optionally stat submission.
 // Email host. Example: smtp.gmail.com
@@ -56,7 +56,6 @@ define("AUTH_PROVIDER", "GooglePlusProvider");
 define("GOOGLE_CLIENT_ID",     "");
 define("GOOGLE_CLIENT_SECRET", "");
 define("GOOGLE_APP_NAME",      "");
-define("GOOGLE_REDIRECT_URL",  "");
 // Client ID for the optional accompanying Android app. See the wiki for more information.
 //define("GOOGLE_APP_CLIENT_ID", "");
 

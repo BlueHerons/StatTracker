@@ -72,10 +72,7 @@
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Leaderboards<b class="caret"></b></a>
 						<ul class="dropdown-menu scrollable-menu" role="menu">
-						{% for stat in stats if stat.hasWeeklyLeaderboard() %}
-							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
-						{% endfor %}
-						{% for stat in stats|sort %}
+						{% for stat in stats|name_sort if stat.hasLeaderboard() %}
 							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
 						{% endfor %}
 

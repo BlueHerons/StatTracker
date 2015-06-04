@@ -159,6 +159,9 @@ function onPageLoad() {
 					var json = parseOCRResponse(e.currentTarget.response);
 					if (json.hasOwnProperty("error")) {
 						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+                                                $(".loading").hide();
+                                                showActions();
+                                                return;
 					}
 					else if(json.hasOwnProperty("status")) {
 						$("#message").show().html(json.status);

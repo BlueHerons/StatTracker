@@ -99,10 +99,10 @@ $StatTracker->match("/api/{token}/token", function(Request $request, $token) use
             $token = $agent->createToken($name);
 
             $url = sprintf("%s://%s", $request->getScheme(), $request->getHost());
-            $url = $url . $request->getBaseUrl();
+            $url = $url . $request->getBaseUrl() . "/";
 
             $uri = "stattracker://token?token=%s&name=%s&agent=%s&issuer=%s";
-            $uri = sprintf($uri, $token, $name, $agent->name, $url);
+            $uri = sprintf($uri, $token, $name, $agent->name, urlencode($url));
 
             $qr = new QRCode();
             $qr->setText($uri)
@@ -275,7 +275,17 @@ $StatTracker->post("/api/{token}/ocr", function(Request $request, $token) use ($
 		break;
 	    case "multipart/form-data":
                 // Typically an HTTP file upload
-                move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+                if ($_FILES['screenshot']['error'] !== 0) {
+                    $response = $StatTracker->json(array(
+                        "error" => $StatTracker->getFileUploadError($_FILES['screenshot']['error'])
+                    ));
+                    // Need to append two newlines
+                    $response->setContent($response->getContent() . PHP_EOL . PHP_EOL);
+                    return $response;
+                }
+                else {
+                    move_uploaded_file($_FILES['screenshot']['tmp_name'], $file);
+                }
                 break;
             default:
 	        return $StatTracker->abort(400, "Bad request " . $content_type);
