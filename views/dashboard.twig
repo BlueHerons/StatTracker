@@ -97,7 +97,7 @@ function onPageLoad() {
                     $(html).find(".time-remaining").remove();
                 }
                 else {
-                    $(html).find(".time-remaining span").html(badge.days_remaining);
+                    $(html).find(".time-remaining span").html(format(badge.days_remaining));
                 }
                 $("#upcoming_badges").append(html);
             });
@@ -134,7 +134,7 @@ function onPageLoad() {
                 $(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge)
                                                            .addClass(ratio.stat2.level)
                                                      .attr("title", ratio.stat2.name);
-                $(html).find(".value").html(ratio.ratio);
+                $(html).find(".value").html(format(ratio.ratio));
 
                 $("#ratios").append(html);
             });
