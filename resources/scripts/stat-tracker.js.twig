@@ -102,3 +102,7 @@ var StatTracker = new function() {
         return(false);
     }
 };
+
+var format = function(number) {
+    return numeral(number).format("0,0");
+}

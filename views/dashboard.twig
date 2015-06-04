@@ -1,413 +1,413 @@
 {% set chartLabelColor = "#04EAF5" %}
 <div class="dashboard-container">
-	<div class="container">
-		<div class="item">
-			<div id="agent-info">
-				<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
-				<div class="about">
-					<div class="name {{ faction_class }}">{{ agent.name }}</div>
-					<div class="level">LVL <span>{{ agent.level }}</span></div>
-					<div class="ap"><span class="current">{{ attribute(agent.stats, 'ap')|number_format }}</span> AP</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="item">
+            <div id="agent-info">
+                <div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
+                <div class="about">
+                    <div class="name {{ faction_class }}">{{ agent.name }}</div>
+                    <div class="level">LVL <span>{{ agent.level }}</span></div>
+                    <div class="ap"><span class="current">{{ attribute(agent.stats, 'ap')|number_format }}</span> AP</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<div class="container">
-		<div class="item">
-			<h3>Upcoming Badges</h3>
-			<div id="upcoming_badges">
-				<div class="upcoming-badge">
-					<div class="badge-display">
-						<div class="badge-image badge-icon-75 progress-overlay" />
-						<p class="percent-complete">
-							<span />
-							<span>complete</span>
-						</p>
-					</div>
-					<div class="time-remaining"><span></span> days remaining</div>
-				</div>
-			</div>
-		</div>
+    <div class="container">
+        <div class="item">
+            <h3>Upcoming Badges</h3>
+            <div id="upcoming_badges">
+                <div class="upcoming-badge">
+                    <div class="badge-display">
+                        <div class="badge-image badge-icon-75 progress-overlay" />
+                        <p class="percent-complete">
+                            <span />
+                            <span>complete</span>
+                        </p>
+                    </div>
+                    <div class="time-remaining"><span></span> days remaining</div>
+                </div>
+            </div>
+        </div>
 
-		<div class="item">
-			<h3>Ratios</h3>
-			<div id="ratios">
-				<div class="ratio">
-					<div class="badges">
-						<div class="badge-display badge-1">
-							<div class="badge-image badge-icon-75" />
-						</div>
-						<div class="seperator">:</div>
-						<div class="badge-display badge-2">
-							<div class="badge-image badge-icon-75" />
-						</div>
-					</div>
-					<div class="value" />
-				</div>
-			</div>
-		</div>
+        <div class="item">
+            <h3>Ratios</h3>
+            <div id="ratios">
+                <div class="ratio">
+                    <div class="badges">
+                        <div class="badge-display badge-1">
+                            <div class="badge-image badge-icon-75" />
+                        </div>
+                        <div class="seperator">:</div>
+                        <div class="badge-display badge-2">
+                            <div class="badge-image badge-icon-75" />
+                        </div>
+                    </div>
+                    <div class="value" />
+                </div>
+            </div>
+        </div>
 
-		<div class="item">
-			<h3>AP Breakdown</h3>
-			<div id="ap_breakdown"></div>
-		</div>
-	</div>
+        <div class="item">
+            <h3>AP Breakdown</h3>
+            <div id="ap_breakdown"></div>
+        </div>
+    </div>
 
-	<div class="container">
+    <div class="container">
 {% for stat in stats if stat.graphable and stat.badges|length > 0 %}
-	{% include 'stat_graph.twig' %}
+    {% include 'stat_graph.twig' %}
 {% endfor %}
 {% for stat in stats if stat.graphable and stat.badges|length == 0 %}
-	{% include 'stat_graph.twig' %}
+    {% include 'stat_graph.twig' %}
 {% endfor %}
-	</div>
+    </div>
 </div>
 <script>
 function onPageLoad() {
-	$("span.graph-link[data-what='graph']").addClass("active");
+    $("span.graph-link[data-what='graph']").addClass("active");
 
-	$("span.graph-link").click(function() {
-		stat = $(this).attr("data-stat");
-		$("span.graph-link[data-stat='" + stat + "']").removeClass("active");
-		$(this).addClass("active");
-		$("#graph-" + stat).empty();
-		$("#graph-" + stat).after($("<div/>").addClass("loading 110"));
-		loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
-	});
+    $("span.graph-link").click(function() {
+        stat = $(this).attr("data-stat");
+        $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
+        $(this).addClass("active");
+        $("#graph-" + stat).empty();
+        $("#graph-" + stat).after($("<div/>").addClass("loading 110"));
+        loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
+    });
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming",
-		data: { ts: '{{ agent.update_time }}' },
-		dataType: "json",
-		statusCode: {
-			500: function() {
-				alert("There was an error retrieving your upcoming badges");
-			}
-		},
-		success: function(data) {
-			tmpl = $(".upcoming-badge").clone();
-			$("#upcoming_badges").html("");
-			data.forEach(function(badge, i, arr) {
-				html = tmpl.clone();
-				$(html).find(".badge-image").addClass(badge.name.toLowerCase().replace("_", ""))
-				                           .addClass(badge.level)
-				                           .css("opacity", badge.progress / 1.5);
-				$(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
-				if (badge.days_remaining == null) {
-					$(html).find(".time-remaining").remove();
-				}
-				else {
-					$(html).find(".time-remaining span").html(badge.days_remaining);
-				}
-				$("#upcoming_badges").append(html);
-			});
-		}
-	});
+    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming",
+        data: { ts: '{{ agent.update_time }}' },
+        dataType: "json",
+        statusCode: {
+            500: function() {
+                alert("There was an error retrieving your upcoming badges");
+            }
+        },
+        success: function(data) {
+            tmpl = $(".upcoming-badge").clone();
+            $("#upcoming_badges").html("");
+            data.forEach(function(badge, i, arr) {
+                html = tmpl.clone();
+                $(html).find(".badge-image").addClass(badge.name.toLowerCase().replace("_", ""))
+                                           .addClass(badge.level)
+                                           .css("opacity", badge.progress / 1.5);
+                $(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
+                if (badge.days_remaining == null) {
+                    $(html).find(".time-remaining").remove();
+                }
+                else {
+                    $(html).find(".time-remaining span").html(badge.days_remaining);
+                }
+                $("#upcoming_badges").append(html);
+            });
+        }
+    });
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ratios",
-		data: { ts: '{{ agent.update_time }}' },
-		dataType: "json",
-		statusCode: {
-			500: function() {
-				alert("There was an error retrieving your ratios");
-			}
-		},
-		success: function(data) {
-			tmpl = $(".ratio").clone();
-			$("#ratios").html("");
-			data.forEach(function(ratio, i, arr) {
-				html = tmpl.clone();
-				ratio.stat1.badge = ratio.stat1.badge.replace("_", "");
-				ratio.stat2.badge = ratio.stat2.badge.replace("_", "");
+    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ratios",
+        data: { ts: '{{ agent.update_time }}' },
+        dataType: "json",
+        statusCode: {
+            500: function() {
+                alert("There was an error retrieving your ratios");
+            }
+        },
+        success: function(data) {
+            tmpl = $(".ratio").clone();
+            $("#ratios").html("");
+            data.forEach(function(ratio, i, arr) {
+                html = tmpl.clone();
+                ratio.stat1.badge = ratio.stat1.badge.replace("_", "");
+                ratio.stat2.badge = ratio.stat2.badge.replace("_", "");
 
-				if (ratio.stat1.badge == "level") {
-					ratio.stat1.level = "level-icon-75 {{faction_class}} l" + ratio.stat1.level;
-				}
+                if (ratio.stat1.badge == "level") {
+                    ratio.stat1.level = "level-icon-75 {{faction_class}} l" + ratio.stat1.level;
+                }
 
-				if (ratio.stat2.badge == "level") {
-					ratio.stat2.level = "level-icon-75 {{faction_class}} l" + ratio.stat2.level;
-				}
+                if (ratio.stat2.badge == "level") {
+                    ratio.stat2.level = "level-icon-75 {{faction_class}} l" + ratio.stat2.level;
+                }
 
-				$(html).find(".badge-1 .badge-image").addClass(ratio.stat1.badge)
-				                                     .addClass(ratio.stat1.level)
+                $(html).find(".badge-1 .badge-image").addClass(ratio.stat1.badge)
+                                                     .addClass(ratio.stat1.level)
                                                                      .attr("title", ratio.stat1.name);
-				$(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge)
-                      				                     .addClass(ratio.stat2.level)
-				                                     .attr("title", ratio.stat2.name);
-				$(html).find(".value").html(ratio.ratio);
+                $(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge)
+                                                           .addClass(ratio.stat2.level)
+                                                     .attr("title", ratio.stat2.name);
+                $(html).find(".value").html(ratio.ratio);
 
-				$("#ratios").append(html);
-			});
-		}
-	});
+                $("#ratios").append(html);
+            });
+        }
+    });
 
-	$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown",
-		data: { ts: '{{ agent.update_time }}' },
-		dataType: "json",
-		statusCode: {
-			500: function() {
-				alert("There was an error retrieving the graph for AP Breakdown.");
-			}
-		},
-		success: function(response) {
-			CHART_WIDTH_MAX = 300;
-			CONTAINER_WIDTH_MAX = 500;
-			containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
-			left = (containerWidth - CHART_WIDTH_MAX) / 2;
-			left = left < 0 ? 0 : left;
-			chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
+    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown",
+        data: { ts: '{{ agent.update_time }}' },
+        dataType: "json",
+        statusCode: {
+            500: function() {
+                alert("There was an error retrieving the graph for AP Breakdown.");
+            }
+        },
+        success: function(response) {
+            CHART_WIDTH_MAX = 300;
+            CONTAINER_WIDTH_MAX = 500;
+            containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
+            left = (containerWidth - CHART_WIDTH_MAX) / 2;
+            left = left < 0 ? 0 : left;
+            chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
 
-			$("#ap_breakdown").highcharts({
-				chart: {
-					backgroundColor: "#000",
-					plotBackgroundColor: "#000"
-				},
-				colors: response.slice_colors,
-				credits: {
-					enabled: false
-				},
-				title : {
-					text: null
-				},
-				plotOptions: {
-					pie: {
-						allowPointSelect: true,
-						cursor: "pointer",
-						dataLabels: {
-							distance: -40,
-							enabled: true,
-							format: "{percentage:.2f}%"
-						}
-					}
-				},
-				series: [{
-					type: "pie",
-					name: "AP",
-					data: response.data
-				}]
-			});
-		}
-	});
+            $("#ap_breakdown").highcharts({
+                chart: {
+                    backgroundColor: "#000",
+                    plotBackgroundColor: "#000"
+                },
+                colors: response.slice_colors,
+                credits: {
+                    enabled: false
+                },
+                title : {
+                    text: null
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: "pointer",
+                        dataLabels: {
+                            distance: -40,
+                            enabled: true,
+                            format: "{percentage:.2f}%"
+                        }
+                    }
+                },
+                series: [{
+                    type: "pie",
+                    name: "AP",
+                    data: response.data
+                }]
+            });
+        }
+    });
 
-	function loadStatPrediction(stat, name) {
-		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/prediction",
-			data: { ts: '{{ agent.update_time }}' },
-			dataType: "json",
-			statusCode: {
-				500: function() {
-					alert("There was an error retrieving the graph for " + name + ".");
-				}
-			},
-			success: function(prediction) {
-				if (prediction.rate == null) {
-					$(".prediction." + stat).hide();
-				}
-				else if (prediction.badge != null) {
-				
-					$(".prediction." + stat + " .next-badge .badge-image + .percent-complete span").html(Math.floor(prediction.progress * 100) +"%");
+    function loadStatPrediction(stat, name) {
+        $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/prediction",
+            data: { ts: '{{ agent.update_time }}' },
+            dataType: "json",
+            statusCode: {
+                500: function() {
+                    alert("There was an error retrieving the graph for " + name + ".");
+                }
+            },
+            success: function(prediction) {
+                if (prediction.rate == null) {
+                    $(".prediction." + stat).hide();
+                }
+                else if (prediction.badge != null) {
+                
+                    $(".prediction." + stat + " .next-badge .badge-image + .percent-complete span").html(Math.floor(prediction.progress * 100) +"%");
 
-					if (prediction.next == null) {
-						$(".prediction." + stat + " .next-badge").hide();
-					}
+                    if (prediction.next == null) {
+                        $(".prediction." + stat + " .next-badge").hide();
+                    }
 
-					msg = "";
-					if (prediction.badge == "Level") {
-						$(".prediction." + stat + " .current-badge .badge-image").removeClass("badge-icon-75");
-						$(".prediction." + stat + " .next-badge .badge-image").removeClass("badge-icon-75");
-						$(".prediction." + stat + " .current-badge .badge-image").addClass("level-icon-75");
-						$(".prediction." + stat + " .next-badge .badge-image").addClass("level-icon-75");
+                    msg = "";
+                    if (prediction.badge == "Level") {
+                        $(".prediction." + stat + " .current-badge .badge-image").removeClass("badge-icon-75");
+                        $(".prediction." + stat + " .next-badge .badge-image").removeClass("badge-icon-75");
+                        $(".prediction." + stat + " .current-badge .badge-image").addClass("level-icon-75");
+                        $(".prediction." + stat + " .next-badge .badge-image").addClass("level-icon-75");
 
-						$(".prediction." + stat + " .current-badge .level-icon-75").addClass("{{ faction_class }}");
-						$(".prediction." + stat + " .current-badge .level-icon-75").addClass("l" + prediction.current);
+                        $(".prediction." + stat + " .current-badge .level-icon-75").addClass("{{ faction_class }}");
+                        $(".prediction." + stat + " .current-badge .level-icon-75").addClass("l" + prediction.current);
 
-						if (prediction.next == null) {
-							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-							msg += "Your average rate is " + prediction.rate + " " + prediction.unit + " per day";
-						}
-						else {
-							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("{{ faction_class }}");
-							$(".prediction." + stat + " .next-badge .level-icon-75").addClass("l" + prediction.next);
-							$(".prediction." + stat + " .next-badge .level-icon-75").css("opacity", prediction.progress / 1.5);	
-							msg = "You have " + prediction.amount_remaining + " " + prediction.unit + " remaining for level " + prediction.next + ".<p/>At your average rate of " + prediction.rate + " per day, that should take " + prediction.days_remaining + " days.";
-						}
-					}
-					else {
-						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.badge.toLowerCase().replace(" ", ""));
-						$(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.current.toString().toLowerCase());
+                        if (prediction.next == null) {
+                            $(".prediction." + stat + " .badge-prediction").css("display", "block");
+                            msg += "Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day";
+                        }
+                        else {
+                            $(".prediction." + stat + " .next-badge .level-icon-75").addClass("{{ faction_class }}");
+                            $(".prediction." + stat + " .next-badge .level-icon-75").addClass("l" + prediction.next);
+                            $(".prediction." + stat + " .next-badge .level-icon-75").css("opacity", prediction.progress / 1.5);    
+                            msg = "You have " + format(data.prediction.amount_remaining) + " " + data.prediction.unit + " remaining for level " + data.prediction.next + ".<p/>At your average rate of " + format(data.prediction.rate) + " per day, that should take " + format(data.prediction.days_remaining) + " days.";
+                        }
+                    }
+                    else {
+                        $(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.badge.toLowerCase().replace(" ", ""));
+                        $(".prediction." + stat + " .current-badge .badge-icon-75").addClass(prediction.current.toString().toLowerCase());
 
-						if (prediction.next != null) {
-							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.badge.toString().toLowerCase().replace(" ", ""));
-							$(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.next.toString().toLowerCase());
-							$(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", prediction.progress / 1.5);
-							msg = "You have " + prediction.amount_remaining + " " + prediction.unit + " remaining for the " + prediction.next + " badge.<p/>At your average rate of " + prediction.rate + " per day, that should take " + prediction.days_remaining + " days.";
-						}
-						else {
-							$(".prediction." + stat + " .badge-prediction").css("display", "block");
-							msg += "Your average rate is " + prediction.rate + " " + prediction.unit + " per day";
-						}
-					}
-	
-					$(".prediction." + stat + " .badge-prediction").html(msg);
-				}
-				else {
-					$(".prediction." + stat + " .summary .current-badge").hide();
-					$(".prediction." + stat + " .summary .next-badge").hide();
-					$(".prediction." + stat + " .rate").html("Your average rate is " + prediction.rate + " " + prediction.unit + " per day.");
-				}
-			}
-		});
-	}
-		
-	function loadStatGraph(stat, name, what, when) {
-		$.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
-			data: { ts: '{{ agent.update_time }}' },
-			dataType: "json",
-			statusCode: {
-				500: function() {
-					alert("There was an error retrieving the graph for " + name + ".");
-				}
-			},
-			success: function(response) {
-				$("#graph-" + stat + " + div.loading").remove();
+                        if (prediction.next != null) {
+                            $(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.badge.toString().toLowerCase().replace(" ", ""));
+                            $(".prediction." + stat + " .next-badge .badge-icon-75").addClass(prediction.next.toString().toLowerCase());
+                            $(".prediction." + stat + " .next-badge .badge-icon-75").css("opacity", prediction.progress / 1.5);
+                            msg = "You have " + format(prediction.amount_remaining) + " " + prediction.unit + " remaining for the " + prediction.next + " badge.<p/>At your average rate of " + format(prediction.rate) + " per day, that should take " + format(prediction.days_remaining) + " days.";
+                        }
+                        else {
+                            $(".prediction." + stat + " .badge-prediction").css("display", "block");
+                                                        msg += "Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day";
+                        }
+                    }
+    
+                    $(".prediction." + stat + " .badge-prediction").html(msg);
+                }
+                else {
+                    $(".prediction." + stat + " .summary .current-badge").hide();
+                    $(".prediction." + stat + " .summary .next-badge").hide();
+                    $(".prediction." + stat + " .rate").html("Your average rate is " + format(prediction.rate) + " " + prediction.unit + " per day.");
+                }
+            }
+        });
+    }
+        
+    function loadStatGraph(stat, name, what, when) {
+        $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
+            data: { ts: '{{ agent.update_time }}' },
+            dataType: "json",
+            statusCode: {
+                500: function() {
+                    alert("There was an error retrieving the graph for " + name + ".");
+                }
+            },
+            success: function(response) {
+                $("#graph-" + stat + " + div.loading").remove();
 
-				CHART_WIDTH_MAX = 400;
-				CONTAINER_WIDTH_MAX = 500;
-				containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
-				left = (containerWidth - CHART_WIDTH_MAX) / 2;
-				left = left < 0 ? 0 : left;
-				chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
-				
-				switch (what) {
-					case "trend":
-						$("#graph-" + stat).highcharts({
-							chart: {
-								backgroundColor: "#000",
-								plotBackgroundColor: "#000"
-							},
-							credits: { enabled: false },
-							legend : {
-								align: "left",
-								floating: true,
-								itemStyle : {
-									color: "#FFF",
-									fontWeight: "normal"
-								},
-								itemHoverStyle: { color: "#FFF" },
-								layout: "vertical",
-								verticalAlign: "top",
-								x: 75
-							},
-							title : { text: null },
-							plotOptions: {
-								column: {
-									color: "{{ faction_color }}"
-								},
-								spline: {
-									color: "#DC3912",
-									marker: { enabled: false }
-								}
-							},
-							series: [{
-									type: "column",
-									data: response.value,
-									name: "Gained",
-								}, {
-									type: "spline",
-									data: response.target,
-									name: "Target",
-								}],
-							xAxis: {
-								categories: response.dates,
-								labels: {
-									rotation: -40,
-									style: {
-										color: "{{ chartLabelColor }}"
-									}
-								},
-								lineColor: "{{ chartLabelColor }}",
-								tickColor: "{{ chartLabelColor }}"
-							},
-							yAxis: {
-								gridLineColor: "{{ chartLabelColor }}",
-								labels: {
-									style: {
-										color: "{{ chartLabelColor }}"
-									}
-								},
-								lineColor: "{{ chartLabelColor }}",
-								title: {
-									style: {
-										color: "{{ chartLabelColor }}"
-									},
-									text: name
-								}
-							}
-						});
-						break;
-					case "graph":
-						dates = response.data.shift();
-						response.data[0].color = "{{ faction_color }}";
-						response.data[0].marker = { "enabled" : true };
-						response.data[1].color = "#DC3912";
-						response.data[1].marker = { "enabled" : false };
+                CHART_WIDTH_MAX = 400;
+                CONTAINER_WIDTH_MAX = 500;
+                containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
+                left = (containerWidth - CHART_WIDTH_MAX) / 2;
+                left = left < 0 ? 0 : left;
+                chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
+                
+                switch (what) {
+                    case "trend":
+                        $("#graph-" + stat).highcharts({
+                            chart: {
+                                backgroundColor: "#000",
+                                plotBackgroundColor: "#000"
+                            },
+                            credits: { enabled: false },
+                            legend : {
+                                align: "left",
+                                floating: true,
+                                itemStyle : {
+                                    color: "#FFF",
+                                    fontWeight: "normal"
+                                },
+                                itemHoverStyle: { color: "#FFF" },
+                                layout: "vertical",
+                                verticalAlign: "top",
+                                x: 75
+                            },
+                            title : { text: null },
+                            plotOptions: {
+                                column: {
+                                    color: "{{ faction_color }}"
+                                },
+                                spline: {
+                                    color: "#DC3912",
+                                    marker: { enabled: false }
+                                }
+                            },
+                            series: [{
+                                    type: "column",
+                                    data: response.value,
+                                    name: "Gained",
+                                }, {
+                                    type: "spline",
+                                    data: response.target,
+                                    name: "Target",
+                                }],
+                            xAxis: {
+                                categories: response.dates,
+                                labels: {
+                                    rotation: -40,
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    }
+                                },
+                                lineColor: "{{ chartLabelColor }}",
+                                tickColor: "{{ chartLabelColor }}"
+                            },
+                            yAxis: {
+                                gridLineColor: "{{ chartLabelColor }}",
+                                labels: {
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    }
+                                },
+                                lineColor: "{{ chartLabelColor }}",
+                                title: {
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    },
+                                    text: name
+                                }
+                            }
+                        });
+                        break;
+                    case "graph":
+                        dates = response.data.shift();
+                        response.data[0].color = "{{ faction_color }}";
+                        response.data[0].marker = { "enabled" : true };
+                        response.data[1].color = "#DC3912";
+                        response.data[1].marker = { "enabled" : false };
 
-						$("#graph-" + stat).highcharts({
-							chart: {
-								backgroundColor: "#000",
-								plotBackgroundColor: "#000"
-							},
-							credits: { enabled: false },
-							legend : {
-								align: "left",
-								floating: true,
-								itemStyle : {
-									color: "#FFF",
-									fontWeight: "normal"
-								},
-								itemHoverStyle: { color: "#FFF" },
-								layout: "vertical",
-								verticalAlign: "top",
-								x: 75
-							},
-							title : { text: null },
-							series: [ response.data[1], response.data[0] ],
-							xAxis: {
-								categories: dates.data,
-								labels: {
-									rotation: -40,
-									step: 4,
-									style: {
-										color: "{{ chartLabelColor }}"
-									}
-								},
-								lineColor: "{{ chartLabelColor }}",
-								tickColor: "{{ chartLabelColor }}"
-							},
-							yAxis: {
-								gridLineColor: "{{ chartLabelColor }}",
-								labels: {
-									style: {
-										color: "{{ chartLabelColor }}"
-									}
-								},
-								lineColor: "{{ chartLabelColor }}",
-								title: {
-									style: {
-										color: "{{ chartLabelColor }}"
-									},
-									text: null
-								}
-							}
-						});
-						break;
-				}
-			}
-		});
-	}
+                        $("#graph-" + stat).highcharts({
+                            chart: {
+                                backgroundColor: "#000",
+                                plotBackgroundColor: "#000"
+                            },
+                            credits: { enabled: false },
+                            legend : {
+                                align: "left",
+                                floating: true,
+                                itemStyle : {
+                                    color: "#FFF",
+                                    fontWeight: "normal"
+                                },
+                                itemHoverStyle: { color: "#FFF" },
+                                layout: "vertical",
+                                verticalAlign: "top",
+                                x: 75
+                            },
+                            title : { text: null },
+                            series: [ response.data[1], response.data[0] ],
+                            xAxis: {
+                                categories: dates.data,
+                                labels: {
+                                    rotation: -40,
+                                    step: 4,
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    }
+                                },
+                                lineColor: "{{ chartLabelColor }}",
+                                tickColor: "{{ chartLabelColor }}"
+                            },
+                            yAxis: {
+                                gridLineColor: "{{ chartLabelColor }}",
+                                labels: {
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    }
+                                },
+                                lineColor: "{{ chartLabelColor }}",
+                                title: {
+                                    style: {
+                                        color: "{{ chartLabelColor }}"
+                                    },
+                                    text: null
+                                }
+                            }
+                        });
+                        break;
+                }
+            }
+        });
+    }
 
 {% for stat in stats if stat.graphable %}
-	loadStatPrediction("{{ stat.stat }}", "{{ stat.name }}");
-	loadStatGraph("{{ stat.stat}}", "{{ stat.name }}", "graph", null);
+    loadStatPrediction("{{ stat.stat }}", "{{ stat.name }}");
+    loadStatGraph("{{ stat.stat}}", "{{ stat.name }}", "graph", null);
 {% endfor %}
 }
 </script>
