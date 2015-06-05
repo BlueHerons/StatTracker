@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetWeeklyLeaderboardForStat` $$
 
-CREATE PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` DATE)a
+CREATE PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` DATE)
     READS SQL DATA
     SQL SECURITY INVOKER
 BEGIN
