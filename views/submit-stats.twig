@@ -238,18 +238,12 @@ function onPageLoad() {
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit?allow_lower_values=true",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {
 				$(".loading").hide();
-				if (!data.error) {
-					$("#message").show().html(data.message).show();
-					window.scrollTo(0,0);
-				}
-				else {
-					alert(data.message);
-				}
+				$("#message").show().html(data.message).show();
 			}
 		});
 	

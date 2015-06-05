@@ -586,7 +586,7 @@ class Agent {
      *
      * @param array $data associative array where key is stat and value is the value for the stat.
      */
-    public function updateStats($data) {
+    public function updateStats($data, $allow_lower) {
         // Get lowest submission date
         $stmt = StatTracker::db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
 
@@ -596,21 +596,43 @@ class Agent {
 
             $ts = date("Y-m-d 00:00:00");
             $dt = $data['date'] == null ? date("Y-m-d") : $data['date'];
-            $stmt = StatTracker::db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+            $select_stmt = StatTracker::db()->prepare("SELECT value `current_value` FROM Data WHERE agent = ? AND date = ? AND stat = ?");
+            $insert_stmt = StatTracker::db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+
+            StatTracker::db()->beginTransaction();
 
             foreach ($data as $stat => $value) {
                 if ($stat == "date") continue;
                 $value = filter_var($data[$stat], FILTER_SANITIZE_NUMBER_INT);
                 $value = !is_numeric($value) ? 0 : $value;
 
-                $stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                if ($allow_lower) {
+                    $insert_stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                }
+                else {
+                    $select_stmt->execute(array($this->name, $dt, $stat));
+                    extract($select_stmt->fetch());
+                    $select_stmt->closeCursor();
+
+                    if ($current_value <= $value) {
+                        $insert_stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                    }
+                    else {
+                        StatTracker::db()->rollback();
+                        return sprintf("Stats cannot be updated. %s is lower than %s for %s.", number_format($value), number_format($current_value), StatTracker::getStats()[$stat]->name);
+                    }
+                }
             }
+
+            StatTracker::db()->commit();
+            return true;
         }
         catch (Exception $e) {
             throw $e;
         }
         finally {
-            $stmt->closeCursor();
+            $select_stmt->closeCursor();
+            $insert_stmt->closeCursor();
         }
     }
 }

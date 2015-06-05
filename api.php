@@ -226,7 +226,7 @@ $StatTracker->get("/api/{token}/{stat}/{view}/{when}.{format}", function($token,
 
 
 // Allow agents to submit stats
-$StatTracker->post("/api/{token}/submit", function($token) use ($StatTracker) {
+$StatTracker->post("/api/{token}/submit", function(Request $request, $token) use ($StatTracker) {
 	$agent = Agent::lookupAgentByToken($token);
 
 	if (!$agent->isValid()) {
@@ -238,15 +238,23 @@ $StatTracker->post("/api/{token}/submit", function($token) use ($StatTracker) {
         $response = new stdClass();
         $response->error = false;
 
+        $allow_lower_values = filter_var($request->query->get("allow_lower_values", false), FILTER_VALIDATE_BOOLEAN);
+
         try {
-	    $agent->updateStats($data);
-            $response->message = sprintf("Your stats for %s have been received.", date("l, F j", strtotime($data['date'])));
+	    $result = $agent->updateStats($data, $allow_lower_values);
+            if ($result === true) {
+                $response->message = sprintf("Your stats for %s have been received.", date("l, F j", strtotime($data['date'])));
 
-            if (!$agent->hasSubmitted()) {
-                $response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+                if (!$agent->hasSubmitted()) {
+                    $response->message .= " Since this was your first submission, predictions are not available. Submit again tomorrow to see your predictions.";
+                }
+
+                $StatTracker['session']->set("agent", Agent::lookupAgentByToken($token));
             }
-
-            $StatTracker['session']->set("agent", Agent::lookupAgentByToken($token));
+            else {
+                $response->error = true;
+                $response->message = $result;
+            }
         }
         catch (Exception $e) {
             $response->error = true;
