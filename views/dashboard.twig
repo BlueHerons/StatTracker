@@ -98,6 +98,8 @@ function onPageLoad() {
                 }
                 else {
                     $(html).find(".time-remaining span").html(format(badge.days_remaining));
+                    date = new Date().addDays(badge.days_remaining);
+                    $(html).find(".time-remaining").attr("title", date.getMonthName() + " " + date.getDate());
                 }
                 $("#upcoming_badges").append(html);
             });
