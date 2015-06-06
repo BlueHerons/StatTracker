@@ -14,8 +14,15 @@
 						</p>
 					</div>
 				</div>
-				<p class="badge-prediction" />
-				<p class="rate" />
+                            <p class="badge-remaining">
+                                You have <span class='amount'/> <span class='unit'/> remaining for <span class='badge-level' /> <span class='badge-name'/>.
+                            </p>
+                            <p class="badge-prediction">
+                                At your average rate of <span class='amount'/> per day, that should take <span class='days-remaining'/> days.
+                            </p>
+                            <p class="rate">
+                                Your average rate is <span class='amount'/> <span class='unit'/> per day.
+                            </p>
 			</div>
 			<div class="graph-selector">
 				<span class="graph-link {{ stat.stat }} link" data-stat="{{ stat.stat }}" data-what="graph" data-when="all-time">Past 30 days</span>
