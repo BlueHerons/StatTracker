@@ -488,6 +488,10 @@ class Agent {
         $prediction->rate = $row['rate'];
         $prediction->progress = $row['progress'];
         $prediction->days_remaining = $row['days'];
+        $prediction->target_date = date("Y-m-d", strtotime("+" . round($row['days']) . " days"));
+
+        $local_fmt = ($row['days'] >= 365) ? "F j, Y" : "F j";
+        $prediction->target_date_local = date($local_fmt, strtotime("+" . round($row['days']) . " days"));
 
         if ($stat !== "level") {
             $prediction->amount_remaining = $row['remaining'];
@@ -573,7 +577,9 @@ class Agent {
                     "name" => $badge,
                     "level" => strtolower($next),
                     "progress" => $progress,
-                    "days_remaining" => $days_remaining
+                    "days_remaining" => $days_remaining,
+                    "target_date" => date("Y-m-d", strtotime("+" . round($days_remaining) . " days")),
+                    "target_date_local" => date("F j", strtotime("+" . round($days_remaining) . " days"))
                 );
             }
         }

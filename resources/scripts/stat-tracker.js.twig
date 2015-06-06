@@ -106,13 +106,3 @@ var StatTracker = new function() {
 var format = function(number) {
     return numeral(number).format("0,0.[00]");
 }
-
-Date.prototype.addDays = function(days) {
-    this.setDate(this.getDate() + parseInt(days));
-    return this;
-};
-
-Date.prototype.getMonthName = function() {
-    months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return months[this.getMonth()];
-};
