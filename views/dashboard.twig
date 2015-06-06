@@ -76,7 +76,7 @@ function onPageLoad() {
         loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
     });
 
-    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming",
+    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming?limit=5",
         data: { ts: '{{ agent.update_time }}' },
         dataType: "json",
         statusCode: {
