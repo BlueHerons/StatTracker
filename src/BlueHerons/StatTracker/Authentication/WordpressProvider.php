@@ -51,15 +51,15 @@ class WordpressProvider implements IAuthenticationProvider {
                     if (!$agent->isValid()) {
                         $name = apply_filters(ST_AGENT_NAME_FILTER, $user->user_login);
 
-                        $this->logger->info(sprintf("Adding new user %s", $name));
+                        $this->logger->info(sprintf("Adding new agent %s", $name));
 
                         $agent->name = $name;
 
                         // Insert them into the DB
-                        $stmt = $app->db()->prepare("UPDATE Agent SET agent = ? WHERE email = ?");
-                        $stmt->execute(array($name, $user->user_email));
+                        $stmt = $app->db()->prepare("INSERT INTO Agent (email, agent) VALUES (?, ?) ON DUPLICATE KEY UPDATE agent = ?;");
+                        $stmt->execute(array($user->user_email, $name, $name));
                         $stmt->closeCursor();
-                    
+                   
                         // Generate an API token
                         $this->generateAPIToken($agent);
 
