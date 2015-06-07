@@ -66,7 +66,12 @@
 
 <script>
 function onPageLoad() {
-	$("#message").hide();
+    if (StatTracker.message) {
+        $("#message").html(StatTracker.message);
+    }
+    else {
+        $("#message").hide();
+    }
 	$("#loading").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
