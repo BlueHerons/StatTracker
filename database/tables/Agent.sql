@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS `Agent` (
   `auth_code` varchar(6) NOT NULL DEFAULT '',
   `meta` TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (`email`),
-  UNIQUE KEY `auth_code` (`auth_code`),
   KEY `faction` (`faction`),
   KEY `agent` (`agent`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
