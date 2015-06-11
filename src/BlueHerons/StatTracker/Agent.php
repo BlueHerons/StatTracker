@@ -115,7 +115,7 @@ class Agent {
      * @return string Object AP Breakdown object
      */
     public function getAPBreakdown($days_back = 0) {
-        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdownOverDays(?, ?);");
+        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdown(?, ?);");
         $stmt->execute(array($this->name, $days_back));
         $stmt->closeCursor();
 
@@ -562,7 +562,7 @@ class Agent {
             $stmt->closeCursor();
 
             // sprintf still used intentionally
-            $stmt = StatTracker::db()->query(sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %d;", $limit));
+            $stmt = StatTracker::db()->query(sprintf("SELECT * FROM UpcomingBadges ORDER BY days_remaining ASC LIMIT %d;", $limit));
 
             if (!is_array($this->upcoming_badges)) {
                 $this->upcoming_badges = array();
