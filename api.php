@@ -190,7 +190,9 @@ $StatTracker->get("/api/{token}/{stat}/{view}/{when}.{format}", function($token,
 	$data = "";
 	switch ($view) {
 		case "breakdown":
-			$data = $agent->getAPBreakdown();
+                        $when = filter_var($when, FILTER_SANITIZE_NUMBER_INT);
+                        $when = is_numeric($when) ? $when : 0;
+			$data = $agent->getAPBreakdown($when);
 			break;
 		case "leaderboard":
 			$data = $StatTracker->getLeaderboard($stat, $when);

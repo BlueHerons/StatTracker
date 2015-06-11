@@ -53,7 +53,15 @@
 
         <div class="item">
             <h3>AP Breakdown</h3>
+            <div class="graph-selector">
+	        <span class="graph-link ap-breakdown link" data-stat="ap-breakdown" data-what="graph" data-when="0">All Time</span>
+		&nbsp;|&nbsp;
+		<span class="graph-link ap-breakdown link" data-stat="ap-breakdown" data-what="trend" data-when="30">Past 30 Days</span>
+		&nbsp;|&nbsp;
+		<span class="graph-link ap-breakdown link" data-stat="ap-breakdown" data-what="trend" data-when="7">Past 7 Days</span>
+            </div>
             <div id="ap_breakdown"></div>
+            <div class="loading 110" />
         </div>
     </div>
 
@@ -74,9 +82,16 @@ function onPageLoad() {
         stat = $(this).attr("data-stat");
         $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
         $(this).addClass("active");
-        $("#graph-" + stat).empty();
-        $("#graph-" + stat).after($("<div/>").addClass("loading 110"));
-        loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
+        if (stat == "ap-breakdown") {
+            $("#ap_breakdown").empty();
+            $("#ap_breakdown").after($("<div/>").addClass("loading 110"));
+            getAPBreakdown($(this).attr("data-when"));
+        }
+        else {
+            $("#graph-" + stat).empty();
+            $("#graph-" + stat).after($("<div/>").addClass("loading 110"));
+            loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
+        }
     });
 
     $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming?limit=5",
@@ -145,54 +160,57 @@ function onPageLoad() {
         }
     });
 
-    $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown",
-        data: { ts: '{{ agent.update_time }}' },
-        dataType: "json",
-        statusCode: {
-            500: function() {
-                alert("There was an error retrieving the graph for AP Breakdown.");
-            }
-        },
-        success: function(response) {
-            CHART_WIDTH_MAX = 300;
-            CONTAINER_WIDTH_MAX = 500;
-            containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
-            left = (containerWidth - CHART_WIDTH_MAX) / 2;
-            left = left < 0 ? 0 : left;
-            chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
-
-            $("#ap_breakdown").highcharts({
-                chart: {
-                    backgroundColor: "#000",
-                    plotBackgroundColor: "#000"
-                },
-                colors: response.slice_colors,
-                credits: {
-                    enabled: false
-                },
-                title : {
-                    text: null
-                },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: "pointer",
-                        dataLabels: {
-                            distance: -40,
-                            enabled: true,
-                            format: "{percentage:.2f}%"
+    function getAPBreakdown(days) {
+        $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown/" + days,
+            data: { ts: '{{ agent.update_time }}' },
+            dataType: "json",
+            statusCode: {
+                500: function() {
+                    alert("There was an error retrieving the graph for AP Breakdown.");
+                }
+            },
+            success: function(response) {
+                $("#ap_breakdown + div.loading").remove();
+                CHART_WIDTH_MAX = 300;
+                CONTAINER_WIDTH_MAX = 500;
+                containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
+                left = (containerWidth - CHART_WIDTH_MAX) / 2;
+                left = left < 0 ? 0 : left;
+                chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
+    
+                $("#ap_breakdown").highcharts({
+                    chart: {
+                        backgroundColor: "#000",
+                        plotBackgroundColor: "#000"
+                    },
+                    colors: response.slice_colors,
+                    credits: {
+                        enabled: false
+                    },
+                    title : {
+                        text: null
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: "pointer",
+                            dataLabels: {
+                                distance: -40,
+                                enabled: true,
+                                format: "{percentage:.2f}%"
+                            }
                         }
-                    }
-                },
-                series: [{
-                    type: "pie",
-                    name: "AP",
-                    data: response.data
-                }]
-            });
-        }
-    });
-
+                    },
+                    series: [{
+                        type: "pie",
+                        name: "AP",
+                        data: response.data
+                    }]
+                });
+            }
+        });
+    }
+    
     function loadStatPrediction(stat, name) {
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/prediction",
             data: { ts: '{{ agent.update_time }}' },
@@ -410,6 +428,8 @@ function onPageLoad() {
             }
         });
     }
+
+    getAPBreakdown(0);
 
 {% for stat in stats if stat.graphable %}
     loadStatPrediction("{{ stat.stat }}", "{{ stat.name }}");

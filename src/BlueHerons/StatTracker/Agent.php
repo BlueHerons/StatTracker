@@ -108,15 +108,15 @@ class Agent {
     }
 
     /**
-     * Generates JSON formatted data for use in a Google Visualization API pie chart.
+     * Generates a breakdown of AP earned by stat
      *
-     * @param Agent agent the agent whose data should be used
+     * @param int $days_back Days before the more recent submission that should be considered for the Breakdown
      *
      * @return string Object AP Breakdown object
      */
-    public function getAPBreakdown() {
-        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdown(?);");
-        $stmt->execute(array($this->name));
+    public function getAPBreakdown($days_back = 0) {
+        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdownOverDays(?, ?);");
+        $stmt->execute(array($this->name, $days_back));
         $stmt->closeCursor();
 
         $stmt = StatTracker::db()->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
