@@ -24,7 +24,7 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
   SELECT b.stat, 
          b.name,
          b.level,
-         d.value / b.amount_required,
+         IF((d.value / b.amount_required) > .99, .99, d.value / b.amount_required),
          COALESCE(((b.amount_required - d.value) / GetRateForAgentAndStat(agent_name, b.stat)),9999.9) remaining
     FROM Data d
     JOIN Badges b ON d.stat = b.stat
@@ -38,4 +38,5 @@ GROUP BY b.stat
 ORDER BY remaining ASC;
 
 END $$
+
 DELIMITER ;
