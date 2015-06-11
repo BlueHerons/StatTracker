@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `GetAPBreakdown` $$
 
-CREATE PROCEDURE `GetAPBreakdownOverDays`(IN `agent_name` VARCHAR(15), IN `days_back` INT(2))
+CREATE PROCEDURE `GetAPBreakdown`(IN `agent_name` VARCHAR(15), IN `days_back` INT(2))
     READS SQL DATA
 BEGIN
 
