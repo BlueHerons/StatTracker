@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no" />
 
 	<link rel="shortcut icon" href="favicon.ico" />
-	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Coda:400,700" />
 	<link rel="stylesheet" href="{{ app.request.basepath }}/resources/css/style.css" />
 
@@ -22,6 +22,7 @@
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="//code.highcharts.com/4.0/highcharts.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/headroom.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/jQuery.headroom.min.js"></script>
 	<script type="text/javascript" src="{{ app.request.basepath }}/resources/scripts/jquery.tablesorter.min.js"></script>
@@ -71,10 +72,7 @@
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Leaderboards<b class="caret"></b></a>
 						<ul class="dropdown-menu scrollable-menu" role="menu">
-						{% for stat in stats if stat.hasWeeklyLeaderboard() %}
-							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
-						{% endfor %}
-						{% for stat in stats|sort %}
+						{% for stat in stats|name_sort if stat.hasLeaderboard() %}
 							<li><a href="{{ app.request.basepath }}/leaderboards#{{ stat.stat }}">{{ stat.name }}</a></li>
 						{% endfor %}
 
@@ -82,9 +80,14 @@
 					</li>
 				</ul>
                                 <ul class="nav navbar-nav navbar-right">
-				    {% if agent is defined and agent.auth_code is not null %}
-                                    <li class="navbar-link"><a href="#">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span></a></li>
-                                    <li class="navbar-link"><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
+				    {% if agent is defined and agent.token is not null %}
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, <span class="{% if agent.faction == "R" %}resistance-agent{% else %}enlightened-agent{% endif %}">{{ agent.name }}</span><b class="caret"></b></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="{{ app.request.basepath }}/settings">Settings</a></li>
+                                            <li><a href="{{ app.request.basepath }}/logout" id="logout">Logout</a></li>
+                                        </ul>
+                                    </li>
                                     {% else %}
 				    <li class="navbar-link"><a href="#">Welcome, agent</a></li>
                                     {% endif %}
@@ -92,15 +95,18 @@
 			</div>
 		</div>
 	</nav>
-				
+	
+        {% if attribute(constants, "debug") %}
+        <div class="message">
+        Debug mode is enabled!
+        </div>
+        {% endif %}
+			
 	<div id="main-content" class="container-fluid">
 		<div class="loading"></div>
 		<div id="login-dialog">
 			<p>Welcome, Agent</p>
 			<div id="login-buttons">
-				<div class="google">
-					<a href=""><span>Sign in with Google</span></a>
-				</div>
 			</div>
 	
 			<div id="login-message"></div>

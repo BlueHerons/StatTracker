@@ -1,17 +1,21 @@
 Options -Indexes -MultiViews
 
-<IfModule mod_ssl.c>
-	# Force SSL
-	RewriteCond %{HTTPS} !on
-	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-</IfModule>
+# 2.5 MB
+php_value upload_max_filesize 2621440
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-	# Silex
-	RewriteRule ^api api.php [QSA,L]
-	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteRule ^ index.php [QSA,L]
+
+    <IfModule mod_ssl.c>
+        # Force SSL
+        RewriteCond %{HTTPS} !on
+        RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    </IfModule>
+
+    # Silex
+    RewriteRule ^api api.php [QSA,L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
 <IfModule mod_deflate.c>

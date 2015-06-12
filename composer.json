@@ -10,25 +10,19 @@
             "role": "Lead Developer"
         },
         {
+            "name": "Fragger",
+            "email": "wonderfulweb@gmail.com",
+            "homepage": "http://github.com/Fragger",
+            "role": "Developer"
+        },
+        {
             "name": "ForrestMcIntyre",
             "homepage": "http://github.com/ForrestMcIntyre",
             "role": "Contributor"
         },
         {
-            "name": "BoatAnchor",
-            "homepage": "http://github.com/BoatAnchor",
-            "role": "Contributor"
-        },
-        {
-            "name": "Fragger",
-            "email": "wonderfulweb@gmail.com",
-            "homepage": "http://github.com/Fragger",
-            "role": "Contributor"
-        },
-        {
-            "name": "aunger",
-            "homepage": "http://github.com/aunger",
-            "role": "Contributor"
+            "name": "others",
+            "homepage": "https://github.com/BlueHerons/StatTracker/graphs/contributors"
         }
     ],
     "support": {
@@ -51,7 +45,8 @@
         "php-curl-class/php-curl-class": "~2.1",
         "swiftmailer/swiftmailer": "~5.1.0",
         "silex/silex": "~1.2",
-        "twig/twig": "~1.8"
+        "twig/twig": "~1.8",
+        "endroid/qrcode": "^1.5"
     },
     "scripts": {
         "post-update-cmd": "BlueHerons\\StatTracker\\Installer::postUpdate",

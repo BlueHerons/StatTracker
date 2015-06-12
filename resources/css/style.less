@@ -7,7 +7,7 @@
 @enlightened-color: rgba(43, 237, 27, 1);
 
 @upcoming-badge-height: 85;
-@upcoming-badge-time-margin: @upcoming-badge-height / 3.3;
+@upcoming-badge-time-margin: @upcoming-badge-height / 7;
 @upcoming-badge-width: 270;
 
 @ratio-height: 105;
@@ -32,9 +32,10 @@ body {
     margin: 0;
     min-height: 100%;
     padding: 0;
+    padding-top: 50px;
     position: relative;
 
-    #message {
+    #message, .message {
         background: #102023;
         border: 2px solid rgba(0, 216, 225, 1);
         margin-left: auto;
@@ -42,7 +43,14 @@ body {
         margin-top: 15px;
         max-width: 450px;
         padding: 10px;
+        text-align: center;
         width: 100%;
+    }
+
+    .message.error {
+        &:extend(.message);
+        border: 2px solid rgba(231, 77, 77, 1);
+        color: rgba(231, 77, 77, 1);
     }
 }
 
@@ -82,7 +90,7 @@ form#ocr {
     max-width: 440px;
 }
 
-h2, h3 {
+h2, h3, h4 {
     color: @title-color;
     font-size: 125%;
     font-weight: bold;
@@ -324,6 +332,25 @@ table#stat-entry {
             }
 
         }
+
+        .wordpress {
+            a {
+                display: block;
+                margin: 0 auto;
+                width: 160px;
+                height: 54px;
+                background: url("./resources/images/wp.png");
+                background-position: 0px 0px;
+
+                span {
+                    display: none;
+                }
+            }
+
+             a:hover {
+                background-position: 0px 54px;
+            }
+        }
     }
 
     #login-message {
@@ -337,35 +364,95 @@ table#stat-entry {
 
 #main-content {
     padding-bottom: 100px;
-    padding-top: 51px;
     text-align: center;
     width: 100%;
+}
+
+#popup {
+    position: absolute;
+    padding-top: 50px;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    z-index: 1000;
+    background-color: black;
+    word-wrap: break-word;
+
+    table {
+        margin-bottom: 15px;
+
+        td, th {
+            text-align: center;
+            vertical-align: top;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        th {
+            width: 100px;
+        }
+    }
+
+    > * {
+        margin: 0 auto;
+        max-width: 90%;
+    }
+
+    > h3 {
+        padding-top: 15px;
+    }
+
+    #qr {
+        padding: 25px 0;
+    }
+
+    > p {
+        padding-bottom: 10px;
+    }
+
+    p#name {
+        color: @header-color;
+
+        span {
+            color: @text-color;
+        }
+    }
+
+    p#instructions {
+    }
+
+    > a {
+        color: @leaderboard-hover-color;
+        padding-top: 10px;
+    }
+
+    > a img {
+        padding: 20px;
+    }
 }
 
 #ratios {
     margin: 0 auto;
     min-width: ~"@{ratio-width}px";
-    width: ~"@{ratio-width}px";
 
     .ratio {
-        clear: left;
         color: white;
-        display: block;
+        display: inline-block;
         font-size: 110%;
         height: ~"@{ratio-height}px";
-        padding-bottom: 20px;
-        padding-left: 4px;
+        margin: 0 15px 20px 15px;
 
         .badges {
-
             > * {
                 float: left;
             }
 
             .seperator {
                 padding-top: ~"@{ratio-seperator-padding}px";
-                padding-left: 10px;
-                padding-right: 10px;
+                padding-left: 5px;
+                padding-right: 5px;
             }
         }
 
@@ -431,111 +518,109 @@ table#stat-entry {
     background-image: url("./resources/images/locked_badge_75.png");
 }
 
-.badge-icon-75.builder.bronze   { background-position: 0px 0px; }
-.badge-icon-75.builder.silver   { background-position: 0px -75px; }
-.badge-icon-75.builder.gold     { background-position: 0px -150px; }
-.badge-icon-75.builder.platinum { background-position: 0px -225px; }
-.badge-icon-75.builder.onyx     { background-position: 0px -300px; }
+.badge-icon-75.builder.bronze   { background-position: 5px 1px; }
+.badge-icon-75.builder.silver   { background-position: 5px -75px; }
+.badge-icon-75.builder.gold     { background-position: 5px -151px; }
+.badge-icon-75.builder.platinum { background-position: 5px -225px; }
+.badge-icon-75.builder.onyx     { background-position: 5px -301px; }
 
-.badge-icon-75.connector.bronze   { background-position: -75px 0px; }
-.badge-icon-75.connector.silver   { background-position: -75px -75px; }
-.badge-icon-75.connector.gold     { background-position: -75px -150px; }
-.badge-icon-75.connector.platinum { background-position: -75px -225px; }
-.badge-icon-75.connector.onyx     { background-position: -75px -300px; }
+.badge-icon-75.connector.bronze   { background-position: -71px 0px; }
+.badge-icon-75.connector.silver   { background-position: -71px -76px; }
+.badge-icon-75.connector.gold     { background-position: -71px -150px; }
+.badge-icon-75.connector.platinum { background-position: -71px -226px; }
+.badge-icon-75.connector.onyx     { background-position: -71px -300px; }
 
-.badge-icon-75.engineer.bronze   { background-position: -975px 0px; }
-.badge-icon-75.engineer.silver   { background-position: -975px -75px; }
-.badge-icon-75.engineer.gold     { background-position: -975px -150px; }
-.badge-icon-75.engineer.platinum { background-position: -975px -225px; }
-.badge-icon-75.engineer.onyx     { background-position: -975px -300px; }
+.badge-icon-75.engineer.bronze   { background-position: -971px 0px; }
+.badge-icon-75.engineer.silver   { background-position: -971px -76px; }
+.badge-icon-75.engineer.gold     { background-position: -971px -150px; }
+.badge-icon-75.engineer.platinum { background-position: -971px -226px; }
+.badge-icon-75.engineer.onyx     { background-position: -971px -300px; }
 
-.badge-icon-75.explorer.bronze   { background-position: -150px 0px; }
-.badge-icon-75.explorer.silver   { background-position: -150px -75px; }
-.badge-icon-75.explorer.gold     { background-position: -150px -150px; }
-.badge-icon-75.explorer.platinum { background-position: -150px -225px; }
-.badge-icon-75.explorer.onyx     { background-position: -150px -300px; }
+.badge-icon-75.explorer.bronze   { background-position: -146px 1px; }
+.badge-icon-75.explorer.silver   { background-position: -146px -75px; }
+.badge-icon-75.explorer.gold     { background-position: -146px -151px; }
+.badge-icon-75.explorer.platinum { background-position: -146px -225px; }
+.badge-icon-75.explorer.onyx     { background-position: -146px -301px; }
 
-.badge-icon-75.guardian.bronze   { background-position: -225px 0px; }
-.badge-icon-75.guardian.silver   { background-position: -225px -75px; }
-.badge-icon-75.guardian.gold     { background-position: -225px -150px; }
-.badge-icon-75.guardian.platinum { background-position: -225px -225px; }
-.badge-icon-75.guardian.onyx     { background-position: -225px -300px; }
+.badge-icon-75.guardian.bronze   { background-position: -221px 0px; }
+.badge-icon-75.guardian.silver   { background-position: -221px -76px; }
+.badge-icon-75.guardian.gold     { background-position: -221px -150px; }
+.badge-icon-75.guardian.platinum { background-position: -221px -226px; }
+.badge-icon-75.guardian.onyx     { background-position: -221px -300px; }
 
-.badge-icon-75.hacker.bronze   { background-position: -300px 0px; }
-.badge-icon-75.hacker.silver   { background-position: -300px -75px; }
-.badge-icon-75.hacker.gold     { background-position: -300px -150px; }
-.badge-icon-75.hacker.platinum { background-position: -300px -225px; }
-.badge-icon-75.hacker.onyx     { background-position: -300px -300px; }
+.badge-icon-75.hacker.bronze   { background-position: -296px 1px; }
+.badge-icon-75.hacker.silver   { background-position: -296px -75px; }
+.badge-icon-75.hacker.gold     { background-position: -296px -151px; }
+.badge-icon-75.hacker.platinum { background-position: -296px -225px; }
+.badge-icon-75.hacker.onyx     { background-position: -296px -301px; }
 
-.badge-icon-75.illuminator.bronze   { background-position: -1200px 0px; }
-.badge-icon-75.illuminator.silver   { background-position: -1200px -75px; }
-.badge-icon-75.illuminator.gold     { background-position: -1200px -150px; }
-.badge-icon-75.illuminator.platinum { background-position: -1200px -225px; }
-.badge-icon-75.illuminator.onyx     { background-position: -1200px -300px; }
+.badge-icon-75.illuminator.bronze   { background-position: -1196px 1px; }
+.badge-icon-75.illuminator.silver   { background-position: -1196px -75px; }
+.badge-icon-75.illuminator.gold     { background-position: -1196px -151px; }
+.badge-icon-75.illuminator.platinum { background-position: -1196px -225px; }
+.badge-icon-75.illuminator.onyx     { background-position: -1196px -301px; }
 
+.badge-icon-75.liberator.bronze   { background-position: -371px 0px; }
+.badge-icon-75.liberator.silver   { background-position: -371px -76px; }
+.badge-icon-75.liberator.gold     { background-position: -371px -150px; }
+.badge-icon-75.liberator.platinum { background-position: -371px -226px; }
+.badge-icon-75.liberator.onyx     { background-position: -371px -300px; }
 
-.badge-icon-75.liberator.bronze   { background-position: -375px 0px; }
-.badge-icon-75.liberator.silver   { background-position: -375px -75px; }
-.badge-icon-75.liberator.gold     { background-position: -375px -150px; }
-.badge-icon-75.liberator.platinum { background-position: -375px -225px; }
-.badge-icon-75.liberator.onyx     { background-position: -375px -300px; }
+.badge-icon-75.mindcontroller.bronze   { background-position: -446px 1px; }
+.badge-icon-75.mindcontroller.silver   { background-position: -446px -75px; }
+.badge-icon-75.mindcontroller.gold     { background-position: -446px -151px; }
+.badge-icon-75.mindcontroller.platinum { background-position: -446px -225px; }
+.badge-icon-75.mindcontroller.onyx     { background-position: -446px -301px; }
 
-.badge-icon-75.mindcontroller.bronze   { background-position: -450px 0px; }
-.badge-icon-75.mindcontroller.silver   { background-position: -450px -75px; }
-.badge-icon-75.mindcontroller.gold     { background-position: -450px -150px; }
-.badge-icon-75.mindcontroller.platinum { background-position: -450px -225px; }
-.badge-icon-75.mindcontroller.onyx     { background-position: -450px -300px; }
+.badge-icon-75.pioneer.bronze   { background-position: -521px 0px; }
+.badge-icon-75.pioneer.silver   { background-position: -521px -76px; }
+.badge-icon-75.pioneer.gold     { background-position: -521px -150px; }
+.badge-icon-75.pioneer.platinum { background-position: -521px -226px; }
+.badge-icon-75.pioneer.onyx     { background-position: -521px -300px; }
 
-.badge-icon-75.pioneer.bronze   { background-position: -525px 0px; }
-.badge-icon-75.pioneer.silver   { background-position: -525px -75px; }
-.badge-icon-75.pioneer.gold     { background-position: -525px -150px; }
-.badge-icon-75.pioneer.platinum { background-position: -525px -225px; }
-.badge-icon-75.pioneer.onyx     { background-position: -525px -300px; }
+.badge-icon-75.purifier.bronze   { background-position: -596px 1px; }
+.badge-icon-75.purifier.silver   { background-position: -596px -75px; }
+.badge-icon-75.purifier.gold     { background-position: -596px -151px; }
+.badge-icon-75.purifier.platinum { background-position: -596px -225px; }
+.badge-icon-75.purifier.onyx     { background-position: -596px -301px; }
 
-.badge-icon-75.purifier.bronze   { background-position: -600px 0px; }
-.badge-icon-75.purifier.silver   { background-position: -600px -75px; }
-.badge-icon-75.purifier.gold     { background-position: -600px -150px; }
-.badge-icon-75.purifier.platinum { background-position: -600px -225px; }
-.badge-icon-75.purifier.onyx     { background-position: -600px -300px; }
+.badge-icon-75.recharger.bronze   { background-position: -671px 0px; }
+.badge-icon-75.recharger.silver   { background-position: -671px -76px; }
+.badge-icon-75.recharger.gold     { background-position: -671px -150px; }
+.badge-icon-75.recharger.platinum { background-position: -671px -226px; }
+.badge-icon-75.recharger.onyx     { background-position: -671px -300px; }
 
-.badge-icon-75.recharger.bronze   { background-position: -675px 0px; }
-.badge-icon-75.recharger.silver   { background-position: -675px -75px; }
-.badge-icon-75.recharger.gold     { background-position: -675px -150px; }
-.badge-icon-75.recharger.platinum { background-position: -675px -225px; }
-.badge-icon-75.recharger.onyx     { background-position: -675px -300px; }
+.badge-icon-75.seer.bronze   { background-position: -746px 1px; }
+.badge-icon-75.seer.silver   { background-position: -746px -75px; }
+.badge-icon-75.seer.gold     { background-position: -746px -151px; }
+.badge-icon-75.seer.platinum { background-position: -746px -225px; }
+.badge-icon-75.seer.onyx     { background-position: -746px -301px; }
 
-.badge-icon-75.seer.bronze   { background-position: -750px 0px; }
-.badge-icon-75.seer.silver   { background-position: -750px -75px; }
-.badge-icon-75.seer.gold     { background-position: -750px -150px; }
-.badge-icon-75.seer.platinum { background-position: -750px -225px; }
-.badge-icon-75.seer.onyx     { background-position: -750px -300px; }
+.badge-icon-75.sojourner.bronze   { background-position: -1271px 0px; }
+.badge-icon-75.sojourner.silver   { background-position: -1271px -76px; }
+.badge-icon-75.sojourner.gold     { background-position: -1271px -150px; }
+.badge-icon-75.sojourner.platinum { background-position: -1271px -226px; }
+.badge-icon-75.sojourner.onyx     { background-position: -1271px -300px; }
 
-.badge-icon-75.sojourner.bronze   { background-position: -1275px 0px; }
-.badge-icon-75.sojourner.silver   { background-position: -1275px -75px; }
-.badge-icon-75.sojourner.gold     { background-position: -1275px -150px; }
-.badge-icon-75.sojourner.platinum { background-position: -1275px -225px; }
-.badge-icon-75.sojourner.onyx     { background-position: -1275px -300px; }
+.badge-icon-75.specops.bronze   { background-position: -896px 1px; }
+.badge-icon-75.specops.silver   { background-position: -896px -75px; }
+.badge-icon-75.specops.gold     { background-position: -896px -151px; }
+.badge-icon-75.specops.platinum { background-position: -896px -225px; }
+.badge-icon-75.specops.onyx     { background-position: -896px -301px; }
 
+.badge-icon-75.translator.bronze   { background-position: -1121px 0px; }
+.badge-icon-75.translator.silver   { background-position: -1121px -76px; }
+.badge-icon-75.translator.gold     { background-position: -1121px -150px; }
+.badge-icon-75.translator.platinum { background-position: -1121px -226px; }
+.badge-icon-75.translator.onyx     { background-position: -1121px -300px; }
 
-.badge-icon-75.specops.bronze   { background-position: -900px 0px; }
-.badge-icon-75.specops.silver   { background-position: -900px -75px; }
-.badge-icon-75.specops.gold     { background-position: -900px -150px; }
-.badge-icon-75.specops.platinum { background-position: -900px -225px; }
-.badge-icon-75.specops.onyx     { background-position: -900px -300px; }
+.badge-icon-75.trekker.bronze   { background-position: -821px 0px; }
+.badge-icon-75.trekker.silver   { background-position: -821px -76px; }
+.badge-icon-75.trekker.gold     { background-position: -821px -150px; }
+.badge-icon-75.trekker.platinum { background-position: -821px -226px; }
+.badge-icon-75.trekker.onyx     { background-position: -821px -300px; }
 
-.badge-icon-75.translator.bronze   { background-position: -1125px 0px; }
-.badge-icon-75.translator.silver   { background-position: -1125px -75px; }
-.badge-icon-75.translator.gold     { background-position: -1125px -150px; }
-.badge-icon-75.translator.platinum { background-position: -1125px -225px; }
-.badge-icon-75.translator.onyx     { background-position: -1125px -300px; }
-
-.badge-icon-75.trekker.bronze   { background-position: -825px 0px; }
-.badge-icon-75.trekker.silver   { background-position: -825px -75px; }
-.badge-icon-75.trekker.gold     { background-position: -825px -150px; }
-.badge-icon-75.trekker.platinum { background-position: -825px -225px; }
-.badge-icon-75.trekker.onyx     { background-position: -825px -300px; }
-
-.dashboard-container {
+.dashboard-container, .settings-container {
     .breakdown {
         display: inline-block;
         vertical-align: top;
@@ -547,16 +632,29 @@ table#stat-entry {
         }
     }
 
-	.container {
+    .container {
     	padding-left: 0px !important;
     	padding-right: 0px !important;
     
+        table {
+            margin: 0 auto;
+            
+            td, th {
+                min-width: 75px;
+                text-align: center;
+            }
+        }
+
         .item {
             display: inline-block;
             text-align: center;
             max-width: 500px;
             vertical-align: top;
             width: 100%;
+
+            table {
+                margin-bottom: 10px;
+            }
         }
 
         @media (min-width: 1000px) {
@@ -730,6 +828,14 @@ table#stat-entry {
         display: inline-block;
     }
 
+    > p {
+        display: block;
+    }
+
+    .badge-remaining, .rate {
+        margin-top: 10px;
+    }
+    
     img.badge-icon {
         vertical-align: middle;
     }

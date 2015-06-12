@@ -66,4 +66,70 @@ interface IAuthenticationProvider {
      * info from the provider here, and process it via the login() method, which will be called automatically.
      */
     public function callback(StatTracker $app);
+
+    /**
+     * When status == "registration_required", optionally send an email to the user stating what needs to be completed
+     * in order to complete registration.
+     *
+     * Return the entire body of an email message that shouold be sent to the user.
+     *
+     * If no email should be sent, return false
+     */
+    public function getRegistrationEmail($email_address);
+
+    public function getAuthenticationUrl();
+
+    public function getName();
+}
+
+class AuthResponse {
+
+    const AUTHENTICATION_REQUIRED = "authentication_required";
+    const LOGGED_OUT = "logged_out";
+    const OKAY = "okay";
+    const REGISTRATION_REQUIRED = "registration_required";
+
+    public static function authenticationRequired(IAuthenticationProvider $provider) {
+        return new AuthResponse(self::AUTHENTICATION_REQUIRED, array(
+                                    "providers" => array(
+                                        array(
+                                            "name" => strtolower($provider->getName()),
+                                            "url" => $provider->getAuthenticationUrl()
+                                        )
+                                    )
+                                ));
+    }
+
+    public static function loggedOut() {
+        return new AuthResponse(self::LOGGED_OUT);
+    }
+
+    public static function okay($agent) {
+        return new AuthResponse(self::OKAY, array(
+                                    "agent" => $agent
+                                ));
+    }
+
+    public static function registrationRequired($message = "", $email_address = "") {
+        return new AuthResponse(self::REGISTRATION_REQUIRED, array(
+                                    "message" => $message,
+                                    "email" => $email_address
+                                ));
+    }
+
+    public static function error($message) {
+        return new AuthResponse(null, array(
+                                    "message" => $message
+                                ), true);
+    }
+
+    private function __construct($status, $fields = array(), $error = false) {
+        $this->error = $error;
+        $this->status = $status;
+
+        foreach ($fields as $k => $v) {
+            $this->$k = $v;
+        }
+    }
+
 }

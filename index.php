@@ -32,6 +32,7 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 	if ($page == "dashboard" ||
 	    $page == "leaderboards" ||
 	    $page == "submit-stats" ||
+            $page == "settings" ||
             $page == "terms") {
 		$StatTracker['session']->set("page_after_login", $page);
 		return $StatTracker['twig']->render("index.twig", array(
@@ -40,6 +41,7 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 				"ga_id" => StatTracker::getConstant("GOOGLE_ANALYTICS_ID"),
                                 "admin_agent" => StatTracker::getConstant("ADMIN_AGENT"),
                                 "contributors" => $StatTracker->getContributors(),
+                                "debug" => StatTracker::getConstant("DEBUG", false),
 				"group_name" => StatTracker::getConstant("GROUP_NAME"),
 				"version" => StatTracker::getConstant("VERSION", "bleeding edge"),
 			),
@@ -100,9 +102,6 @@ $StatTracker->get('/page/{page}', function(Request $request, $page) use ($StatTr
 		}
 
 		$page_parameters['date'] = $date;
-	}
-	else {
-		$StatTracker->getAgent()->getStats("latest", true);
 	}
 
 	return $StatTracker['twig']->render($page.".twig", array(

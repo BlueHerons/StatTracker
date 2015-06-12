@@ -1,6 +1,6 @@
 <div id="message" />	
 
-<form method="post" action="./api/{{ agent.auth_code }}/submit-stats" id="submit-stats">
+<form method="post" action="./api/{{ agent.token }}/submit-stats" id="submit-stats">
 	<div id="loading" class="loading"/>
 	<div id="agent-info">
 		<div class="avatar level-icon-75 {{ faction_class }} l{{ agent.level }}"/>
@@ -66,7 +66,12 @@
 
 <script>
 function onPageLoad() {
-	$("#message").hide();
+    if (StatTracker.message) {
+        $("#message").html(StatTracker.message);
+    }
+    else {
+        $("#message").hide();
+    }
 	$("#loading").hide();
 	$("input[name='ap']").hide();
 	$("table#stat-entry").hide();
@@ -101,7 +106,7 @@ function onPageLoad() {
 			$("table#stat-entry").hide();
 			$("#agent-info").hide();
 			
-			$.get("{{ app.request.basepath }}/api/{{ agent.auth_code }}/profile/" + $(this).val())
+			$.get("{{ app.request.basepath }}/api/{{ agent.token }}/profile/" + $(this).val())
 			 .done(function(data, status, jqXHR) {
 				console.log(data);
 				for (stat in data.stats) {
@@ -149,7 +154,7 @@ function onPageLoad() {
 		$("#submit-actions").hide();
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/ocr",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/ocr",
 			data: data,
 			cache: false,
 			processData: false,
@@ -159,6 +164,9 @@ function onPageLoad() {
 					var json = parseOCRResponse(e.currentTarget.response);
 					if (json.hasOwnProperty("error")) {
 						$("#message").show().html("An error occurred while processing your screenshot: " + json.error + ".<p/>Please try again or submit your stats manually.");
+                                                $(".loading").hide();
+                                                showActions();
+                                                return;
 					}
 					else if(json.hasOwnProperty("status")) {
 						$("#message").show().html(json.status);
@@ -235,18 +243,12 @@ function onPageLoad() {
 		window.scrollTo(0,0);
 		$.ajax({
 			type: "POST",
-			url: "{{ app.request.basepath }}/api/{{ agent.auth_code }}/submit",
+			url: "{{ app.request.basepath }}/api/{{ agent.token }}/submit?allow_lower_values=true",
 			data: $("form#submit-stats").serialize(),
 			dataType: "json",
 			success: function(data) {
 				$(".loading").hide();
-				if (!data.error) {
-					$("#message").show().html(data.message).show();
-					window.scrollTo(0,0);
-				}
-				else {
-					alert(data.message);
-				}
+				$("#message").show().html(data.message).show();
 			}
 		});
 	

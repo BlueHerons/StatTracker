@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS `Stats` (
   PRIMARY KEY (`stat`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `order` (`order`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Stats` (`order`, `stat`, `name`, `unit`, `group`, `ocr`, `graph`, `leaderboard`, `prediction`) VALUES
 (0, 'ap', 'AP', 'AP', '', 1, 1, 7, 0),

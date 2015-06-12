@@ -35,17 +35,13 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
         // Kick off the OAuth process
         if (empty($StatTracker['session']->get("token"))) {
-            $response->status = "authentication_required";
-            $response->url = $this->client->createAuthUrl();
-            return $response;
+            return AuthResponse::authenticationRequired($this);
         }
 
         $this->client->setAccessToken($StatTracker['session']->get("token"));
 
         if ($this->client->isAccessTokenExpired()) {
-            $response->status = "authentication_required";
-            $response->url = $this->client->createAuthUrl();
-            return $response;
+            return AuthResponse::authenticationRequired($this);
         }
 
         if ($StatTracker['session']->get("agent") === null) {
@@ -59,49 +55,53 @@ class GooglePlusProvider implements IAuthenticationProvider {
                 }
 
                 if (empty($email_address)) {
-                    $response->error = true;
-                    $response->message = "Google did not provide an email address.";
-                    return $response;
+                    return AuthResponse::error("Google did not provide an email address.");
                 }
 
-                $response->email = $email_address;
                 $agent = Agent::lookupAgentName($email_address);
 
                 if (!$agent->isValid()) {
-                    // They need to register
-                    $this->generateAuthCode($email_address);
-                    $this->updateUserMeta($email_address, $me->id);
-                    $response->status = "registration_required";
-                                        $this->logger->info(sprintf("Registration required for %s", $email_address));
+                    // Could be no token, or new user.
+                    // If a name is present, they have been approved, so generate a token and proceed
+                    if (!empty($agent->name)) {
+                        $this->generateAPIToken($agent);
+                        $agent = Agent::lookupAgentName($email_address);
+                        if (!$agent->isValid()) {
+                            $response = AuthResponse::error("Not a valid agent");
+                        }
+                        else {
+                            $StatTracker['session']->set("agent", $agent);
+                            $response = AuthResponse::okay($agent);
+                        }
+                    }
+                    else {
+                        // They need to register, this code is a challenge
+                        $this->generateAuthCode($email_address);
+                        $response= AuthResponse::registrationRequired(sprintf("An email has been sent to<br/><strong>%s</strong><br/>with steps to complete registration", $email_address), $email_address);
+                        $this->logger->info(sprintf("Registration required for %s", $email_address));
+                    }
                 }
                 else {
-                    // Issue a new auth code
-                    $this->generateAuthCode($email_address, true);
-                    $this->updateUserMeta($email_address, $me->id);
-                    $agent->getAuthCode(true);
                     $StatTracker['session']->set("agent", $agent);
-                    $response->status = "okay";
-                    $response->agent = $agent;
-                                        $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
+                    $response = AuthResponse::okay($agent);
+                    $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
                 }
             }
             catch (Exception $e) {
-                $response->error = true;
-                $response->message = $e->getMessage();
-                                $this->logger->error(sprintf("EXCEPTION: %s\n%s:%s", $e->getMessage(), $e->getFile(), $e->getLine()));
+                $response::error($e->getMessage());
+                $this->logger->error(sprintf("EXCEPTION: %s\n%s:%s", $e->getMessage(), $e->getFile(), $e->getLine()));
                 return $response;
             }
         }
         else {
             $agent = $StatTracker['session']->get("agent");
 
-            // Ensure auth_code is valid
-            if (Agent::lookupAgentByAuthCode($agent->getAuthCode())->isValid()) {
-                $response->status = "okay";
-                $response->agent = $agent;
+            // Ensure token is valid
+            if (Agent::lookupAgentByToken($agent->getToken())->isValid()) {
+                $response = AuthResponse::okay($agent);
             }
             else {
-                                $this->logger->info(sprintf("Expired auth_code for %s. Logging out", $agent->name));
+                $this->logger->info(sprintf("Expired token for %s. Logging out", $agent->name));
                 return $this->logout($StatTracker);
             }
         }
@@ -110,7 +110,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
     }
 
     public function logout(StatTracker $StatTracker) {
-                $agent = $StatTracker['session']->get("agent");
+        $agent = $StatTracker['session']->get("agent");
         $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
         foreach($cookies as $cookie) {
             $parts = explode('=', $cookie);
@@ -120,9 +120,8 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
         $this->client->revokeToken($StatTracker['session']->get("token"));
         session_destroy();
-        $response = new stdClass();
-        $response->status = "logged_out";
-                $this->logger->info(sprintf("%s logged out", $agent->name));
+        $response = AuthResponse::loggedOut();
+        $this->logger->info(sprintf("%s logged out", $agent->name));
         return $response;
     }
 
@@ -175,6 +174,45 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
     }
 
+    public function getRegistrationEmail($email_address) {
+        $stmt = StatTracker::db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
+        $stmt->execute(array($email_address));
+        $msg = "";
+
+        // If no activation code is found, instruct user to contact the admin agent.
+        if ($stmt->rowCount() == 0) {
+            $stmt->closeCursor();
+            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
+                   "registration, please contact <strong>" . ADMIN_AGENT . "</strong> through your secure chat ".
+                   "and ask them to enable access for you.";
+        }
+        else {
+            extract($stmt->fetch());
+            $stmt->closeCursor();
+
+            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
+                   "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
+                   "faction comms:".
+                   "<p/>%s<p/>" .
+                   "You will recieve a reply message once you have been activated. This may take up to " .
+                   "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
+                   "<p/>".
+                   $_SERVER['HTTP_REFERER'];
+
+            $msg = sprintf($msg, $activation_code);
+        }
+
+        return $msg;
+    }
+
+    public function getAuthenticationUrl() {
+        return $this->client->createAuthUrl();
+    }
+
+    public function getName() {
+        return "Google";
+    }
+
     /**
      * Generates an authorization code for the given email address. If the email address is not
      * already in the database, it will be inserted. If it already exists, the authorization code
@@ -214,22 +252,13 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
     }
 
-    /**
-     * Updates meta data about the user from the OAuth service on login. This isn't used by the app, but helps to
-     * validate who a registering user is.
-     *
-     * @param string $email_address the primary identifier for the user
-     * @param string $profile_id    the G+ id of the user
-     */
-    public function updateUserMeta($email_address, $profile_id) {
-        try {
-            $stmt = StatTracker::db()->prepare("UPDATE Agent SET profile_id = ? WHERE email = ?;");
-            $stmt->execute(array($profile_id, $email_address));
-            $stmt->closeCursor();
+    private function generateAPIToken($agent) {
+        $token = $agent->createToken("API");
+        if ($token === false) {
+            return false;
         }
-        catch (PDOException $e) {
-            // This exception is not vital to functionality, so eat it.
-            error_log($e);
+        else {
+            $agent->token = $token;
         }
     }
 }

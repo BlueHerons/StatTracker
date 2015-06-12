@@ -10,7 +10,7 @@ use BlueHerons\StatTracker\StatTracker;
 class Agent {
 
     public $name;
-    public $auth_code;
+    public $token;
     public $faction;
     public $level;
     public $stats;
@@ -24,7 +24,7 @@ class Agent {
      * @return string Agent object
      */
     public static function lookupAgentName($email_address) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction, auth_code FROM Agent WHERE email = ?;");
+        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));
         extract($stmt->fetch());
         $stmt->closeCursor();
@@ -33,23 +33,26 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $auth_code);
+            $agent = new Agent($agent);
             $agent->faction = $faction;
+
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ? AND revoked = ?;");
+            $stmt->execute(array($agent->name, "API", 0));
+            extract($stmt->fetch());
+            $stmt->closeCursor();
+
+            if ($token !== null) {
+                $agent = new Agent($agent->name, $token);
+                $agent->faction = $faction;
+            }
+
             return $agent;
         }
     }
 
-    /**
-     * Retruns the registered Agent for the given auth_code. If not agent is found, a generic
-     * Agent object is returned.
-     *
-     * @param string $auth_code
-     *
-     * @return object Agent object
-     */
-    public static function lookupAgentByAuthCode($auth_code) {
-        $stmt = StatTracker::db()->prepare("SELECT agent, faction FROM Agent WHERE auth_code = ?;");
-        $stmt->execute(array($auth_code));
+    public static function lookupAgentByToken($token) {
+        $stmt = StatTracker::db()->prepare("SELECT a.agent, a.faction FROM Agent a JOIN Tokens t ON t.agent = a.agent WHERE t.token = ? AND t.revoked = ?;");
+        $stmt->execute(array($token, 0));
         extract($stmt->fetch());
         $stmt->closeCursor();
 
@@ -57,7 +60,11 @@ class Agent {
             return new Agent();
         }
         else {
-            $agent = new Agent($agent, $auth_code);
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET last_used = NOW() WHERE token = ?;");
+            $stmt->execute(array($token));
+            $stmt->closeCursor();
+
+            $agent = new Agent($agent, $token);
             $agent->faction = $faction;
             return $agent;
         }
@@ -74,19 +81,20 @@ class Agent {
      *
      * @throws Exception if agent name is not found.
      */
-    public function __construct($agent = "Agent", $auth_code = null) {
+    public function __construct($agent = "Agent", $token = null) {
         if (!is_string($agent)) {
             throw new Exception("Agent name must be a string");
         }
 
         $this->name = $agent;
-        $this->auth_code = $auth_code;
+        $this->token = $token;
 
         if ($this->isValid()) {
             $this->getLevel();
             $this->hasSubmitted();
             $this->getStat('ap');
             $this->getUpdateTimestamp();
+            $this->getTokens();
         }
     }
 
@@ -96,19 +104,19 @@ class Agent {
      * @return boolean true if agent is valid, false otherwise
      */
     public function isValid() {
-        return $this->name != "Agent" && !empty($this->auth_code);
+        return $this->name != "Agent" && !empty($this->token);
     }
 
     /**
-     * Generates JSON formatted data for use in a Google Visualization API pie chart.
+     * Generates a breakdown of AP earned by stat
      *
-     * @param Agent agent the agent whose data should be used
+     * @param int $days_back Days before the more recent submission that should be considered for the Breakdown
      *
      * @return string Object AP Breakdown object
      */
-    public function getAPBreakdown() {
-        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdown(?);");
-        $stmt->execute(array($this->name));
+    public function getAPBreakdown($days_back = 0) {
+        $stmt = StatTracker::db()->prepare("CALL GetAPBreakdown(?, ?);");
+        $stmt->execute(array($this->name, $days_back));
         $stmt->closeCursor();
 
         $stmt = StatTracker::db()->query("SELECT * FROM APBreakdown ORDER BY grouping, sequence ASC;");
@@ -135,24 +143,69 @@ class Agent {
         return array("data" => $data, "slice_colors" => $colors);
     }
 
-    /**
-     * Gets the auth code for the agent
-     *
-     * @param bool $refresh Whether or not to refetch the value from the database
-     *
-     * @return the auth code for thw agent
-     */
-    public function getAuthCode($refresh = false) {
-        if (!isset($this->auth_code) || $refresh) {
-            $stmt = StatTracker::db()->prepare("SELECT auth_code FROM Agent WHERE agent = ?;");
-            $stmt->execute(array($this->name));
-            extract($stmt->fetch());
-            $stmt->closeCursor();
+    public function getToken() {
+        return $this->token;
+    }
 
-            $this->auth_code = $auth_code;
+    /**
+     * Gets the access tokens associated with this agent
+     *
+     * @param $refresh Refresh the cached list of access tokens
+     */
+    public function getTokens($refresh = false) {
+        if (!isset($this->tokens) || $refresh) {
+            $stmt = StatTracker::db()->prepare("SELECT name FROM Tokens WHERE agent = ? AND revoked = ?;");
+            $stmt->execute(array($this->name, 0));
+            $tokens = array();
+
+            while ($row = $stmt->fetch()) {
+                extract($row);
+                $tokens[] = $name;
+            }
+            $this->tokens = $tokens;
         }
 
-        return $this->auth_code;
+        return $this->tokens;
+    }
+
+    /**
+     * Creates a new access token. The token is returned once from this method, it cannot be retrieved again.
+     *
+     * @return the token if a new one was created, false if not
+     */
+    public function createToken($name) {
+        if (!in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("INSERT INTO Tokens (agent, name, token) VALUES(?, UCASE(?), SHA2(CONCAT(?, ?, UUID()), 256));");
+            $stmt->execute(array($this->name, $name, $this->name, $name));
+
+            // A token is return only when it is created
+            $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = UCASE(?) AND revoked = ?");
+            $stmt->execute(array($this->name, $name, 0));
+            extract($stmt->fetch());
+            return $token;
+        }
+
+        return false;
+    }
+
+    /**
+     * Revokes the named token. If the "API" token is revoked, a new one will be generated automatically
+     */
+    public function revokeToken($name) {
+        if (in_array($name, $this->getTokens())) {
+            $stmt = StatTracker::db()->prepare("UPDATE Tokens SET revoked = ?, name = CONCAT(name, '-', UNIX_TIMESTAMP(NOW())) WHERE agent = ? and name = UCASE(?)");
+            $stmt->execute(array(1, $this->name, $name));
+
+            // "API" token is special. If it was revoked, another one needs to be created
+            if (strtoupper($name) == "API") {
+                $this->getTokens(true);
+                $this->createToken(strtoupper($name));
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -272,7 +325,7 @@ class Agent {
     }
 
     /**
-     * Gets the timestamp for which the last update was made for the agent. If $data is provided, the timestamp will
+     * Gets the timestamp for which the last update was made for the agent. If $date is provided, the timestamp will
      * be the update for that day
      */
     public function getUpdateTimestamp($date = "latest", $refresh = false) {
@@ -345,12 +398,13 @@ class Agent {
         }
 
         if (!isset($this->stats[$stat]) || $refresh) {
+            $ts = $this->getUpdateTimestamp($when, $refresh);
             if ($when == "latest" || new DateTime() < new DateTime($when)) {
-                $when = date("Y-m-d", $this->getUpdateTimestamp($when, $refresh));
+                $when = date("Y-m-d", $ts);
             }
 
-            $stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND date = ? ORDER BY date DESC LIMIT 1;");
-            $stmt->execute(array($stat, $this->name, $when));
+            $stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND (date = ? OR updated = FROM_UNIXTIME(?)) ORDER BY date DESC LIMIT 1;");
+            $r = $stmt->execute(array($stat, $this->name, $when, $ts));
             extract($stmt->fetch());
             $stmt->closeCursor();
 
@@ -358,7 +412,7 @@ class Agent {
                 $this->stats = array();
             }
 
-            $this->stats[$stat] = $value;
+            $this->stats[$stat] = !is_numeric($value) ? 0 : $value;
         }
 
         return $this->stats[$stat];
@@ -434,6 +488,10 @@ class Agent {
         $prediction->rate = $row['rate'];
         $prediction->progress = $row['progress'];
         $prediction->days_remaining = $row['days'];
+        $prediction->target_date = date("Y-m-d", strtotime("+" . round($row['days']) . " days"));
+
+        $local_fmt = ($row['days'] >= 365) ? "F j, Y" : "F j";
+        $prediction->target_date_local = date($local_fmt, strtotime("+" . round($row['days']) . " days"));
 
         if ($stat !== "level") {
             $prediction->amount_remaining = $row['remaining'];
@@ -504,7 +562,7 @@ class Agent {
             $stmt->closeCursor();
 
             // sprintf still used intentionally
-            $stmt = StatTracker::db()->query(sprintf("SELECT * FROM UpcomingBadges WHERE (days_remaining > 0 OR days_remaining IS NULL) ORDER BY days_remaining ASC LIMIT %d;", $limit));
+            $stmt = StatTracker::db()->query(sprintf("SELECT * FROM UpcomingBadges ORDER BY days_remaining ASC LIMIT %d;", $limit));
 
             if (!is_array($this->upcoming_badges)) {
                 $this->upcoming_badges = array();
@@ -519,7 +577,9 @@ class Agent {
                     "name" => $badge,
                     "level" => strtolower($next),
                     "progress" => $progress,
-                    "days_remaining" => $days_remaining
+                    "days_remaining" => $days_remaining,
+                    "target_date" => date("Y-m-d", strtotime("+" . round($days_remaining) . " days")),
+                    "target_date_local" => date("F j", strtotime("+" . round($days_remaining) . " days"))
                 );
             }
         }
@@ -532,7 +592,7 @@ class Agent {
      *
      * @param array $data associative array where key is stat and value is the value for the stat.
      */
-    public function updateStats($data) {
+    public function updateStats($data, $allow_lower) {
         // Get lowest submission date
         $stmt = StatTracker::db()->prepare("SELECT COALESCE(MIN(date), CAST(NOW() AS Date)) `min_date` FROM Data WHERE agent = ?");
 
@@ -542,21 +602,43 @@ class Agent {
 
             $ts = date("Y-m-d 00:00:00");
             $dt = $data['date'] == null ? date("Y-m-d") : $data['date'];
-            $stmt = StatTracker::db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+            $select_stmt = StatTracker::db()->prepare("SELECT value `current_value` FROM Data WHERE agent = ? AND date = ? AND stat = ?");
+            $insert_stmt = StatTracker::db()->prepare("INSERT INTO Data (agent, date, timepoint, stat, value) VALUES (?, ?, DATEDIFF(?, ?) + 1, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value);");
+
+            StatTracker::db()->beginTransaction();
 
             foreach ($data as $stat => $value) {
                 if ($stat == "date") continue;
                 $value = filter_var($data[$stat], FILTER_SANITIZE_NUMBER_INT);
                 $value = !is_numeric($value) ? 0 : $value;
 
-                $stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                if ($allow_lower) {
+                    $insert_stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                }
+                else {
+                    $select_stmt->execute(array($this->name, $dt, $stat));
+                    extract($select_stmt->fetch());
+                    $select_stmt->closeCursor();
+
+                    if ($current_value <= $value) {
+                        $insert_stmt->execute(array($this->name, $dt, $dt, $min_date, $stat, $value));
+                    }
+                    else {
+                        StatTracker::db()->rollback();
+                        return sprintf("Stats cannot be updated. %s is lower than %s for %s.", number_format($value), number_format($current_value), StatTracker::getStats()[$stat]->name);
+                    }
+                }
             }
+
+            StatTracker::db()->commit();
+            return true;
         }
         catch (Exception $e) {
             throw $e;
         }
         finally {
-            $stmt->closeCursor();
+            $select_stmt->closeCursor();
+            $insert_stmt->closeCursor();
         }
     }
 }

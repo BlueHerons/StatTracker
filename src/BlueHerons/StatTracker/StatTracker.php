@@ -25,7 +25,7 @@ class StatTracker extends Application {
 
     public static function db() {
         if (!(self::$db instanceof PDO)) {
-            self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=%s", DB_HOST, DB_NAME, DB_CHARSET), DB_USER, DB_PASS, array(
+            self::$db = new PDO(sprintf("mysql:host=%s;dbname=%s;charset=%s", DATABASE_HOST, DATABASE_NAME, DATABASE_CHARSET), DATABASE_USER, DATABASE_PASS, array(
                   PDO::ATTR_EMULATE_PREPARES   => false
                 , PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION
                 , PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -106,7 +106,7 @@ class StatTracker extends Application {
                 $this->logger->debug(sprintf("Searching for specified provider %s", constant("AUTH_PROVIDER")));
                 foreach ($authClasses as $classname) {
                     $name = explode("\\", $classname);
-                    if ($name[sizeof($name)-1] == constant(AUTH_PROVIDER)) {
+                    if ($name[sizeof($name)-1] == constant("AUTH_PROVIDER")) {
                         $class = $classname;
                         break;
                     }
@@ -136,60 +136,64 @@ class StatTracker extends Application {
         return $ocr->scan($filename, $async);
     }
 
+    public function getFileUploadError($code) {
+        $message = "";
+        if (!is_numeric($code)) {
+            $message = "A unknown file upload error occured.";
+        }
+        else {
+            $errors = array(
+                0 => "There is no error, the file uploaded with success",
+                1 => "The uploaded file exceeds the upload_max_filesize directive in php.ini",
+                2 => "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form",
+                3 => "The uploaded file was only partially uploaded",
+                4 => "No file was uploaded",
+                6 => "Missing a temporary folder",
+                7 => "Failed to write file to disk",
+                8 => "A PHP extension stopped the file upload"
+            );
+
+            $message = $errors[$code];
+        }
+
+        return $message;
+    }
+
     /**
      * Sends the autorization code for the given email address to that address. The email includes
      * instructions on how to complete the registration process as well.
      *
-     * Most providers should generate an auth_code and use that as a challenge during the registration process. If
+     * Most providers should generate an code and use that as a challenge during the registration process. If
      * that is not possible given a provider, then a rather generic email will be sent to the user, instructing
-     * to contact the specified ADMIN_AGENT.
+     * to contact the specified ADMIN_AGENT. Providers can also opt to not send any email.
      *
      * @param string $email_address The address to send the registration email to.
      *
      * @return void
      */
     public function sendRegistrationEmail($email_address) {
-        $stmt = $this->db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
-        $stmt->execute(array($email_address));
-        $msg = "";
+        $body = $this->getAuthenticationProvider()->getRegistrationEmail($email_address);
 
-        // If no activation code is found, instruct user to contact the admin agent.
-        if ($stmt->rowCount() == 0) {
-            $stmt->closeCursor();
-            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to complete your " .
-                   "registration, please contact <strong>" . ADMIN_AGENT . "</strong> through your secure chat ".
-                   "and ask them to enable access for you.";
+        if ($body === false) {
+            // Explicit false means no email should be sent
+            return;
         }
         else {
-            extract($stmt->fetch());
-            $stmt->closeCursor();
+            $this->logger->info(sprintf("Sending registration email to %s", $email_address));
 
-            $msg = "Thanks for registering with " . GROUP_NAME . "'s Stat Tracker. In order to validate your " .
-                   "identity, please message the following code to <strong>@" . ADMIN_AGENT . "</strong> in " .
-                   "faction comms:".
-                   "<p/>%s<p/>" .
-                   "You will recieve a reply message once you have been activated. This may take up to " .
-                   "24 hours. Once you recieve the reply, simply refresh Stat Tracker.".
-                   "<p/>".
-                   $_SERVER['HTTP_REFERER'];
-
-            $msg = sprintf($msg, $activation_code);
-        }
-
-        $this->logger->info(sprintf("Sending registration email to %s", $email_address));
-
-        $transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
+            $transport = \Swift_SmtpTransport::newInstance(SMTP_HOST, SMTP_PORT, SMTP_ENCR)
                 ->setUsername(SMTP_USER)
                 ->setPassword(SMTP_PASS);
 
-        $mailer = \Swift_Mailer::newInstance($transport);
+            $mailer = \Swift_Mailer::newInstance($transport);
 
-        $message = \Swift_Message::newInstance('Stat Tracker Registration')
+            $message = \Swift_Message::newInstance('Stat Tracker Registration')
                 ->setFrom(array(GROUP_EMAIL => GROUP_NAME))
                 ->setTo(array($email_address))
                 ->setBody($msg, 'text/html', 'iso-8859-2');
 
-        $mailer->send($message);
+            $mailer->send($message);
+        }
     }
 
     public function setBaseURL($request) {
