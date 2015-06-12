@@ -2,6 +2,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `Stats`;
+
 CREATE TABLE IF NOT EXISTS `Stats` (
   `order` tinyint(3) NOT NULL,
   `stat` varchar(20) NOT NULL,

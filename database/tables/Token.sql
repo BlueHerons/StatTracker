@@ -1,6 +1,8 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
+-- DO NOT DROP THIS TABLE
+
 CREATE TABLE IF NOT EXISTS `Tokens` (
   `agent` varchar(15) NOT NULL,
   `name` varchar(25) NOT NULL,

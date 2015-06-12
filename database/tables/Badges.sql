@@ -1,7 +1,9 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `Badges` (
+DROP TABLE IF EXISTS `Badges`;
+
+CREATE TABLE `Badges` (
   `name` varchar(20) NOT NULL,
   `level` enum('None','Bronze','Silver','Gold','Platinum','Onyx','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16') NOT NULL,
   `stat` varchar(20) NOT NULL,
