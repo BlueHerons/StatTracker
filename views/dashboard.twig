@@ -83,8 +83,8 @@ function onPageLoad() {
         $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
         $(this).addClass("active");
         if (stat == "ap-breakdown") {
-            $("#ap_breakdown").empty();
-            $("#ap_breakdown").after($("<div/>").addClass("loading 110"));
+            //$("#ap_breakdown").empty();
+            //$("#ap_breakdown").after($("<div/>").addClass("loading 110"));
             getAPBreakdown($(this).attr("data-when"));
         }
         else {
@@ -93,6 +93,8 @@ function onPageLoad() {
             loadStatGraph(stat, "", $(this).attr("data-what"), $(this).attr("data-when"));
         }
     });
+
+    var apBreakdownChart;
 
     $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming?limit=5",
         data: { ts: '{{ agent.update_time }}' },
@@ -170,43 +172,53 @@ function onPageLoad() {
                 }
             },
             success: function(response) {
-                $("#ap_breakdown + div.loading").remove();
-                CHART_WIDTH_MAX = 300;
-                CONTAINER_WIDTH_MAX = 500;
-                containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
-                left = (containerWidth - CHART_WIDTH_MAX) / 2;
-                left = left < 0 ? 0 : left;
-                chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
+                if (apBreakdownChart == null) {
+                    $("#ap_breakdown + div.loading").remove();
+                    CHART_WIDTH_MAX = 300;
+                    CONTAINER_WIDTH_MAX = 500;
+                    containerWidth = window.innerWidth > CONTAINER_WIDTH_MAX ? CONTAINER_WIDTH_MAX : window.innerWidth - 15;
+                    left = (containerWidth - CHART_WIDTH_MAX) / 2;
+                    left = left < 0 ? 0 : left;
+                    chartWidth = (containerWidth < CHART_WIDTH_MAX) ? containerWidth : CHART_WIDTH_MAX - 10;
     
-                $("#ap_breakdown").highcharts({
-                    chart: {
-                        backgroundColor: "#000",
-                        plotBackgroundColor: "#000"
-                    },
-                    colors: response.slice_colors,
-                    credits: {
-                        enabled: false
-                    },
-                    title : {
-                        text: null
-                    },
-                    plotOptions: {
-                        pie: {
-                            allowPointSelect: true,
-                            cursor: "pointer",
-                            dataLabels: {
-                                distance: -40,
-                                enabled: true,
-                                format: "{percentage:.2f}%"
+                    $("#ap_breakdown").highcharts({
+                        chart: {
+                            backgroundColor: "#000",
+                            plotBackgroundColor: "#000"
+                        },
+                        colors: response.slice_colors,
+                        credits: {
+                            enabled: false
+                        },
+                        title : {
+                            text: null
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: "pointer",
+                                dataLabels: {
+                                    distance: -40,
+                                    enabled: true,
+                                    format: "{percentage:.2f}%"
+                                }
                             }
-                        }
-                    },
-                    series: [{
-                        type: "pie",
-                        name: "AP",
-                        data: response.data
-                    }]
-                });
+                        },
+                        series: [{
+                            type: "pie",
+                            animation: false,
+                            name: "AP",
+                            data: response.data
+                        }]
+                    });
+                    apBreakdownChart = $("#ap_breakdown").highcharts();
+                }
+                else {
+                    console.log(response);
+                    for (i in response.data) {
+                        apBreakdownChart.series[0].data[i].update(response.data[i][1]);
+                    }
+                }
             }
         });
     }
