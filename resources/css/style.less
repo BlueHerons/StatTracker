@@ -47,7 +47,10 @@ body {
         width: 100%;
     }
 
-    .message {
+    .message.error {
+        &:extend(.message);
+        border: 2px solid rgba(231, 77, 77, 1);
+        color: rgba(231, 77, 77, 1);
     }
 }
 

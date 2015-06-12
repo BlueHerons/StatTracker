@@ -83,8 +83,6 @@ function onPageLoad() {
         $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
         $(this).addClass("active");
         if (stat == "ap-breakdown") {
-            //$("#ap_breakdown").empty();
-            //$("#ap_breakdown").after($("<div/>").addClass("loading 110"));
             getAPBreakdown($(this).attr("data-when"));
         }
         else {
@@ -99,10 +97,8 @@ function onPageLoad() {
     $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/badges/upcoming?limit=5",
         data: { ts: '{{ agent.update_time }}' },
         dataType: "json",
-        statusCode: {
-            500: function() {
-                alert("There was an error retrieving your upcoming badges");
-            }
+        error: function(xhr) {
+            $("#upcoming_badges").html("").addClass("message error").html("There was an error retrieving your upcoming badges. (" + xhr.status + ")");
         },
         success: function(data) {
             tmpl = $(".upcoming-badge").clone();
@@ -128,10 +124,8 @@ function onPageLoad() {
     $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ratios",
         data: { ts: '{{ agent.update_time }}' },
         dataType: "json",
-        statusCode: {
-            500: function() {
-                alert("There was an error retrieving your ratios");
-            }
+        error: function(xhr) {
+            $("#ratios").html("").addClass("message error").html("There was an error retrieving your ratios. (" + xhr.status + ")");
         },
         success: function(data) {
             tmpl = $(".ratio").clone();
@@ -166,10 +160,9 @@ function onPageLoad() {
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown/" + days,
             data: { ts: '{{ agent.update_time }}' },
             dataType: "json",
-            statusCode: {
-                500: function() {
-                    alert("There was an error retrieving the graph for AP Breakdown.");
-                }
+            error: function(xhr) {
+                $("#ap_breakdown + div.loading").remove();
+                $("#ap_breakdown").html("").addClass("message error").html("There was an error retrieving your AP breakdown. (" + xhr.status + ")");
             },
             success: function(response) {
                 if (apBreakdownChart == null) {
@@ -227,10 +220,8 @@ function onPageLoad() {
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/prediction",
             data: { ts: '{{ agent.update_time }}' },
             dataType: "json",
-            statusCode: {
-                500: function() {
-                    alert("There was an error retrieving the graph for " + name + ".");
-                }
+            error: function(xhr) {
+                $(".prediction." + stat + " .summary").html("").addClass("message error").html("There was an error retrieving your prediction. (" + xhr.status + ")");
             },
             success: function(prediction) {
                 if (prediction.rate == null) {
@@ -298,10 +289,9 @@ function onPageLoad() {
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
             data: { ts: '{{ agent.update_time }}' },
             dataType: "json",
-            statusCode: {
-                500: function() {
-                    alert("There was an error retrieving the graph for " + name + ".");
-                }
+            error: function(xhr) {
+                $("#graph-" + stat + " + div.loading").remove();
+                $("#graph-" + stat).html("").addClass("message error").html("There was an error retrieving the graph. (" + xhr.status + ")");
             },
             success: function(response) {
                 $("#graph-" + stat + " + div.loading").remove();
