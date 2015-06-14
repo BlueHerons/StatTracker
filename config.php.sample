@@ -53,8 +53,11 @@ define("AUTH_PROVIDER", "GooglePlusProvider");
 
 // Google OAuth configuration. https://console.developers.google.com. Only required if you use Google as your provider.
 // This provider requires email configuration. See "SMTP_*" constants.
-define("GOOGLE_CLIENT_ID",     "");
-define("GOOGLE_CLIENT_SECRET", "");
+//define("GOOGLE_CLIENT_ID",     "");
+//define("GOOGLE_CLIENT_SECRET", "");
+
+// Wordpress Installation configuration. Only required if you use Wordpress as your provider.
+//define("WORDPRESS_ROOT_PATH", "");
 
 // You should not need to change any values below this line.
 
