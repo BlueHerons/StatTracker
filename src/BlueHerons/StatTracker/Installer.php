@@ -58,12 +58,12 @@ class Installer {
         foreach($table_order as $table) {
             $file = sprintf("./database/tables/%s.sql", $table);
             $tables = array_diff($tables, array($file));
-            $event->getIO()->write(sprintf("Creating table %s", basename($file)));
+            $event->getIO()->write(sprintf("Creating table %s...", pathinfo($file, PATHINFO_FILENAME)));
             self::executeSQL($file);
         }
 
         foreach($tables as $file) {
-            $event->getIO()->write(sprintf("Creating table %s", basename($file)));
+            $event->getIO()->write(sprintf("Creating table %s...", pathinfo($file, PATHINFO_FILENAME)));
             self::executeSQL($file);
         }
     }
@@ -74,6 +74,7 @@ class Installer {
         $routines = array_merge($functions, $procedures);
 
         foreach ($routines as $file) {
+            $event->getIO()->write(sprintf("Creating function %s...", pathinfo($file, PATHINFO_FILENAME)));
             self::executeSQL($file);
         }
     }
