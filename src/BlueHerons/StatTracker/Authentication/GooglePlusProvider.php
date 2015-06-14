@@ -142,38 +142,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
     }
 
-    public function token(StatTracker $StatTracker) {
-        $access_token = isset($_REQUEST['token']) ? $_REQUEST['token'] : file_get_contents("php://input");
-        try {
-            if (!isset($access_token)) {
-                throw new Exception("Google responded incorrectly to the authentication request. Please try again later.");
-            }
-            $time = time();
-            $reqUrl = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='.$access_token;
-            $req = new \Google_Http_Request($reqUrl);
-            $tokenInfo = json_decode($this->client->getAuth()->authenticatedRequest($req)->getResponseBody());
-            if (property_exists($tokenInfo, 'error')) {
-                // This is not a valid token.
-                throw new Exception("Invalid Access Token.");
-            }
-            else if (!property_exists($tokenInfo, 'audience') || $tokenInfo->audience != GOOGLE_APP_CLIENT_ID) {
-                // This is not meant for this app. It is VERY important to check
-                // the client ID in order to prevent man-in-the-middle attacks.
-                throw new Exception("Access Token not meant for this app.");
-            }
-
-            $token = json_encode(array(
-                "access_token" => $access_token,
-                "created" => $time,
-                "expires_in" => $tokenInfo->expires_in));
-            $StatTracker['session']->set("token", $token);
-        }
-        catch (Exception $e) {
-            error_log("Google authentication token failure");
-            error_log(print_r($e, true));
-        }
-    }
-
     public function getRegistrationEmail($email_address) {
         $stmt = StatTracker::db()->prepare("SELECT auth_code AS `activation_code` FROM Agent WHERE email = ?;");
         $stmt->execute(array($email_address));

@@ -55,9 +55,6 @@ define("AUTH_PROVIDER", "GooglePlusProvider");
 // This provider requires email configuration. See "SMTP_*" constants.
 define("GOOGLE_CLIENT_ID",     "");
 define("GOOGLE_CLIENT_SECRET", "");
-define("GOOGLE_APP_NAME",      "");
-// Client ID for the optional accompanying Android app. See the wiki for more information.
-//define("GOOGLE_APP_CLIENT_ID", "");
 
 // You should not need to change any values below this line.
 
