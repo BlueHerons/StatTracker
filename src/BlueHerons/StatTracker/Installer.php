@@ -40,7 +40,11 @@ class Installer {
         self::assertDefined("DATABASE_PASS");
 
         self::assertDefined("AUTH_PROVIDER");
-        if (constant("AUTH_PROVIDER") == "WordpressProvider") {
+        if (constant("AUTH_PROVIDER") == "GooglePlusProvider") {
+            self::assertDefined("GOOGLE_CLIENT_ID");
+            self::assertDefined("GOOGLE_CLIENT_SECRET");
+        }
+        else if (constant("AUTH_PROVIDER") == "WordpressProvider") {
             self::assertDefined("WORDPRESS_ROOT_PATH");
         }
     }
@@ -80,7 +84,7 @@ class Installer {
     }
 
     private static function assertDefined($const) {
-        if (!defined($const))
+        if (!defined($const) || empty(constant($const)))
             throw new Exception("$const is not defined. Please edit config.php");
     }
 
