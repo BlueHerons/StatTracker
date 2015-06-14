@@ -1,4 +1,4 @@
-DELIMITER $$
+DROP PROCEDURE IF EXISTS `GetBadges`;
 
 CREATE PROCEDURE `GetBadges`(IN `agent_name` VARCHAR(15), IN `submission_date` DATE)
     READS SQL DATA
@@ -38,6 +38,4 @@ LEFT JOIN Badges b ON
           q2.threshold = b.amount_required
 ORDER BY `badge`;
 
-END $$
-
-DELIMITER ;
+END;

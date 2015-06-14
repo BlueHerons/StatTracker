@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetRatiosForAgent` $$
+DROP PROCEDURE IF EXISTS `GetRatiosForAgent`;
 
 CREATE PROCEDURE `GetRatiosForAgent`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
@@ -63,5 +61,4 @@ ratio_loop: LOOP
                 (SELECT level FROM Badges WHERE stat = stat_2 and @stat2 >= amount_required ORDER BY amount_required DESC LIMIT 1));
 END LOOP;
 
-END $$
-DELIMITER ;
+END;

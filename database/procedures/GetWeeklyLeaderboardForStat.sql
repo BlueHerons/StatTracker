@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetWeeklyLeaderboardForStat` $$
+DROP PROCEDURE IF EXISTS `GetWeeklyLeaderboardForStat`;
 
 CREATE PROCEDURE `GetWeeklyLeaderboardForStat`(IN `stat_name` VARCHAR(20), IN `start_date` DATE)
     READS SQL DATA
@@ -159,6 +157,4 @@ CREATE TEMPORARY TABLE LeaderboardForStat
          (SELECT @rank := 0) r 
 ORDER BY delta_value DESC;
 
-END $$
-
-DELIMITER ;
+END;

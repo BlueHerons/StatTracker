@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS `GetTimepointForAgentAndDate` $$
+DROP FUNCTION IF EXISTS `GetTimepointForAgentAndDate`;
 
 CREATE FUNCTION `GetTimepointForAgentAndDate`(`agent_name` VARCHAR(15), `start_date` DATE) RETURNS int(4)
     READS SQL DATA
@@ -13,6 +11,4 @@ SELECT COALESCE(
 
 RETURN @timepoint;
 
-END $$
-
-DELIMITER ;
+END;

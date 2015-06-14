@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS `GetInterceptForAgentAndStatBetweenDates` $$
+DROP FUNCTION IF EXISTS `GetInterceptForAgentAndStatBetweenDates`;
 
 CREATE FUNCTION `GetInterceptForAgentAndStatBetweenDates`(`agent_name` VARCHAR(15), `stat_key` VARCHAR(20), `start_date` DATE, `end_date` DATE) RETURNS int(10)
     NO SQL
@@ -28,6 +26,4 @@ SELECT ((@sumY - (@slope * @sumX)) / @n) INTO @intercept;
 
 RETURN @intercept;
 
-END $$
-
-DELIMITER ;
+END;

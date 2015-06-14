@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetGraphForStat` $$
+DROP PROCEDURE IF EXISTS `GetGraphForStat`;
 
 CREATE PROCEDURE `GetGraphForStat`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
     READS SQL DATA
@@ -27,6 +25,4 @@ CREATE TEMPORARY TABLE GraphDataForStat
      WHERE dl.date >= @minDate AND 
            dl.date <= @maxDate;
 
-END $$
-
-DELIMITER ;
+END;

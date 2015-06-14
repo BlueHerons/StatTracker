@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetLeaderboardForStat` $$
+DROP PROCEDURE IF EXISTS `GetLeaderboardForStat`;
 
 CREATE PROCEDURE `GetLeaderboardForStat`(IN `stat_key` VARCHAR(20))
     READS SQL DATA
@@ -34,6 +32,4 @@ SELECT @rank := @rank + 1 AS rank,
        (SELECT @rank := 0) r
 WHERE age <= 30;
 
-END $$
-
-DELIMITER ;
+END;

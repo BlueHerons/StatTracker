@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS `GetRateForAgentAndStat` $$
+DROP FUNCTION IF EXISTS `GetRateForAgentAndStat`;
 
 CREATE FUNCTION `GetRateForAgentAndStat`(`agent_name` VARCHAR(20), `stat_key` VARCHAR(20)) RETURNS double(10,2)
     READS SQL DATA
@@ -11,6 +9,4 @@ RETURN GetRateForAgentAndStatBetweenDates(agent_name,
                                           DATE_SUB(NOW(), INTERVAL 30 DAY),
                                           NOW());
 
-END $$
-
-DELIMITER ;
+END;

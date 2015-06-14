@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetAPBreakdown` $$
+DROP PROCEDURE IF EXISTS `GetAPBreakdown`;
 
 CREATE PROCEDURE `GetAPBreakdown`(IN `agent_name` VARCHAR(15), IN `days_back` INT(2))
     READS SQL DATA
@@ -47,6 +45,4 @@ IF (@totalAP != 0) THEN
     INSERT INTO APBreakdown VALUES(@recent, @target, 2, 1, '', 'Uncalculated', ABS(@remainder));
 END IF;
 
-END $$
-
-DELIMITER ;
+END;

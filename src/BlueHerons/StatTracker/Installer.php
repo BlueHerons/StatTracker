@@ -20,6 +20,7 @@ class Installer {
         self::init();
         self::createDirectories($event);
         self::createDatabaseTables($event);
+        self::createDatabaseRoutines($event);
     }
 
     private static function init() {
@@ -37,13 +38,16 @@ class Installer {
         self::assertDefined("DATABASE_CHARSET");
         self::assertDefined("DATABASE_USER");
         self::assertDefined("DATABASE_PASS");
+
+        self::assertDefined("AUTH_PROVIDER");
+        if (constant("AUTH_PROVIDER") == "WordpressProvider") {
+            self::assertDefined("WORDPRESS_ROOT_PATH");
+        }
     }
 
     private static function createDirectories(Event $event) {
-        $io = $event->getIO();
-
-        self::createDirectory(LOG_DIR, $io);
-        self::createDirectory(UPLOAD_DIR, $io);
+        self::createDirectory(LOG_DIR, $event->getIO());
+        self::createDirectory(UPLOAD_DIR, $event->getIO());
     }
 
     private static function createDatabaseTables(Event $event) {
@@ -54,16 +58,28 @@ class Installer {
         foreach($table_order as $table) {
             $file = sprintf("./database/tables/%s.sql", $table);
             $tables = array_diff($tables, array($file));
-            self::executeSQL($file, $event->getIO());
+            $event->getIO()->write(sprintf("Creating table %s", basename($file)));
+            self::executeSQL($file);
         }
 
         foreach($tables as $file) {
-            self::executeSQL($file, $event->getIO());
+            $event->getIO()->write(sprintf("Creating table %s", basename($file)));
+            self::executeSQL($file);
+        }
+    }
+
+    private static function createDatabaseRoutines(Event $event) {
+        $functions = glob("./database/functions/*.sql");
+        $procedures = glob("./database/procedures/*.sql");
+        $routines = array_merge($functions, $procedures);
+
+        foreach ($routines as $file) {
+            self::executeSQL($file);
         }
     }
 
     private static function assertDefined($const) {
-        if (!defined("LOG_DIR"))
+        if (!defined($const))
             throw new Exception("$const is not defined. Please edit config.php");
     }
 
@@ -80,12 +96,10 @@ class Installer {
         }
     }
 
-    private static function executeSQL($file, $io) {
-        $io->write("Executing $file...");
+    private static function executeSQL($file) {
         $db = StatTracker::db();
         $sql = file_get_contents($file);
         $r = $db->exec($sql);
-        $io->write("$r rows affected");
         return $r;
     }   
 }

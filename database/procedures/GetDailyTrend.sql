@@ -1,4 +1,5 @@
-DELIMITER $$
+DROP PROCEDURE IF EXISTS `GetDailyTrend`;
+
 CREATE PROCEDURE `GetDailyTrend`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20), IN `start_date` DATE, IN `end_date` DATE)
     NO SQL
 BEGIN
@@ -26,5 +27,4 @@ SELECT date,
      WHERE dl.date >= start_date AND 
            dl.date <= end_date) q1;
 
-END $$
-DELIMITER ;
+END;

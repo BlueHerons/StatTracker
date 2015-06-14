@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetUpcomingBadges` $$
+DROP PROCEDURE IF EXISTS `GetUpcomingBadges`;
 
 CREATE PROCEDURE `GetUpcomingBadges`(IN `agent_name` VARCHAR(15))
     READS SQL DATA
@@ -37,6 +35,4 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
 GROUP BY b.stat
 ORDER BY remaining ASC;
 
-END $$
-
-DELIMITER ;
+END;

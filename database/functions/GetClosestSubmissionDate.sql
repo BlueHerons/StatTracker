@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS `GetClosestSubmissionDate` $$
+DROP FUNCTION IF EXISTS `GetClosestSubmissionDate`;
 
 CREATE FUNCTION `GetClosestSubmissionDate`(`agent_name` VARCHAR(15), `target_date` DATE) RETURNS date
     READS SQL DATA
@@ -13,6 +11,4 @@ RETURN (SELECT d.date
       ORDER BY ABS(DATEDIFF(d.date, target_date)) ASC 
          LIMIT 1);
 
-END $$
-
-DELIMITER ;
+END;

@@ -1,6 +1,4 @@
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `GetBadgePrediction` $$
+DROP PROCEDURE IF EXISTS `GetBadgePrediction`;
 
 CREATE PROCEDURE `GetBadgePrediction`(IN `agent_name` VARCHAR(15), IN `stat_key` VARCHAR(20))
     READS SQL DATA
@@ -69,6 +67,4 @@ CREATE TEMPORARY TABLE BadgePrediction
 	       ROUND(@intercept) `intercept`,
 	       ROUND(@slope, 2) `slope`;
 
-END $$
-
-DELIMITER ;
+END;
