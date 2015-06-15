@@ -8,7 +8,6 @@ BEGIN
 
 DECLARE stat_1 VARCHAR(20);
 DECLARE stat_2 VARCHAR(20);
-DECLARE message VARCHAR(255);
 
 DECLARE done INT DEFAULT false;
 DECLARE row_cursor CURSOR FOR SELECT * FROM Ratio;
@@ -35,7 +34,7 @@ SELECT MAX(date) INTO @latest_submission
 OPEN row_cursor;
 
 ratio_loop: LOOP
-    FETCH row_cursor INTO stat_1, stat_2, message;
+    FETCH row_cursor INTO stat_1, stat_2;
 
     IF done THEN LEAVE ratio_loop; END IF;
 
@@ -55,8 +54,8 @@ ratio_loop: LOOP
                 stat_1, 
                 stat_2, 
                 @stat1 / @stat2,
-                (SELECT name FROM Stats WHERE stat = stat_1),
-                (SELECT name FROM Stats WHERE stat = stat_2),
+                (SELECT nickname FROM Stats WHERE stat = stat_1),
+                (SELECT nickname FROM Stats WHERE stat = stat_2),
                 (SELECT name FROM Badges WHERE stat = stat_1 LIMIT 1),
                 (SELECT level FROM Badges WHERE stat = stat_1 and @stat1 >= amount_required ORDER BY amount_required DESC LIMIT 1),
                 (SELECT name FROM Badges WHERE stat = stat_2 LIMIT 1),
