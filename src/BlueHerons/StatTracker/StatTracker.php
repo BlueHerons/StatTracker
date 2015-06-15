@@ -207,7 +207,7 @@ class StatTracker extends Application {
      */
     public static function getStats() {
         if (!is_array(self::$stats)) {
-            $stmt = self::db()->query("SELECT stat as `key`, name, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
+            $stmt = self::db()->query("SELECT stat as `key`, name, `nickname`, `group`, unit, ocr, graph, leaderboard FROM Stats ORDER BY `order` ASC;");
             $rows = $stmt->fetchAll();
 
             foreach($rows as $row) {
@@ -215,6 +215,7 @@ class StatTracker extends Application {
                 extract($row);
                 $stat->stat = $key;
                 $stat->name = $name;
+                $stat->nickname = $nickname;
                 $stat->group = $group;
                 $stat->unit = $unit;
                 $stat->ocr = $ocr;
