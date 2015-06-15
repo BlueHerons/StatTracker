@@ -69,11 +69,6 @@ $StatTracker->get('/{page}', function ($page) use ($StatTracker) {
 				$page = empty($page) ? "dashboard" : $page;
 				return $StatTracker->redirect("./{$page}");
 				break;
-			case "token":
-				$StatTracker->getAuthenticationProvider()->token($StatTracker);
-				$authResponse = $StatTracker->getAuthenticationProvider()->login($StatTracker);
-				return $StatTracker->json($authResponse);
-				break;
 			case "logout":
 				return $StatTracker->json($StatTracker->getAuthenticationProvider()->logout($StatTracker));
 				break;

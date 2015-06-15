@@ -20,7 +20,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
 
     public function __construct($base_url, Logger $logger) {
         $this->client = new Google_Client();
-        $this->client->setApplicationName(GOOGLE_APP_NAME);
         $this->client->setClientId(GOOGLE_CLIENT_ID);
         $this->client->setClientSecret(GOOGLE_CLIENT_SECRET);
         $this->client->setRedirectUri(sprintf("%s/authenticate?action=callback", $base_url));
@@ -138,38 +137,6 @@ class GooglePlusProvider implements IAuthenticationProvider {
         }
         catch (Exception $e) {
             error_log("Google authentication callback failure");
-            error_log(print_r($e, true));
-        }
-    }
-
-    public function token(StatTracker $StatTracker) {
-        $access_token = isset($_REQUEST['token']) ? $_REQUEST['token'] : file_get_contents("php://input");
-        try {
-            if (!isset($access_token)) {
-                throw new Exception("Google responded incorrectly to the authentication request. Please try again later.");
-            }
-            $time = time();
-            $reqUrl = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='.$access_token;
-            $req = new \Google_Http_Request($reqUrl);
-            $tokenInfo = json_decode($this->client->getAuth()->authenticatedRequest($req)->getResponseBody());
-            if (property_exists($tokenInfo, 'error')) {
-                // This is not a valid token.
-                throw new Exception("Invalid Access Token.");
-            }
-            else if (!property_exists($tokenInfo, 'audience') || $tokenInfo->audience != GOOGLE_APP_CLIENT_ID) {
-                // This is not meant for this app. It is VERY important to check
-                // the client ID in order to prevent man-in-the-middle attacks.
-                throw new Exception("Access Token not meant for this app.");
-            }
-
-            $token = json_encode(array(
-                "access_token" => $access_token,
-                "created" => $time,
-                "expires_in" => $tokenInfo->expires_in));
-            $StatTracker['session']->set("token", $token);
-        }
-        catch (Exception $e) {
-            error_log("Google authentication token failure");
             error_log(print_r($e, true));
         }
     }
