@@ -574,8 +574,8 @@ class Agent {
                 $badge = strtolower($badge);
 
                 $this->upcoming_badges[] = array(
-                    "name" => $badge,
-                    "level" => strtolower($next),
+                    "name" => ucfirst($badge),
+                    "level" => ucfirst($next),
                     "progress" => $progress,
                     "days_remaining" => $days_remaining,
                     "target_date" => date("Y-m-d", strtotime("+" . round($days_remaining) . " days")),

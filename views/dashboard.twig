@@ -26,8 +26,8 @@
                         </p>
                     </div>
                     <div class="time-remaining">
-                        <span class="days">?</span> days remaining<br/>
-                        <span class="target-date"/>
+                        <span class="badge-level"/> <span class="badge-name" /><br/>
+                        <span class="days">?</span> days (<span class="target-date"/>)
                     </div>
                 </div>
             </div>
@@ -106,13 +106,15 @@ function onPageLoad() {
             data.forEach(function(badge, i, arr) {
                 html = tmpl.clone();
                 $(html).find(".badge-image").addClass(badge.name.toLowerCase().replace("_", ""))
-                                           .addClass(badge.level)
+                                           .addClass(badge.level.toLowerCase())
                                            .css("opacity", badge.progress / 1.5);
                 $(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
                 if (badge.days_remaining == null) {
                     $(html).find(".time-remaining").remove();
                 }
                 else {
+                    $(html).find(".time-remaining .badge-level").html(badge.level);
+                    $(html).find(".time-remaining .badge-name").html(badge.name);
                     $(html).find(".time-remaining span.days").html(format(badge.days_remaining));
                     $(html).find(".time-remaining span.target-date").html(badge.target_date_local);
                 }
