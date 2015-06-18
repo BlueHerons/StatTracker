@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `Ratio` (
   `stat_1` varchar(20) NOT NULL,
   `stat_2` varchar(20) NOT NULL,
   `factor` decimal(4,1) NOT NULL DEFAULT '100.0',
-  PRIMARY KEY (`stat_1`,`stat_2`),
+  PRIMARY KEY (`stat_1`,`stat_2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `Ratio` VALUES
