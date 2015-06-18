@@ -531,15 +531,18 @@ class Agent {
                         "stat" => $stat_1,
                         "badge" => strtolower(str_replace(" ", "_", $badge_1)),
                         "level" => strtolower($badge_1_level),
-                        "name" => $stat_1_name
+                        "name" => $stat_1_name,
+                        "nickname" => $stat_1_nickname
                     ),
                     "stat2" => array(
                         "stat" => $stat_2,
                         "badge" => strtolower(str_replace(" ", "_", $badge_2)),
                         "level" => strtolower($badge_2_level),
-                        "name" => $stat_2_name
+                        "name" => $stat_2_name,
+                        "nickname" => $stat_2_nickname
                     ),
-                    "ratio" => $ratio
+                    "ratio" => $ratio,
+                    "step" => $factor
                 );
             }
             $stmt->closeCursor();

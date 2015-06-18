@@ -372,6 +372,101 @@ class StatTracker extends Application {
 
         return $results;
     }
+
+    public function getDistribution($stat1, $stat2, $factor) {
+        if (!$this->isValidStat($stat1) || !$this->isValidStat($stat2) || !is_numeric($factor)) {
+            return new \stdClass();
+        }
+        else {
+            $stmt = $this->db()->prepare("CALL GetDistributionForRatio(?, ?, ?);");
+            $stmt->execute(array($stat1, $stat2, $factor));
+            $stmt = $this->db()->query("SELECT * FROM DistributionForRatio;");
+
+            $dist = new \stdClass();
+            $dist->stat = array(
+                "stat1" => $stat1,
+                "stat2" => $stat2,
+                "factor" => $factor);
+            
+            while ($row = $stmt->fetch()) {
+                extract($row);
+                
+                $dist->distribution->steps[] = $step;
+                $dist->distribution->count[] = $count;
+            }
+
+            $start = 0;// - $factor;
+            $steps = array();
+            $counts = array();
+            $breaks = array();
+
+            // If dealing with a factor >= 1, always use ints.
+            if ($factor >= 1) {
+                for ($i = 0; $i < sizeof($dist->distribution->steps); $i++) {
+                    $dist->distribution->steps[$i] = intval($dist->distribution->steps[$i]);
+                }
+            }
+
+            if ($dist->distribution->steps[0] !== 0 &&
+                floatval($dist->distribution->steps[0]) !== floatval(0)) {
+                    array_unshift($dist->distribution->steps, 0);
+                    array_unshift($dist->distribution->count, 0);
+            }
+
+            // Make sure "steps" (each increament of factor) is sequential. If there are more than $THRESHOLD
+            // increments with no value, save it as a "break" in continuity
+            $THRESHOLD = 5;
+            foreach ($dist->distribution->steps as $step) {
+                if (($step - $factor) > $start) {
+                    if (($step - $start) > ($factor * $THRESHOLD)) {
+                        $breaks[] = array($start, $step);
+                        array_push($steps, $step);
+                        $start = $step + ($factor * $THRESHOLD);
+                    }
+                    else {
+                        foreach (range($start + $factor, $step, $factor) as $n) {
+                            array_push($steps, $n);
+                            $start = $n;
+                        }
+                    }
+                    
+                }
+                else {
+                    array_push($steps, $step);
+                    $start = $step;
+                }
+            }
+
+            // custom array_search function for precision
+            function search_array($value, &$array) {
+                for ($i = 0; $i < sizeof($array); $i++) {
+                    if (bccomp(floatval($value), floatval($array[$i]), 1) === 0) { 
+                        return $i;
+                    }
+                }
+                return false;
+            };
+
+            // insert 0 for steps that where previously created
+            foreach ($steps as $step) {
+                $step = floatval($step);
+                $i = search_array($step, $dist->distribution->steps);
+                if ($i !== false) {
+                    $value = $dist->distribution->count[$i];
+                    array_push($counts, $value);
+                }
+                else {
+                    array_push($counts, 0);
+                }
+            }
+
+            $dist->distribution->breaks = $breaks;
+            $dist->distribution->steps = $steps;
+            $dist->distribution->count = $counts;
+
+            return $dist;
+        }
+    }
 }
 
 class Stat {

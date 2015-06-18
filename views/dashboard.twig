@@ -149,8 +149,8 @@ function onPageLoad() {
 
                 $(html).find(".badge-1 .badge-image").addClass(ratio.stat1.badge + " " + ratio.stat1.level);
                 $(html).find(".badge-2 .badge-image").addClass(ratio.stat2.badge + " " + ratio.stat2.level);
-                $(html).find(".badge-1 .badge-name").html(ratio.stat1.name);
-                $(html).find(".badge-2 .badge-name").html(ratio.stat2.name);
+                $(html).find(".badge-1 .badge-name").html(ratio.stat1.nickname);
+                $(html).find(".badge-2 .badge-name").html(ratio.stat2.nickname);
                 $(html).find(".value").html(format(ratio.ratio));
 
                 $("#ratios").append(html);
