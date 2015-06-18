@@ -413,6 +413,11 @@ class StatTracker extends Application {
                     array_unshift($dist->distribution->count, 0);
             }
 
+            // Add 1 step to the end
+            $last = $dist->distribution->steps[count($dist->distribution->steps) - 1];
+            array_push($dist->distribution->steps, $last + $factor);
+            array_push($dist->distribution->count, 0);
+
             // Make sure "steps" (each increament of factor) is sequential. If there are more than $THRESHOLD
             // increments with no value, save it as a "break" in continuity
             $THRESHOLD = 5;
