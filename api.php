@@ -164,6 +164,22 @@ $StatTracker->get("/api/{token}/badges/{what}", function(Request $request, $toke
   ->assert("what", "today|upcoming|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}")
   ->value("what", "today");
 
+$StatTracker->get("/api/{token}/distribution/{stat1}/{stat2}/{factor}", function($token, $stat1, $stat2, $factor) use ($StatTracker) {
+	$agent = Agent::lookupAgentByToken($token);
+
+	if (!$agent->isValid()) {
+		return $StatTracker->abort(403);
+	}
+
+        $data = $StatTracker->getDistribution($stat1, $stat2, $factor);
+
+	$response = JsonResponse::create();
+	$response->setEncodingOptions($response->getEncodingOptions() | JSON_NUMERIC_CHECK);
+	$response->setData($data);
+
+        return $response;
+})->before($validateRequest);
+
 // Retrieve ratio information for the agent
 $StatTracker->get("/api/{token}/ratios", function($token) use ($StatTracker) {
 	$agent = Agent::lookupAgentByToken($token);

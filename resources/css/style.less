@@ -436,30 +436,9 @@ table#stat-entry {
 #ratios {
     margin: 0 auto;
     min-width: ~"@{ratio-width}px";
-
-    .ratio {
-        color: white;
-        display: inline-block;
-        font-size: 110%;
-        height: ~"@{ratio-height}px";
-        margin: 0 15px 20px 15px;
-
-        .badges {
-            > * {
-                float: left;
-            }
-
-            .seperator {
-                padding-top: ~"@{ratio-seperator-padding}px";
-                padding-left: 5px;
-                padding-right: 5px;
-            }
-        }
-
-        .value {
-        }
-    }
 }
+
+
 
 #submit-actions {
     margin: 40px auto;
@@ -817,6 +796,29 @@ table#stat-entry {
     background-size: 110px 110px;
 }
 
+.ratio {
+    color: white;
+    display: inline-block;
+    font-size: 110%;
+    height: ~"@{ratio-height}px";
+    margin: 0 15px 20px 15px;
+
+    .badges {
+        > * {
+            float: left;
+        }
+
+        .seperator {
+            padding-top: ~"@{ratio-seperator-padding}px";
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+
+    .value {
+    }
+}
+
 .summary {
     text-align: center;
 
@@ -887,6 +889,16 @@ table#stat-entry {
     margin: 0 auto;
     max-width: 450px;
     text-align: left;
+}
+
+.trend {
+    .ratio {
+        margin-bottom: 0px;
+    }
+
+    .text {
+        margin-bottom: 20px;
+    }
 }
 
 .upcoming-badge {
