@@ -2,6 +2,7 @@
 
 {% for ratio in agent.getRatios() %}
     <div class="item">
+        <a name="{{ratio.stat1.stat}}-{{ratio.stat2.stat}}" />
         <h3>{{ratio.stat1.name}} : {{ratio.stat2.name}}</h3>
         <div id="trend_{{ratio.stat1.stat}}-{{ratio.stat2.stat}}" class="trend">
             <div class="ratio">
