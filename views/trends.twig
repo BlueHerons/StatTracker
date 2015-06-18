@@ -18,6 +18,14 @@
                     </div>
                 </div>
             </div>
+	    <div class="graph-selector">
+	        <span class="graph-link link active" data-stat1="{{ ratio.stat1.stat }}" data-stat2="{{ ratio.stat2.stat }}" data-what="trend" data-when="0">All time</span>
+		<!-- &nbsp;|&nbsp;
+		<span class="graph-link link" data-stat1="{{ ratio.stat1.stat }}" data-stat2="{{ ratio.stat2.stat }}" data-what="trend" data-when="30">Past 30 days</span>
+		&nbsp;|&nbsp;
+		<span class="graph-link link" data-stat1="{{ ratio.stat1.stat }}" data-stat2="{{ ratio.stat2.stat }}" data-what="trend" data-when="7">Past 7 days</span>-->
+            </div>
+
             <div class="text">For every {{ratio.ratio}} {{ratio.stat1.unit}}, you have 1 {{ratio.stat2.unit}}.</div>
             <div class="graph" />
             <div class="loading 110" />
