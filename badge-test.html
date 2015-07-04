@@ -1,0 +1,160 @@
+<html>
+<head>
+	<title>Stat Tracker | The Local Resistance</title>
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Coda:400,700">
+	<link rel="stylesheet" href="/~paidtodecimate/StatTracker/resources/css/style.css">
+
+	<style>
+		@media (max-width: 439px) { .hidden-xxs { display: none !important; } }
+		@media (max-width: 439px) { .visible-xxs { display: block !important; } }
+		@media (min-width: 768px) { .navbar-text { margin-left: 0px; } }
+		.navbar-text span { padding-right: 15px; }
+		.navbar-text a { color: #999; text-decoration: none; }
+		.navbar-text a:hover { color: #FFF; }
+	</style>
+
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="//code.highcharts.com/4.0/highcharts.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/headroom.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.7.0/jQuery.headroom.min.js"></script>
+	<script type="text/javascript" src="/~paidtodecimate/StatTracker/resources/scripts/jquery.tablesorter.min.js"></script>
+	<script type="text/javascript" src="/~paidtodecimate/StatTracker/resources/scripts/stat-tracker.js"></script>
+	<script>
+	$(document).ready(function() {
+		$("#login-dialog").hide();
+		StatTracker.pageToLoad = "dashboard";
+                StatTracker.authenticate();
+                $("nav.navbar").headroom();
+	});
+
+	</script>
+</head>
+<body>
+<div class="badge-image badge-icon-75 builder locked"></div>
+<div class="badge-image badge-icon-75 builder bronze"></div>
+<div class="badge-image badge-icon-75 builder silver"></div>
+<div class="badge-image badge-icon-75 builder gold"></div>
+<div class="badge-image badge-icon-75 builder platinum"></div>
+<div class="badge-image badge-icon-75 builder onyx"></div>
+<div class="badge-image badge-icon-75 connector locked"></div>
+<div class="badge-image badge-icon-75 connector bronze"></div>
+<div class="badge-image badge-icon-75 connector silver"></div>
+<div class="badge-image badge-icon-75 connector gold"></div>
+<div class="badge-image badge-icon-75 connector platinum"></div>
+<div class="badge-image badge-icon-75 connector onyx"></div>
+<div class="badge-image badge-icon-75 engineer locked"></div>
+<div class="badge-image badge-icon-75 engineer bronze"></div>
+<div class="badge-image badge-icon-75 engineer silver"></div>
+<div class="badge-image badge-icon-75 engineer gold"></div>
+<div class="badge-image badge-icon-75 engineer platinum"></div>
+<div class="badge-image badge-icon-75 engineer onyx"></div>
+<div class="badge-image badge-icon-75 explorer locked"></div>
+<div class="badge-image badge-icon-75 explorer bronze"></div>
+<div class="badge-image badge-icon-75 explorer silver"></div>
+<div class="badge-image badge-icon-75 explorer gold"></div>
+<div class="badge-image badge-icon-75 explorer platinum"></div>
+<div class="badge-image badge-icon-75 explorer onyx"></div>
+<div class="badge-image badge-icon-75 guardian locked"></div>
+<div class="badge-image badge-icon-75 guardian bronze"></div>
+<div class="badge-image badge-icon-75 guardian silver"></div>
+<div class="badge-image badge-icon-75 guardian gold"></div>
+<div class="badge-image badge-icon-75 guardian platinum"></div>
+<div class="badge-image badge-icon-75 guardian onyx"></div>
+<div class="badge-image badge-icon-75 hacker locked"></div>
+<div class="badge-image badge-icon-75 hacker bronze"></div>
+<div class="badge-image badge-icon-75 hacker silver"></div>
+<div class="badge-image badge-icon-75 hacker gold"></div>
+<div class="badge-image badge-icon-75 hacker platinum"></div>
+<div class="badge-image badge-icon-75 hacker onyx"></div>
+<div class="badge-image badge-icon-75 illuminator locked"></div>
+<div class="badge-image badge-icon-75 illuminator bronze"></div>
+<div class="badge-image badge-icon-75 illuminator silver"></div>
+<div class="badge-image badge-icon-75 illuminator gold"></div>
+<div class="badge-image badge-icon-75 illuminator platinum"></div>
+<div class="badge-image badge-icon-75 illuminator onyx"></div>
+<div class="badge-image badge-icon-75 innovator locked"></div>
+<div class="badge-image badge-icon-75 innovator bronze"></div>
+<div class="badge-image badge-icon-75 innovator silver"></div>
+<div class="badge-image badge-icon-75 innovator gold"></div>
+<div class="badge-image badge-icon-75 innovator platinum"></div>
+<div class="badge-image badge-icon-75 innovator onyx"></div>
+<div class="badge-image badge-icon-75 liberator locked"></div>
+<div class="badge-image badge-icon-75 liberator bronze"></div>
+<div class="badge-image badge-icon-75 liberator silver"></div>
+<div class="badge-image badge-icon-75 liberator gold"></div>
+<div class="badge-image badge-icon-75 liberator platinum"></div>
+<div class="badge-image badge-icon-75 liberator onyx"></div>
+<div class="badge-image badge-icon-75 mindcontroller locked"></div>
+<div class="badge-image badge-icon-75 mindcontroller bronze"></div>
+<div class="badge-image badge-icon-75 mindcontroller silver"></div>
+<div class="badge-image badge-icon-75 mindcontroller gold"></div>
+<div class="badge-image badge-icon-75 mindcontroller platinum"></div>
+<div class="badge-image badge-icon-75 mindcontroller onyx"></div>
+<div class="badge-image badge-icon-75 pioneer locked"></div>
+<div class="badge-image badge-icon-75 pioneer bronze"></div>
+<div class="badge-image badge-icon-75 pioneer silver"></div>
+<div class="badge-image badge-icon-75 pioneer gold"></div>
+<div class="badge-image badge-icon-75 pioneer platinum"></div>
+<div class="badge-image badge-icon-75 pioneer onyx"></div>
+<div class="badge-image badge-icon-75 purifier locked"></div>
+<div class="badge-image badge-icon-75 purifier bronze"></div>
+<div class="badge-image badge-icon-75 purifier silver"></div>
+<div class="badge-image badge-icon-75 purifier gold"></div>
+<div class="badge-image badge-icon-75 purifier platinum"></div>
+<div class="badge-image badge-icon-75 purifier onyx"></div>
+<div class="badge-image badge-icon-75 recharger locked"></div>
+<div class="badge-image badge-icon-75 recharger bronze"></div>
+<div class="badge-image badge-icon-75 recharger silver"></div>
+<div class="badge-image badge-icon-75 recharger gold"></div>
+<div class="badge-image badge-icon-75 recharger platinum"></div>
+<div class="badge-image badge-icon-75 recharger onyx"></div>
+<div class="badge-image badge-icon-75 recruiter locked"></div>
+<div class="badge-image badge-icon-75 recruiter bronze"></div>
+<div class="badge-image badge-icon-75 recruiter silver"></div>
+<div class="badge-image badge-icon-75 recruiter gold"></div>
+<div class="badge-image badge-icon-75 recruiter platinum"></div>
+<div class="badge-image badge-icon-75 recruiter onyx"></div>
+<div class="badge-image badge-icon-75 seer locked"></div>
+<div class="badge-image badge-icon-75 seer bronze"></div>
+<div class="badge-image badge-icon-75 seer silver"></div>
+<div class="badge-image badge-icon-75 seer gold"></div>
+<div class="badge-image badge-icon-75 seer platinum"></div>
+<div class="badge-image badge-icon-75 seer onyx"></div>
+<div class="badge-image badge-icon-75 sojourner locked"></div>
+<div class="badge-image badge-icon-75 sojourner bronze"></div>
+<div class="badge-image badge-icon-75 sojourner silver"></div>
+<div class="badge-image badge-icon-75 sojourner gold"></div>
+<div class="badge-image badge-icon-75 sojourner platinum"></div>
+<div class="badge-image badge-icon-75 sojourner onyx"></div>
+<div class="badge-image badge-icon-75 specops locked"></div>
+<div class="badge-image badge-icon-75 specops bronze"></div>
+<div class="badge-image badge-icon-75 specops silver"></div>
+<div class="badge-image badge-icon-75 specops gold"></div>
+<div class="badge-image badge-icon-75 specops platinum"></div>
+<div class="badge-image badge-icon-75 specops onyx"></div>
+<div class="badge-image badge-icon-75 translator locked"></div>
+<div class="badge-image badge-icon-75 translator bronze"></div>
+<div class="badge-image badge-icon-75 translator silver"></div>
+<div class="badge-image badge-icon-75 translator gold"></div>
+<div class="badge-image badge-icon-75 translator platinum"></div>
+<div class="badge-image badge-icon-75 translator onyx"></div>
+<div class="badge-image badge-icon-75 trekker locked"></div>
+<div class="badge-image badge-icon-75 trekker bronze"></div>
+<div class="badge-image badge-icon-75 trekker silver"></div>
+<div class="badge-image badge-icon-75 trekker gold"></div>
+<div class="badge-image badge-icon-75 trekker platinum"></div>
+<div class="badge-image badge-icon-75 trekker onyx"></div>
+<div class="badge-image badge-icon-75 blank locked"></div>
+<div class="badge-image badge-icon-75 blank bronze"></div>
+<div class="badge-image badge-icon-75 blank silver"></div>
+<div class="badge-image badge-icon-75 blank gold"></div>
+<div class="badge-image badge-icon-75 blank platinum"></div>
+<div class="badge-image badge-icon-75 blank onyx"></div>
+</body>
