@@ -57,11 +57,11 @@ END IF;
 CREATE TEMPORARY TABLE BadgePrediction
 	SELECT stat_key `stat`, 
 	       @stat `name`,
-           @unit `unit`,
+               @unit `unit`,
 	       @badge `badge`,
 	       @current `current`,
 	       @next `next`,
-	       ROUND(@max / @y, 2) `progress`,
+	       IF((@max / @y) > .99, .99, ROUND(@max / @y, 2)) `progress`,
 	       @max `obtained`,
 	       @remaining `remaining`,
 	       ROUND(@days, 1) `days`,
