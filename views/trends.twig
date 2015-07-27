@@ -11,7 +11,7 @@
                         {% set badgeClass = 'badge-icon-75 ' ~ ratio.stat1.badge|lower|replace({"_":""}) ~ ' ' ~ ratio.stat1.level|lower %}
                         {% if (ratio.stat1.badge|lower|replace({"_":""}) == "level") %}
                             {% set badgeClass = 'level-icon-75' %}
-                            {% set badgeClass = badgeClass ~ ' ' ~ (agent.faction ? "resistance-agent" : "enlightened-agent") %}
+                            {% set badgeClass = badgeClass ~ ' ' ~ (agent.faction == "R" ? "resistance-agent" : "enlightened-agent") %}
                             {% set badgeClass = badgeClass ~ ' l' ~ ratio.stat1.level|lower %}
                         {% endif %}
                         <div class="badge-image {{badgeClass}}" />
