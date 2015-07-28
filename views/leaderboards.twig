@@ -10,26 +10,44 @@
 function onPageLoad() {
     highlightAgent = "{{ agent.name }}";
 
-    $("span.leaderboard-link[data-when='this-week']").addClass("active");
-    
     $("span.leaderboard-link").click(function() {
         stat = $(this).attr("data-stat");
-        $(".leaderboard." + stat + " table tbody").empty();
+
+        if (hasLocalStorage()) {
+            localStorage.setItem("leaderboard." + stat + ".when", $(this).attr("data-when"));
+        }
+
         loadLeaderboard(stat, $(this).attr("data-when"));    
     });
 
 
     function loadLeaderboard(stat, when) {
+        $(".leaderboard." + stat + " table tbody").empty();
+
+        if (when == null) {
+            if (hasLocalStorage()) {
+                key = "leaderboard." + stat + ".when";
+
+                when = localStorage.hasOwnProperty(key) ?
+                    localStorage.getItem(key) :
+                    "this-week";
+            }
+            else {
+                when = "this-week";
+            }
+        }
+
+
         $("span.leaderboard-link[data-stat='" + stat + "']").removeClass("active");
         $("span.leaderboard-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
 
         $(".leaderboard." + stat + " table").after($("<div/>").addClass("loading 110"));
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat + "/leaderboard/" + when,
             dataType: "json",
-            statusCode: {
-                500: function() {
-                    alert("There was an error retrieving the leaderboard for " + stat + ".");
-                }
+            error: function(xhr) {
+                $(".leaderboard." + stat + " table + div.loading").remove();
+                $(".leaderboard." + stat + " .leaderboard-selector").addClass("message error").html("There was an error retrieving the leaderboard. (" + xhr.status + ")");
+                $(".leaderboard." + stat + " table").html("");
             },
             success: function(data) {
                 $(".leaderboard." + stat + " table + div.loading").remove();
@@ -74,7 +92,7 @@ function onPageLoad() {
 
 {% for stat in stats %}
     {% if stat.hasWeeklyLeaderboard() %}
-    loadLeaderboard("{{ stat.stat }}", "this-week");
+    loadLeaderboard("{{ stat.stat }}", null);
     {% else %}
     loadLeaderboard("{{ stat.stat }}", "alltime");
     {% endif %}
