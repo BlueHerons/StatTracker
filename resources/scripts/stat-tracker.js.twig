@@ -8,10 +8,8 @@ var StatTracker = new function() {
             type: "GET",
             dataType: "html",
             data: location.search.substring(1),
-            statusCode: {
-                500: function() {
-                    alert("Internal Server Error");
-                }
+            error: function(xhr) {
+                $("#main-content").html("<div class='message error'>Unable to load this page (" + xhr.status + ")</div>");
             },
             success: function(html) {
                 $("#main-content").html(html);
@@ -105,4 +103,13 @@ var StatTracker = new function() {
 
 var format = function(number) {
     return numeral(number).format("0,0.[00]");
+}
+
+var hasLocalStorage = function() {
+    try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+    }
+    catch (e) {
+        return false;
+    }
 }
