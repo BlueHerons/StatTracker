@@ -78,12 +78,14 @@
 </div>
 <script>
 function onPageLoad() {
-    $("span.graph-link[data-what='graph']").addClass("active");
-
     $("span.graph-link").click(function() {
         stat = $(this).attr("data-stat");
-        $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
-        $(this).addClass("active");
+    
+        if (hasLocalStorage()) {
+            localStorage.setItem("graph." + stat + ".what", $(this).attr("data-what"));
+            localStorage.setItem("graph." + stat + ".when", $(this).attr("data-when"));
+        }
+
         if (stat == "ap-breakdown") {
             getAPBreakdown($(this).attr("data-when"));
         }
@@ -159,6 +161,17 @@ function onPageLoad() {
     });
 
     function getAPBreakdown(days) {
+        if (days == null && hasLocalStorage()) {
+            key = "graph.ap-breakdown.when";
+
+            days = localStorage.hasOwnProperty(key) ?
+                localStorage.getItem(key) :
+                "0";
+        }
+
+        $("span.graph-link[data-stat='ap-breakdown']").removeClass("active");
+        $("span.graph-link[data-stat='ap-breakdown'][data-when='" + days + "']").addClass("active");
+
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/ap/breakdown/" + days,
             data: { ts: '{{ agent.update_time }}' },
             dataType: "json",
@@ -288,6 +301,22 @@ function onPageLoad() {
     }
         
     function loadStatGraph(stat, name, what, when) {
+        if ((when == null || what == null) && hasLocalStorage()) {
+            keyWhat = "graph." + stat + ".what";
+            keyWhen = "graph." + stat + ".when";
+
+            what = (what == null && localStorage.hasOwnProperty(keyWhat)) ?
+                localStorage.getItem(keyWhat) :
+                "graph";
+
+            when = (when == null && localStorage.hasOwnProperty(keyWhen)) ?
+                localStorage.getItem(keyWhen) :
+                "all-time";
+        }
+
+        $("span.graph-link[data-stat='" + stat + "']").removeClass("active");
+        $("span.graph-link[data-stat='" + stat + "'][data-when='" + when + "']").addClass("active");
+
         $.ajax({url: "{{ app.request.basepath }}/api/{{ agent.token }}/" + stat +"/" + what + ((when == null || when == "") ? "" : "/" + when),
             data: { ts: '{{ agent.update_time }}' },
             dataType: "json",
@@ -433,11 +462,11 @@ function onPageLoad() {
         });
     }
 
-    getAPBreakdown(0);
+    getAPBreakdown(null);
 
 {% for stat in stats if stat.graphable %}
     loadStatPrediction("{{ stat.stat }}", "{{ stat.name }}");
-    loadStatGraph("{{ stat.stat}}", "{{ stat.name }}", "graph", null);
+    loadStatGraph("{{ stat.stat}}", "{{ stat.name }}", null, null);
 {% endfor %}
 }
 </script>
