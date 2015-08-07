@@ -575,11 +575,9 @@ class Agent {
 
             while ($row = $stmt->fetch()) {
                 extract($row);
-                $badge = str_replace(" ", "_", $badge);
-                $badge = strtolower($badge);
 
                 $this->upcoming_badges[] = array(
-                    "name" => ucfirst($badge),
+                    "name" => $badge,
                     "level" => ucfirst($next),
                     "progress" => $progress,
                     "days_remaining" => $days_remaining,
