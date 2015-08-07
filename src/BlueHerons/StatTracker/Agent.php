@@ -350,6 +350,24 @@ class Agent {
     }
 
     /**
+     * Gets the latest date that a submission was made for.
+     *
+     * @param boolean $refresh whether or not to refresh the cached values
+     *
+     * @return string date of latest submission
+     */
+    public function getLatestSubmissionDate($refresh = false) {
+        $ts = $this->getUpdateTimestamp("latest", $refresh);
+        $stmt = StatTracker::db()->prepare("SELECT date FROM Data WHERE agent = ? and updated = FROM_UNIXTIME(?)");
+        $stmt->execute(array($this->name, $ts));
+
+        extract($stmt->fetch());
+        $stmt->closeCursor();
+
+        return $date;
+    }
+
+    /**
      * Gets the values of all stats.
      *
      * @param string|date $when "latest" to get the latest stats submitted by the agent, or a date in "yyyy-mm-dd"
@@ -362,7 +380,7 @@ class Agent {
         if (!is_array($this->stats) || $refresh) {
 
             if ($when == "latest" || new DateTime() < new DateTime($when)) {
-                $when = date("Y-m-d", $this->getUpdateTimestamp("latest", $refresh));
+                $when = $this->getLatestSubmissionDate($refresh);
             }
 
             $stmt = StatTracker::db()->prepare("SELECT stat, value FROM Data WHERE agent = ? AND date = ? ORDER BY stat ASC;");
@@ -400,7 +418,7 @@ class Agent {
         if (!isset($this->stats[$stat]) || $refresh) {
             $ts = $this->getUpdateTimestamp($when, $refresh);
             if ($when == "latest" || new DateTime() < new DateTime($when)) {
-                $when = date("Y-m-d", $ts);
+                $when = $this->getLatestSubmissionDate($refresh);
             }
 
             $stmt = StatTracker::db()->prepare("SELECT value FROM Data WHERE stat = ? AND agent = ? AND (date = ? OR updated = FROM_UNIXTIME(?)) ORDER BY date DESC LIMIT 1;");
