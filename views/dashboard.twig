@@ -109,9 +109,9 @@ function onPageLoad() {
             $("#upcoming_badges").html("");
             data.forEach(function(badge, i, arr) {
                 html = tmpl.clone();
-                $(html).find(".badge-image").addClass(badge.name.toLowerCase().replace("_", ""))
-                                           .addClass(badge.level.toLowerCase())
-                                           .css("opacity", badge.progress / 1.5);
+                $(html).find(".badge-image").addClass(badge.name.toLowerCase().replace(" ", ""))
+                                            .addClass(badge.level.toLowerCase())
+                                            .css("opacity", badge.progress / 1.5);
                 $(html).find(".percent-complete span").html(Math.floor(badge.progress * 100) +"%");
                 if (badge.days_remaining == null) {
                     $(html).find(".time-remaining").remove();
