@@ -9,6 +9,7 @@
 <script>
 function onPageLoad() {
     highlightAgent = "{{ agent.name }}";
+    scrollTo = window.location.hash.substring(1);
 
     $("span.leaderboard-link").click(function() {
         stat = $(this).attr("data-stat");
@@ -74,18 +75,22 @@ function onPageLoad() {
     
                     if (highlightAgent == this.agent) {
                         $(".leaderboard." + stat + " table tbody tr:last").addClass("highlight");
-                                    }
+                    }
                 });
                 $(".leaderboard." + stat + " table").tablesorter({
-                                    textExtraction: function(node) {
-                                        if (node.title == "rank" || node.title == "value") {
-                                            return node.innerHTML.replace(/\D/g, '');
-                                        }
-                                        else {
-                                            return node.innerHTML;
-                                        }
-                                    }
-                                });
+                    textExtraction: function(node) {
+                        if (node.title == "rank" || node.title == "value") {
+                            return node.innerHTML.replace(/\D/g, '');
+                        }
+                        else {
+                            return node.innerHTML;
+                        }
+                    }
+                });
+
+                $('html, body').animate({
+                    scrollTop: $("a[name='" + scrollTo + "']").offset().top
+                }, 0);
             }
         });
     }
