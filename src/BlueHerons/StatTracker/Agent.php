@@ -15,6 +15,8 @@ class Agent {
     public $level;
     public $stats;
 
+    const TOKEN_WEB = "WebApp";
+
     /**
      * Returns the registered Agent for the given email address. If no agent is found, a generic
      * Agent object is returned.
@@ -37,7 +39,7 @@ class Agent {
             $agent->faction = $faction;
 
             $stmt = StatTracker::db()->prepare("SELECT token FROM Tokens WHERE agent = ? AND name = ? AND revoked = ?;");
-            $stmt->execute(array($agent->name, "API", 0));
+            $stmt->execute(array($agent->name, Agent::TOKEN_WEB, 0));
             extract($stmt->fetch());
             $stmt->closeCursor();
 
@@ -189,15 +191,15 @@ class Agent {
     }
 
     /**
-     * Revokes the named token. If the "API" token is revoked, a new one will be generated automatically
+     * Revokes the named token. If the web is revoked, a new one will be generated automatically
      */
     public function revokeToken($name) {
         if (in_array($name, $this->getTokens())) {
             $stmt = StatTracker::db()->prepare("UPDATE Tokens SET revoked = ?, name = CONCAT(name, '-', UNIX_TIMESTAMP(NOW())) WHERE agent = ? and name = UCASE(?)");
             $stmt->execute(array(1, $this->name, $name));
 
-            // "API" token is special. If it was revoked, another one needs to be created
-            if (strtoupper($name) == "API") {
+            // Web token is special. If it was revoked, another one needs to be created
+            if (strtoupper($name) == Agent::TOKEN_WEB) {
                 $this->getTokens(true);
                 $this->createToken(strtoupper($name));
             }

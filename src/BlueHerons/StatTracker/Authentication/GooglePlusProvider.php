@@ -220,7 +220,7 @@ class GooglePlusProvider implements IAuthenticationProvider {
     }
 
     private function generateAPIToken($agent) {
-        $token = $agent->createToken("API");
+        $token = $agent->createToken(Agent::TOKEN_WEB);
         if ($token === false) {
             return false;
         }
