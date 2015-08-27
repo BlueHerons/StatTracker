@@ -46,28 +46,28 @@ SELECT amount_required INTO @y FROM Badges WHERE stat = stat_key AND level = @ne
 
 SELECT @remaining / @slope INTO @days;
 
-IF stat_key = 'oldest_portal' THEN
-	SELECT @remaining INTO @days;
+IF stat_key = 'oldest_portal' OR stat_key = 'hacking_streak' THEN
+    SELECT @remaining INTO @days;
 END IF;
 
 IF @days < 0 THEN
-	SELECT 0 INTO @days;
+    SELECT 0 INTO @days;
 END IF;
 
 CREATE TEMPORARY TABLE BadgePrediction
-	SELECT stat_key `stat`, 
-	       @stat `name`,
-               @unit `unit`,
-	       @badge `badge`,
-	       @current `current`,
-	       @next `next`,
-	       IF((@max / @y) > .99, .99, ROUND(@max / @y, 2)) `progress`,
-	       @max `obtained`,
-	       @remaining `remaining`,
-	       ROUND(@days, 1) `days`,
-	       ROUND(@slope, 0) `rate`,
-	       ROUND(@intercept) `intercept`,
-	       ROUND(@slope, 2) `slope`;
+    SELECT stat_key `stat`, 
+           @stat `name`,
+           @unit `unit`,
+           @badge `badge`,
+           @current `current`,
+           @next `next`,
+           IF((@max / @y) > .99, .99, ROUND(@max / @y, 2)) `progress`,
+           @max `obtained`,
+           @remaining `remaining`,
+           ROUND(@days, 1) `days`,
+           ROUND(@slope, 0) `rate`,
+           ROUND(@intercept) `intercept`,
+           ROUND(@slope, 0) `slope`;
 
 END $$
 
