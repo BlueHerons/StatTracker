@@ -26,6 +26,10 @@ SELECT count(*),
 SELECT (((@n * @sumXY) - (@sumX * @sumY)) / ((@n * @sumX2) - (@sumX * @sumX))) INTO @slope;
 SELECT ((@sumY - (@slope * @sumX)) / @n) INTO @intercept;
 
+IF stat_key = 'oldest_portal' OR stat_key = 'hacking_streak' THEN
+    SELECT 1 INTO @slope;
+END IF;
+
 RETURN @slope;
 
 END $$

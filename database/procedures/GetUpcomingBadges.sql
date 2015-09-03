@@ -33,7 +33,7 @@ INSERT INTO UpcomingBadges (stat, badge, next, progress, days_remaining)
          d.date = @latest_submission AND
          b.amount_required > d.value AND
          d.value > 0 AND
-         s.prediction = 1
+         (s.prediction = 1 OR (((b.stat = 'oldest_portal') OR (b.stat = 'hacking_streak')) AND IsStatTicking(agent_name, b.stat)))
 GROUP BY b.stat
 ORDER BY remaining ASC;
 
