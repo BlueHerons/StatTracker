@@ -432,6 +432,10 @@ class OCR {
                     $count++;
                     array_push($elements, $values[1]);
                 }
+                elseif ($step == 'mentoring' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+                    array_push($elements, $values[1]);
+                }
+
             }
 
             // final check on count
