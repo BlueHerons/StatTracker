@@ -279,7 +279,16 @@ class StatTracker extends Application {
      */
     public static function getConstant($name, $default = null) {
         if ($name == "VERSION") {
-            $file = dirname(dirname(dirname(__DIR__))) . "/VERSION";
+            $revision_file = dirname(dirname(dirname(__DIR__))) . "/.revision";
+            $branch_file = dirname(dirname(dirname(__DIR__))) . "/.branch";
+
+            if (file_exists($revision_file) && file_exists($branch_file)) {
+                return substr(file($revision_file)[0], 0, 7) . "-" . file($branch_file)[0];
+            }
+            else {
+                return $default;
+            }
+
             return file_exists($file) ? file($file)[0] : $default;
         }
         else {
