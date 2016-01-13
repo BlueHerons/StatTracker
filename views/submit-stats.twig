@@ -25,6 +25,8 @@
 			<a href="https://play.google.com/store/apps/details?id=com.blueheronsresistance.stattracker&amp;referrer=utm_source%3Dstattracker-instance">
 				<img alt="Android app on Google Play" src="https://developer.android.com/images/brand/en_app_rgb_wo_60.png" />
 			</a>
+
+                        <iframe class="app-video" width="440" height="315" src="https://www.youtube.com/embed/TE_rRJEpR0Y" frameborder="0" allowfullscreen></iframe>
 		</div>
 		{% if not(attribute(constants, "email_submission") == null) %}
 		<div class="email">
@@ -51,7 +53,7 @@
 		<tr>
 			<td>{{ stat.name }}</td>
 			<td>
-			{% if stat.stat == "innovator" %}
+			{% if stat.stat == "innovator" or stat.stat == "vanguard" %}
 			<select name="{{ stat.stat }}">
 				{% for amount_required, badge in stat.badges %}
 				<option value="{{ amount_required }}" {% if attribute(agent.stats, stat.stat) is defined and amount_required == attribute(agent.stats, stat.stat) %}selected{% endif %}>{{ badge }}</option>
