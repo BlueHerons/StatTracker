@@ -179,7 +179,7 @@ class OCR {
             $apBoxWidth = $width - $apBoxLeft;
             $this->log(LogLevel::DEBUG, sprintf("Scanner AP Left @ [%s,%s]", $x, $y));
 
-            for ($y = $logoBoxBottom ; $y > $logoBoxBottom - $logoBoxHeight / 4 ; $y -= 5) {
+            for ($y = $logoBoxBottom - 5 ; $y > $logoBoxBottom - $logoBoxHeight / 4 ; $y -= 5) {
                 for($x = $apBoxLeft ; $x < $apBoxLeft + $apBoxWidth / 4 ; $x ++) {
                     $pixel = $img->getImagePixelColor($x, $y);
                     if ($this->isLight($pixel)) {
