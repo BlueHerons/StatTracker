@@ -393,11 +393,17 @@ class OCR {
                     $step = 'missions';
                 }
                 elseif ($step == 'defense' && strpos($line, 'Resource Gathering') !== false) {
-                    // Inject a 0 for missions completed
+                    // Inject a 0 for missions completed and mission days attended
+                    array_push($elements, 0);
                     array_push($elements, 0);
                     $step = 'resources';
                 }
                 elseif ($step == 'missions' && strpos($line, 'Resource Gathering') !== false) {
+                    // inject a 0 if only 1 stat, which means that the agent has attended 0 mission days
+                    if ($count == 1) {
+                        array_push($elements, 0);
+                    }
+                    $count = 0;
                     $step = 'resources';
                 }
                 elseif ($step == 'resources' && strpos($line, 'Mentoring') !== false) {
@@ -426,6 +432,7 @@ class OCR {
                     array_push($elements, $values[1]);
                 }
                 elseif ($step == 'missions' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*$/sxmi', $line, $values)) {
+                    $count++;
                     array_push($elements, $values[1]);
                 }
                 elseif ($step == 'resources' && preg_match('/^\s*([\d\s\|.aegiloqt,]+)\s*(days|clays|ilays|cl_ys|__ys|d_ys|_ays)?\s*$/sxmi', $line, $values)) {
