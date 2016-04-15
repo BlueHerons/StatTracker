@@ -91,7 +91,7 @@ class OCR {
      *
      * @return path to new PBM image
      */
-    private function prepareForOCR($imagePath) {
+    public function prepareForOCR($imagePath) {
         $newFile = UPLOAD_DIR . pathinfo($imagePath, PATHINFO_FILENAME) . ".pbm";
 
         try {
@@ -103,10 +103,13 @@ class OCR {
             $quantumRange = $img->getQuantumRange();
             // Threshold in percent * quantumRange in which values higher go pure white and lower pure black
             $threshold = 0.45 * $quantumRange['quantumRangeLong'];
-            // Color to compare to when looking for stat section
+            // Colors to compare to when looking for stat section
             $statSectionColor = new ImagickPixel('#7b6728');
+            $statTextColor = new ImagickPixel('#00bab5');
+            $black = new ImagickPixel('#000000');
             // Distance from 0-255 * quantumRange * sqrt(3) in which to consider colors similar when mapped into 3d space
             $fuzz = 35/255 * $quantumRange['quantumRangeLong'] / sqrt(3);
+            $fuzzText = 0.60 * $quantumRange['quantumRangeLong'] / sqrt(3);
 
             $img->readImage($imagePath);
             $identify = $img->identifyImage();
@@ -262,6 +265,10 @@ class OCR {
                 $img->chopImage(0, $statsTop - $logoBoxBottom, 0, $logoBoxBottom - $progressBarBottom);
             }
 
+            $this->sendMessage("ENHANCING!!!");
+            $this->log(LogLevel::DEBUG, sprintf("Resizing %s", $imagePath));
+            $img->paintOpaqueImage($statTextColor, $black, $fuzzText);
+
             $this->sendMessage("Resizing screenshot...");
             $this->log(LogLevel::DEBUG, sprintf("Resizing %s", $imagePath));
             $img->resizeImage($width * 2, 0, imagick::FILTER_LANCZOS, 1);
@@ -284,7 +291,7 @@ class OCR {
             throw $e;
         }
         finally {
-            unlink($imagePath);
+            //unlink($imagePath);
         }
     }
 
@@ -312,9 +319,9 @@ class OCR {
      *
      * @return array of lines read from the image
      */
-    private function executeOCR($imagePath) {
+    public function executeOCR($imagePath) {
         try {
-            $cmd = sprintf("%s -i %s", OCRAD, $imagePath);
+            $cmd = sprintf("%s %s stdout -psm 6", TESSERACT, $imagePath);
             $this->log(LogLevel::DEBUG, sprintf("Executing %s", $cmd));
             $this->sendMessage("Scanning screenshot...");
             exec($cmd, $lines);
@@ -331,7 +338,7 @@ class OCR {
             throw $e;
         }
         finally {
-            unlink($imagePath);
+            //unlink($imagePath);
         }
     }
 
