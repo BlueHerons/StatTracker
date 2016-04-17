@@ -46,7 +46,8 @@
         "swiftmailer/swiftmailer": "~5.1.0",
         "silex/silex": "~1.2",
         "twig/twig": "~1.8",
-        "endroid/qrcode": "^1.5"
+        "endroid/qrcode": "^1.5",
+        "Frlnc/php-slack": "~1.0"
     },
     "scripts": {
         "describe": "composer describe-version; composer describe-contributors",
