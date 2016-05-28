@@ -46,17 +46,28 @@ class SlackProvider implements IAuthenticationProvider {
             try {
                 $resp = $this->client->execute("auth.test", [])->getBody();
                 if (!$resp['ok']) {
-                    throw new Exception(sprintf("Slack identification failed: %s", $resp['error']));
+                    $this->logger->error(sprintf("auth.test response: %s", print_r($resp, true)));
+                    throw new Exception(sprintf("Slack identification failed auth.test: %s", $resp['error']));
                 }
-                
+
                 $user_id = $resp['user_id'];
 
-                $resp = $this->client->execute("users.info", [ 'user' => $user_id ])->getBody();
+                // Now, this part is utterly stupid...cannot request identify scope (for auth.test) and identity.* 
+                // scopes (for users.identity) at the same time. If we don't have the identity.* scopes, redirect and
+                // request them.
+                $resp = $this->client->execute("users.identity", [])->getBody();
                 if (!$resp['ok']) {
-                    throw new Exception(sprintf("Slack identification failed: %s", $resp['error']));
+                    if ($resp['error'] == "missing_scope") {
+                        $this->second_auth_pass = true;
+                        return AuthResponse::authenticationRequired($this);
+                    }
+                    else {
+                        $this->logger->error(sprintf("users.identity response: %s", print_r($resp, true)));
+                        throw new Exception(sprintf("Slack identification failed users.identity: %s", $resp['error']));
+                    }
                 }
 
-                $email_address = $resp['user']['profile']['email'];
+                $email_address = $resp['user']['email'];
 
                 if (empty($email_address)) {
                     return AuthResponse::error("Slack did not provide an email address.");
@@ -73,7 +84,7 @@ class SlackProvider implements IAuthenticationProvider {
                         $this->generateAPIToken($agent);
                         $agent = Agent::lookupAgentName($email_address);
                         if (!$agent->isValid()) {
-                            $response = AuthResponse::error("Not a valid agent");
+                            $response = AuthResponse::error(sprintf("No agent associated with %s", $email_address));
                         }
                         else {
                             $StatTracker['session']->set("agent", $agent);
@@ -122,8 +133,7 @@ class SlackProvider implements IAuthenticationProvider {
             setcookie($name, '', time()-1000);
             setcookie($name, '', time()-1000, '/');
         }
-        // Slack tokens cannot be revoked and do not expire...
-        //$this->client->revokeToken($StatTracker['session']->get("token"));
+        $this->client->execute("auth.revoke", []);
         session_destroy();
         $response = AuthResponse::loggedOut();
         $this->logger->info(sprintf("%s logged out", $agent->name));
@@ -164,9 +174,15 @@ class SlackProvider implements IAuthenticationProvider {
     }
 
     public function getAuthenticationUrl() {
+        if ($this->second_auth_pass) {
+            $scopes = "identity.basic identity.email identity.avatar identity.team";
+        }
+        else {
+            $scopes = "identify";
+        }
         $query = http_build_query(array(
             "client_id" => SLACK_CLIENT_ID,
-            "scope" => "identify users:read",
+            "scope" => $scopes,
             "redirect_uri" => sprintf("%s/authenticate?action=callback", $this->base_url),
             "team" => SLACK_TEAM_ID
         ));
