@@ -142,10 +142,15 @@ class SlackProvider implements IAuthenticationProvider {
 
     public function callback(StatTracker $StatTracker) {
         $code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
+        $error = isset($_REQUEST['error']) ? $_REQUEST['error'] : null;
 
         try {
             if (!isset($code)) {
                 throw new Exception("Slack responded incorrectly to the authentication request. Please try again later.");
+            }
+
+            if (isset($error)) {
+                return;
             }
 
             $response = $this->client->execute("oauth.access", [
@@ -159,6 +164,7 @@ class SlackProvider implements IAuthenticationProvider {
                 $StatTracker['session']->set("token", $response['access_token']);
             }
             else {
+                $this->logger->error(sprintf("Slack oauth.access response: %s", print_r($response, true)));
                 throw new Exception(sprintf("Slack authorization failed: %s", $response['error']));
             }
         }
