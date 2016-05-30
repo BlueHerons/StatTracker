@@ -44,19 +44,13 @@ class SlackProvider implements IAuthenticationProvider {
 
         if ($StatTracker['session']->get("agent") === null) {
             try {
-                $resp = $this->client->execute("auth.test", [])->getBody();
+                $resp = $this->client->execute("users.identity", [])->getBody();
                 if (!$resp['ok']) {
-                    throw new Exception(sprintf("Slack identification failed: %s", $resp['error']));
-                }
-                
-                $user_id = $resp['user_id'];
-
-                $resp = $this->client->execute("users.info", [ 'user' => $user_id ])->getBody();
-                if (!$resp['ok']) {
-                    throw new Exception(sprintf("Slack identification failed: %s", $resp['error']));
+                    $this->logger->error(sprintf("users.identity response: %s", print_r($resp, true)));
+                    throw new Exception(sprintf("Slack identification failed users.identity: %s", $resp['error']));
                 }
 
-                $email_address = $resp['user']['profile']['email'];
+                $email_address = $resp['user']['email'];
 
                 if (empty($email_address)) {
                     return AuthResponse::error("Slack did not provide an email address.");
@@ -67,13 +61,26 @@ class SlackProvider implements IAuthenticationProvider {
                 if (!$agent->isValid()) {
                     // Could be no token, or new user.
                     if (!empty($agent->name) && $agent->name === "Agent") {
-                        $agent->name = $resp['user']['name'];
+                        // We only need this if the user's email address is not in the ST database
+                        $resp = $this->client->execute("auth.test", [])->getBody();
+                        if (!$resp['ok']) {
+                            if ($resp['error'] == "missing_scope") {
+                                $this->second_auth_pass = true;
+                                return AuthResponse::authenticationRequired($this);
+                            }
+                            else {
+                                $this->logger->error(sprintf("auth.test response: %s", print_r($resp, true)));
+                                throw new Exception(sprintf("Slack identification failed auth.test: %s", $resp['error']));
+                            }
+                        }
+
+                        $agent->name = $resp['user'];
                         $this->createNewAgent($email_address, $agent->name);
                         $this->logger->info(sprintf("Created new agent %s for %s", $agent->name, $email_address));
                         $this->generateAPIToken($agent);
                         $agent = Agent::lookupAgentName($email_address);
                         if (!$agent->isValid()) {
-                            $response = AuthResponse::error("Not a valid agent");
+                            $response = AuthResponse::error(sprintf("No agent associated with %s", $email_address));
                         }
                         else {
                             $StatTracker['session']->set("agent", $agent);
@@ -90,7 +97,14 @@ class SlackProvider implements IAuthenticationProvider {
                     $response = AuthResponse::okay($agent);
                     $this->logger->info(sprintf("%s authenticated successfully", $agent->name));
                 }
-            }
+
+
+                // Now, this part is utterly stupid...cannot request identify scope (for auth.test) and identity.* 
+                // scopes (for users.identity) at the same time. If we don't have the identity.* scopes, redirect and
+                // request them.
+
+                
+                           }
             catch (Exception $e) {
                 $response = AuthResponse::error($e->getMessage());
                 $this->logger->error(sprintf("EXCEPTION: %s\n%s:%s", $e->getMessage(), $e->getFile(), $e->getLine()));
@@ -122,8 +136,7 @@ class SlackProvider implements IAuthenticationProvider {
             setcookie($name, '', time()-1000);
             setcookie($name, '', time()-1000, '/');
         }
-        // Slack tokens cannot be revoked and do not expire...
-        //$this->client->revokeToken($StatTracker['session']->get("token"));
+        $this->client->execute("auth.revoke", []);
         session_destroy();
         $response = AuthResponse::loggedOut();
         $this->logger->info(sprintf("%s logged out", $agent->name));
@@ -132,10 +145,15 @@ class SlackProvider implements IAuthenticationProvider {
 
     public function callback(StatTracker $StatTracker) {
         $code = isset($_REQUEST['code']) ? $_REQUEST['code'] : file_get_contents("php://input");
+        $error = isset($_REQUEST['error']) ? $_REQUEST['error'] : null;
 
         try {
             if (!isset($code)) {
                 throw new Exception("Slack responded incorrectly to the authentication request. Please try again later.");
+            }
+
+            if (isset($error)) {
+                return;
             }
 
             $response = $this->client->execute("oauth.access", [
@@ -149,6 +167,7 @@ class SlackProvider implements IAuthenticationProvider {
                 $StatTracker['session']->set("token", $response['access_token']);
             }
             else {
+                $this->logger->error(sprintf("Slack oauth.access response: %s", print_r($response, true)));
                 throw new Exception(sprintf("Slack authorization failed: %s", $response['error']));
             }
         }
@@ -164,9 +183,16 @@ class SlackProvider implements IAuthenticationProvider {
     }
 
     public function getAuthenticationUrl() {
+        if ($this->second_auth_pass) {
+            $scopes = "identify";
+        }
+        else {
+            $scopes = "identity.basic identity.email identity.avatar identity.team";
+        }
+
         $query = http_build_query(array(
             "client_id" => SLACK_CLIENT_ID,
-            "scope" => "identify users:read",
+            "scope" => $scopes,
             "redirect_uri" => sprintf("%s/authenticate?action=callback", $this->base_url),
             "team" => SLACK_TEAM_ID
         ));

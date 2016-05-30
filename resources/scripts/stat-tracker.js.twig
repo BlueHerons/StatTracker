@@ -47,8 +47,8 @@ var StatTracker = new function() {
                     }
                 }
                 else if (result.status == "registration_required") {
-                                        $(".loading").hide();
-                                        $("#main-content").css("height", "inherit");
+                    $(".loading").hide();
+                    $("#main-content").css("height", "inherit");
                     $("#login-buttons").hide();
                     $("#login-dialog").show();
                     $("#login-message").html(result.message);
@@ -68,6 +68,18 @@ var StatTracker = new function() {
                     $("#main-content").css("height", "inherit");
                     $("#login-message").html("You have been logged out. Refresh this page to log in again.");
                 }
+                else if (result.error) {
+                    $(".loading").hide();
+                    $("#login-message").html(result.message + "<br/><br/>Please try again in a few minutes. If the error persists, please contact the maintainer.");
+                    $("#main-content").css("height", "inherit");
+                    $("#login-dialog").show();
+                }
+            },
+            error: function(result) {
+                $(".loading").hide();
+                $("#login-message").html("Something bad happened. Please try again in a few minutes. If the error persists, please contact the maintainer.");
+                $("#main-content").css("height", "inherit");
+                $("#login-dialog").show();
             },
             processData: false
         });

@@ -34,6 +34,12 @@
             "BlueHerons\\StatTracker\\": "src/BlueHerons/StatTracker"
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/BlueHerons/php-slack"
+        }
+    ],
     "require": {
         "php": ">=5.5",
         "ext-imagick": "~3.1",
@@ -47,7 +53,7 @@
         "silex/silex": "~1.2",
         "twig/twig": "~1.8",
         "endroid/qrcode": "^1.5",
-        "Frlnc/php-slack": "~1.0"
+        "frlnc/php-slack": "dev-master"
     },
     "scripts": {
         "describe": "composer describe-version; composer describe-contributors",
