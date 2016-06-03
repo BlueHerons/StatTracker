@@ -159,6 +159,20 @@ class StatTracker extends Application {
         return $message;
     }
 
+    public function getTeamStats() {
+        $team_profile = array();
+        $stmt = self::db()->prepare("SELECT GetStatSum(?) `value`");
+        foreach ($this->getStats() as $stat) {
+            $stmt->execute(array($stat->stat));
+            while ($row = $stmt->fetch()) {
+                extract($row);
+                $team_profile['stats'][$stat->stat] = $value;
+            }
+        }
+
+        return $team_profile;
+    }
+
     /**
      * Sends the autorization code for the given email address to that address. The email includes
      * instructions on how to complete the registration process as well.

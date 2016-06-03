@@ -34,6 +34,10 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
 
+$StatTracker->get("/api/team/profile", function() use ($StatTracker) {
+    return $StatTracker->json($StatTracker->getTeamStats());
+});
+
 $StatTracker->get("/api/{token}/profile/{when}.{format}", function($token, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByToken($token);
 
