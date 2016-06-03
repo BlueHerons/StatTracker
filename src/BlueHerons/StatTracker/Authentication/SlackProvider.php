@@ -53,7 +53,8 @@ class SlackProvider implements IAuthenticationProvider {
                 $email_address = $resp['user']['email'];
 
                 if (empty($email_address)) {
-                    return AuthResponse::error("Slack did not provide an email address.");
+                    $this->logger->error("Slack did not provide an email address. Redirect to Login");
+                    return AuthResponse::authenticationRequired($this);
                 }
 
                 $agent = Agent::lookupAgentName($email_address);
