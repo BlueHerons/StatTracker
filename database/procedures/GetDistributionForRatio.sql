@@ -1,4 +1,6 @@
-DROP PROCEDURE IF EXISTS `GetDistributionForRatio`;
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `GetDistributionForRatio` $$
 
 CREATE PROCEDURE `GetDistributionForRatio`(IN `stat_1` VARCHAR(20), IN `stat_2` VARCHAR(20), IN `factor` DOUBLE(5,2))
     READS SQL DATA
@@ -35,4 +37,6 @@ SELECT `step`,
  WHERE `step` IS NOT NULL
  GROUP BY `step`;
 
-END;
+END $$
+
+DELIMITER ;
