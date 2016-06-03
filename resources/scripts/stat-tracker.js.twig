@@ -114,7 +114,12 @@ var StatTracker = new function() {
 };
 
 var format = function(number) {
-    return numeral(number).format("0,0.[00]");
+    if (number == null || number == undefined) {
+        return "&#8734;"
+    }
+    else {
+        return numeral(number).format("0,0.[00]");
+    }
 }
 
 var hasLocalStorage = function() {
