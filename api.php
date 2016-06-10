@@ -35,7 +35,10 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 };
 
 $StatTracker->get("/api/team/profile", function() use ($StatTracker) {
-    return $StatTracker->json($StatTracker->getTeamStats());
+    $data = $StatTracker->getTeamStats();
+    return $StatTracker->json($data, 200, array(
+        "Cache-Control" => "max-age=86400, public"
+    ));
 });
 
 $StatTracker->get("/api/{token}/profile/{when}.{format}", function($token, $when, $format) use ($StatTracker) {
