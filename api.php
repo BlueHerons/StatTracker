@@ -34,6 +34,10 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
 
+$StatTracker->after(function (Request $request, Response $response) {
+    $response->headers->set("Access-Control-Allow-Origin", "*");
+});
+
 $StatTracker->get("/api/{token}/profile/{when}.{format}", function($token, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByToken($token);
 
