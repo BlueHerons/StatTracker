@@ -169,6 +169,16 @@ class StatTracker extends Application {
                 $team_profile['stats'][$stat->stat] = $value;
             }
         }
+        $stmt->closeCursor();
+
+        $stmt = self::db()->prepare("SELECT GetActiveAgentCount() `value`");
+        $stmt->execute();
+        while ($row = $stmt->fetch()) {
+            extract($row);
+            $team_profile['agents'] = $value;
+        }
+
+        $team_profile['since'] = date('Y-m-d', strtotime("-30 days"));
 
         return $team_profile;
     }

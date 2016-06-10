@@ -28,7 +28,7 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 		}
 	}
 
-	// Ensure {token} is 6 hexidecimal digits
+	// Ensure {token} is 64 hexidecimal digits
 	if (!validateParameter($request->get("token"), "/^[a-f0-9]{64}$/i")) { return $StatTracker->abort(400); }
 	// Ensure {stat} is alpha characters and an underscore
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
