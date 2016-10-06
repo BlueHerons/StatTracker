@@ -28,11 +28,22 @@ $validateRequest = function(Request $request, Silex\Application $StatTracker) {
 		}
 	}
 
-	// Ensure {token} is 6 hexidecimal digits
+	// Ensure {token} is 64 hexidecimal digits
 	if (!validateParameter($request->get("token"), "/^[a-f0-9]{64}$/i")) { return $StatTracker->abort(400); }
 	// Ensure {stat} is alpha characters and an underscore
 	if (!validateParameter($request->get("stat"), "/^[a-z_]+$/")) { return $StatTracker->abort(400); }
 };
+
+$StatTracker->after(function (Request $request, Response $response) {
+    $response->headers->set("Access-Control-Allow-Origin", "*");
+});
+
+$StatTracker->get("/api/team/profile", function() use ($StatTracker) {
+    $data = $StatTracker->getTeamStats();
+    return $StatTracker->json($data, 200, array(
+        "Cache-Control" => "max-age=86400, public"
+    ));
+});
 
 $StatTracker->get("/api/{token}/profile/{when}.{format}", function($token, $when, $format) use ($StatTracker) {
 	$agent = Agent::lookupAgentByToken($token);
