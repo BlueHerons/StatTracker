@@ -55,7 +55,7 @@ var StatTracker = new function() {
                 }
                 else if (result.status == "okay") {
                     $("#login-dialog").hide();
-                    if (!result.agent.has_submitted) {
+                    if (!result.agent.has_submitted && StatTracker.pageToLoad != "settings") {
                         StatTracker.message = "Stats must be submitted before this tool can be utilized.";
                         StatTracker.pageToLoad = "submit-stats";
                     }
