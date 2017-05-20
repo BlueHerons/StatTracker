@@ -840,12 +840,37 @@ table#stat-entry {
 .link:hover { cursor: pointer; }
 
 .loading {
-    display: block;
-    height: 220px;
-    width: 220px;
-    background: url("./resources/images/ADA.gif") no-repeat;
-    background-position: center;
-    margin: 0 auto;
+	display: block;
+	height: 100px;
+	width: 100px;
+
+	background: url("./resources/images/ada-outer.png") no-repeat;	
+	background-size: 100px 100px;
+
+	animation: spin 10s linear infinite;
+
+	div {
+		display: block;
+		height: 100px;
+		width: 100px;
+	
+		background: url("./resources/images/ada-inner.png") no-repeat;
+		background-size: 100px 100px;
+
+		animation: spin 5s linear infinite reverse;
+	}
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+    50% {
+		transform: rotate(180deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 .loading.110 {
